@@ -83,7 +83,7 @@ export function buildTripGuidanceParticipantStates(
   );
 
   return [...participants]
-    .sort((left, right) => left.participant_code.localeCompare(right.participant_code))
+    .sort((left, right) => left.display_name.localeCompare(right.display_name))
     .map((participant) => {
       const response = responsesByParticipant.get(participant.id) ?? null;
       const pending = pendingByParticipant.get(participant.id);
@@ -139,4 +139,3 @@ export function distanceInMeters(
 
   return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-

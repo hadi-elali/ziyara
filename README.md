@@ -24,7 +24,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 
 - Der AuthContext trennt initiales Session-/Profil-Laden von Hintergrundrefreshes. App-Resume und Realtime-Rollenänderungen erhalten bestehendes Profil, Navigation und Screen-State; Logout oder ein echter Benutzerwechsel entfernt alte Profildaten sofort.
 - Registrierung, Login und Kontoverwaltung unterstützen Anzeigename, `member_type`, `party_size`, Kofferanzahl, E-Mail und Passwort. Die Kofferanzahl gilt für alle durch das Konto vertretenen Personen, kann bei der Registrierung `0` bis `50` betragen und später über die Kontoseite in den Einstellungen geändert werden. Profile können die Rollen `user`, `medical_staff`, `organization_team` und `admin` besitzen.
-- Admins können eigenständige Benutzerkonten im neuen Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size`, physischen Teilnehmer-IDs und Reisegruppen getrennt.
+- Admins können eigenständige Benutzerkonten im Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size` und Reisegruppen getrennt und können im Busmanagement als Einheit ausgewählt werden.
 - „Passwort vergessen“ und der vollständige Recovery-Deep-Link laufen ausschließlich über `/reset-password` beziehungsweise `ziyara:///reset-password`. Normale Login-/Signup-Links werden nicht als Recovery-Link behandelt; nach erfolgreicher Passwortänderung wird die lokale Session entfernt.
 - Nutzer können ausschließlich das eigene Konto über `supabase/functions/delete-account` löschen. Die Function nimmt keine Ziel-User-ID an, prüft den Bearer-Token selbst, schützt den letzten Admin und hält Service-Role-Zugangsdaten vollständig aus dem Client.
 
@@ -38,15 +38,17 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 
 ### Busmanagement
 
-- Admins legen eine aktive Reise, benannte Busse und physische Teilnehmer-IDs an. IDs können optional mit App-Konten verknüpft werden; mehrere IDs dürfen demselben Konto gehören.
+- Admins legen eine aktive Reise und benannte Busse an. Für jeden neuen Bus ist eine registrierte Person als Busführer erforderlich.
+- Personen werden über ihr registriertes Konto oder gemeinsam als ganze Kontofamilie einem Bus zugeordnet. Sobald eine Familie zugeordnet ist, werden ihre Mitglieder nicht zusätzlich als Einzelpersonen angeboten.
+- Eine aktive Reise lässt sich einklappen und schließen. Danach kann eine leere Reise erstellt oder die komplette Busanordnung einschließlich Führung und Personen-/Familienzuordnung aus einer geschlossenen Reise übernommen werden; alte Boardingstände werden nicht kopiert.
 - Der eigene Admin-Punkt **Generalalarm** übernimmt das Starten, Überwachen und Beenden des Bestätigungsablaufs. Das Busmanagement bleibt auf Reise-, Bus- und Teilnehmerzuordnung konzentriert.
 - Realtime, App-Fokus und ein gestaffelter Fallback-Refresh halten die Übersicht aktuell. Monotone Request-Versionen verhindern, dass ältere Reads einen gespeicherten Status zurücksetzen. Antwort und Schließen sperren dieselbe Boarding-Zeile und bleiben dadurch transaktional geordnet.
 - Bei einer abgelaufenen oder fehlenden Auth-Session erneuert der Client die Sitzung und wiederholt eine Teilnehmer- oder Admin-Statusmutation genau einmal für dieselbe User-ID. Endgültige Fehler laden den autoritativen Stand und unterscheiden Auth-, geschlossenes Boarding-, geänderte Zuordnungs-, Offline- und Serverzustände.
 
 ### Reisegruppen und Anführerstandort
 
-- Admins bilden im eigenen Punkt **Reisegruppen** Untergruppen aus vorhandenen physischen Teilnehmer-IDs. Jede ID gehört höchstens einer Gruppe; ein Teilnehmer mit verknüpftem App-Konto wird als Anführer festgelegt und ist automatisch Mitglied.
-- Auch ein Admin kann über seine verknüpfte physische Teilnehmer-ID Mitglied oder Anführer sein. Auf Home und unter `/group` sieht er nur seine eigenen Gruppenzuordnungen; die vollständige Gruppenverwaltung bleibt im Adminbereich.
+- Admins bilden im eigenen Punkt **Reisegruppen** Untergruppen aus den der Reise zugeordneten Personen. Jede Person gehört höchstens einer Gruppe; eine registrierte Person wird als Anführer festgelegt und ist automatisch Mitglied.
+- Auch ein Admin kann Mitglied oder Anführer sein. Auf Home und unter `/group` sieht er nur seine eigenen Gruppenzuordnungen; die vollständige Gruppenverwaltung bleibt im Adminbereich.
 - Der Admin kann den Anführer in der App nach seinem Standort fragen. Der Anführer sieht die Anfrage auf Home und entscheidet ausdrücklich zwischen einer einmaligen Freigabe und Ablehnung; erst nach Zustimmung wird die Vordergrund-Standortberechtigung angefragt.
 - Es gibt kein Live- oder Hintergrundtracking. Geteilte Koordinaten sind per RLS nur für Anführer und Admins und höchstens 15 Minuten lesbar; erneute Anfragen sowie Gruppenänderung oder -löschung entfernen die zuvor gespeicherte Position.
 - Gruppen, Mitgliedschaften und Standortanfragen werden per Realtime, App-Fokus und gestaffeltem Fallback aktualisiert. Alle Mutationen laufen über serverseitig authentifizierte RPCs.
@@ -54,9 +56,9 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 ### Generalalarm
 
 - Der Admin öffnet den eigenen Punkt **Generalalarm**, legt Alarmmeldung und Abfahrt fest und schaltet den Alarm ausdrücklich ein. Der Punkt zeigt jederzeit **Eingeschaltet** oder **Ausgeschaltet** und bietet bei aktivem Alarm eine Beenden-Aktion.
-- Ein offenes Boarding führt Teilnehmer pro physischer ID durch `Gelesen` → `Ich bin unterwegs` → `Im Bus`; `Problem` bleibt als Ausnahmeweg verfügbar.
+- Ein offenes Boarding führt jede zugeordnete Person durch `Gelesen` → `Ich bin unterwegs` → `Im Bus`; `Problem` bleibt als Ausnahmeweg verfügbar.
 - Nach fünf Minuten ohne nächste Stufe werden native lokale Erinnerungen geplant. Ein geschützter Dispatcher beansprucht zusätzlich höchstens einen Expo-Push-Versuch je Gerät, Teilnehmer, Stufe und Fünf-Minuten-Fenster.
-- Das separate Generalalarm-Panel zeigt bestätigte und fehlende Teilnehmer, alle ausstehenden IDs, die Schließbereitschaft jedes Busses und eine ausdrücklich protokollierte manuelle Eskalation.
+- Das separate Generalalarm-Panel zeigt bestätigte und fehlende Personen, alle ausstehenden Namen, die Schließbereitschaft jedes Busses und eine ausdrücklich protokollierte manuelle Eskalation.
 - Push-Tokens und Versandversuche sind nicht clientlesbar. Ein Expo-Ticket gilt nur als Annahme durch den Push-Dienst, nie als garantierte Zustellung oder garantiertes Aufwecken.
 
 ### Tagesprogramm
@@ -64,12 +66,12 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Admins wählen im eigenen Punkt **Tagesprogramm** einen Starttag und planen wahlweise einen, zwei, drei, fünf oder sieben aufeinanderfolgende Tage in einem Formular.
 - Jeder Tag erhält eine optionale Überschrift und einen freien organisatorischen Ablauf. Alle ausgewählten Tage werden atomar gespeichert; ein bereits veröffentlichter Tag kann später geändert werden.
 - Angemeldete Nutzer sehen das heutige Programm kompakt im grünen Home-Bereich. Ein Tipp öffnet das geschützte Wochenprogramm mit heute und den nächsten sechs Tagen, getrennten Tageskarten und gegliederten Ablaufpunkten. Der letzte erfolgreiche, benutzergebundene Stand wird lokal gespeichert und beim nächsten Start sofort angezeigt, während Realtime, App-Fokus und ein gestaffelter Fallback-Refresh ihn im Hintergrund aktualisieren.
-- RLS gibt das Programm der aktiven Reise allen angemeldeten Konten frei, auch wenn noch keine physische Teilnehmer-ID verknüpft ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
+- RLS gibt das Programm der aktiven Reise allen angemeldeten Konten frei, auch wenn das Konto noch keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
 
 ### Reiseführung und „Wo sind wir?“
 
 - Admins veröffentlichen in **Reiseführung** den aktuellen Besuchsort, nächsten Programmpunkt, Abfahrt, Treffpunkt, relevante Tür, Entfernungshinweis, Beschreibung und Handlungen. Im davon getrennten Punkt **Reiseziele & Navigation** legen sie unabhängig davon mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
-- Teilnehmer melden je eigener physischer ID „Noch unterwegs“, „Bin gleich da“, „Beim Treffpunkt“, „Problem“, „Verloren“ oder „Medizinische Hilfe benötigt“. Problemfälle werden ausdrücklich von einem Admin übernommen; der meldende Teilnehmer sieht dessen Anzeigenamen.
+- Teilnehmer melden für ihr zugeordnetes Konto „Noch unterwegs“, „Bin gleich da“, „Beim Treffpunkt“, „Problem“, „Verloren“ oder „Medizinische Hilfe benötigt“. Problemfälle werden ausdrücklich von einem Admin übernommen; der meldende Teilnehmer sieht dessen Anzeigenamen.
 - Alle aktiven Reiseziele erscheinen angemeldeten Teilnehmern als rote Marker auf der nativen und der Webkarte und sind einzeln über externe Navigation erreichbar. Verknüpfte Katalogorte bleiben separat sichtbar. Ein validierter, benutzergebundener AsyncStorage-Cache hält den letzten erfolgreichen Reisezielstand über App-Neustarts hinweg sichtbar, falls der erste Serverabruf fehlschlägt; ein erfolgreicher Supabase-Abruf bleibt maßgeblich und entfernt überholte Ziele. Die Entfernung zum aktuellen Programmtreffpunkt wird nur nach einem Klick einmalig bestimmt; es gibt kein permanentes Tracking und keine Speicherung der Geräteposition im Backend.
 - Eindeutige Offlinefehler werden in einer validierten, benutzerspezifischen AsyncStorage-Warteschlange vorgemerkt. Die UI sagt ausdrücklich, dass diese Meldung noch nicht beim Reiseleiter angekommen ist.
 
@@ -85,7 +87,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - React Native `0.86.3`, React `19.2.3`, TypeScript `~6.0.3` im Strict Mode
 - Expo Router mit typed routes und nativen Tabs
 - Supabase JS `^2.112.3` für Auth, Postgres, RPC und Realtime
-- AsyncStorage, React Native Maps, Expo Location, Notifications, Device, Image, Clipboard und Linking
+- AsyncStorage, React Native Maps auf iOS, Leaflet/OpenStreetMap in `react-native-webview` auf Android sowie Expo Location, Notifications, Device, Image, Clipboard und Linking
 - Jest/Jest Expo, pgTAP und Playwright
 
 Expo-/React-Native-Abhängigkeiten nur mit `npx expo install` auf SDK-57-kompatible Versionen bringen. React Native nicht isoliert aktualisieren und kein `npm audit fix --force` verwenden.
@@ -99,15 +101,16 @@ cp .env.example .env
 npx expo start
 ```
 
-Die `.env` bleibt ignoriert. Für Google Maps auf Android einen auf Paketname und Signing-SHA-1 eingeschränkten Schlüssel verwenden:
+Die `.env` bleibt ignoriert. Für den Client werden nur die Supabase-Werte benötigt:
 
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-GOOGLE_MAPS_ANDROID_API_KEY=your-android-key
 ```
 
-Für den Schlüssel muss das Maps SDK for Android aktiviert sein. `app.config.ts` übergibt ihn beim Build an das `react-native-maps`-Config-Plugin. Nach einer Änderung ist ein neuer nativer Development-/Produktionsbuild erforderlich. iOS verwendet weiterhin den standardmäßigen Apple-Maps-Provider und Web weiterhin die schematische Offlinekarte.
+iOS verwendet weiterhin Apple Maps über `react-native-maps`; unnötige Gebäude-, Indoor-, POI- und Verkehrsebenen sind deaktiviert, die Kartenmitte bleibt im Irak und die kleinen Stadtvorschauen sind statisch. Android verwendet Leaflet direkt in `react-native-webview` mit OpenStreetMap-Kacheln und benötigt weder Expo DOM noch einen Google-Maps-Schlüssel oder hinterlegte Zahlungsdaten. Leaflet-JavaScript und -CSS liegen lokal im App-Bundle; aus dem Internet werden nur sichtbare OSM-Kacheln geladen. Die Android-Karte ist auf den Irak begrenzt, lädt keine Kacheln vorab und nutzt den normalen persistenten HTTP-Cache der WebView sowie einen kleinen Leaflet-Arbeitsspeicherpuffer. Die öffentlichen OpenStreetMap-Kacheln bleiben netzwerkabhängig und unterliegen der [OpenStreetMap Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/); für einen größeren Produktivbetrieb sollte bei Bedarf ein eigener oder ausdrücklich dafür freigegebener Tile-Provider eingesetzt werden. Web verwendet weiterhin die schematische Offlinekarte.
+
+Auf Android werden `react-native-maps` und die ungenutzte `@expo/dom-webview`-Native-View vom Autolinking ausgeschlossen; auf iOS bleiben `react-native-webview` und `@expo/dom-webview` ausgeschlossen. Dadurch bleibt je Plattform nur der tatsächlich verwendete Kartenpfad im nativen Build. Diese Plattformtrennung erfordert einen neuen nativen Android-Development-/Produktionsbuild.
 
 Keine Service-Role-Keys, unbeschränkten API-Schlüssel, personenbezogenen Daten oder Monitoring-DSNs in Appcode, Dokumentation oder Git aufnehmen.
 

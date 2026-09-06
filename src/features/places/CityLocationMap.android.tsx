@@ -1,11 +1,12 @@
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useI18n } from '@/features/i18n/i18n';
 import { localizeCountryName } from '@/features/i18n/localizedData';
-import { clampCoordinateToIraq } from '@/features/map/map-types';
+import { LeafletMapView } from '@/features/map/LeafletMapView';
+import { IRAQ_BOUNDS, zoomForRegion } from '@/features/map/map-types';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { CityLocationMapProps } from './city-location-map-types';
@@ -13,35 +14,44 @@ import type { CityLocationMapProps } from './city-location-map-types';
 export function CityLocationMap({ city, placeCount, region }: CityLocationMapProps) {
   const theme = useTheme();
   const { language, t } = useI18n();
+  const points = useMemo(
+    () => [
+      {
+        accessibilityLabel: city,
+        color: theme.accent,
+        coordinate: region,
+        id: `city:${city}`,
+        title: city,
+      },
+    ],
+    [city, region, theme.accent],
+  );
 
   return (
     <View style={styles.container}>
-      <View style={[styles.mapFrame, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-        <MapView
+      <View
+        style={[
+          styles.mapFrame,
+          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        ]}>
+        <LeafletMapView
           accessibilityLabel={`${t('nav.map')}: ${city}`}
-          initialRegion={{ ...region, ...clampCoordinateToIraq(region) }}
-          mapType="standard"
-          maxZoomLevel={20}
-          minZoomLevel={12}
-          pitchEnabled={false}
-          rotateEnabled={false}
-          scrollEnabled={false}
-          showsBuildings={false}
-          showsIndoors={false}
-          showsPointsOfInterests={false}
-          showsTraffic={false}
+          backgroundColor={theme.backgroundElement}
+          borderColor={theme.border}
+          center={region}
+          interactive={false}
+          maxBounds={IRAQ_BOUNDS}
+          maxZoom={18}
+          minZoom={5}
+          points={points}
           style={styles.map}
-          toolbarEnabled={false}
-          zoomEnabled={false}>
-          <Marker
-            coordinate={{
-              latitude: region.latitude,
-              longitude: region.longitude,
-            }}
-            pinColor={theme.accent}
-            title={city}
-          />
-        </MapView>
+          surfaceColor={theme.surface}
+          textColor={theme.text}
+          tileErrorMessage={t('map.tilesUnavailable')}
+          zoom={zoomForRegion(region)}
+          zoomInLabel={t('map.zoomIn')}
+          zoomOutLabel={t('map.zoomOut')}
+        />
       </View>
       <ThemedText type="small" themeColor="textSecondary">
         {city}, {localizeCountryName('Iraq', language)} ·{' '}
@@ -58,11 +68,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   map: {
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
+    flex: 1,
   },
   mapFrame: {
     aspectRatio: 1.85,

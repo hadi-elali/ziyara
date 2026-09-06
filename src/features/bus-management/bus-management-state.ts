@@ -29,7 +29,7 @@ export type BusClosureState = {
   busId: number | null;
   busName: string | null;
   canClose: boolean;
-  outstandingParticipantCodes: string[];
+  outstandingParticipantNames: string[];
   total: number;
 };
 
@@ -100,7 +100,7 @@ export function buildBusParticipantStates(
         right.bus_id === null
           ? Number.MAX_SAFE_INTEGER
           : (busSortOrders.get(right.bus_id) ?? Number.MAX_SAFE_INTEGER - 1);
-      return leftBus - rightBus || left.participant_code.localeCompare(right.participant_code);
+      return leftBus - rightBus || left.display_name.localeCompare(right.display_name);
     })
     .map((participant) => {
       const response = responsesByParticipant.get(participant.id);
@@ -183,7 +183,7 @@ export function getGeneralAlarmUrgency(
 }
 
 export function buildBusClosureStates(
-  participants: Pick<BusParticipantState, 'bus_id' | 'bus_name' | 'participant_code' | 'status'>[],
+  participants: Pick<BusParticipantState, 'bus_id' | 'bus_name' | 'display_name' | 'status'>[],
 ): BusClosureState[] {
   const groups = new Map<number | null, BusClosureState>();
 
@@ -193,7 +193,7 @@ export function buildBusClosureStates(
       busId: participant.bus_id,
       busName: participant.bus_name,
       canClose: true,
-      outstandingParticipantCodes: [],
+      outstandingParticipantNames: [],
       total: 0,
     };
     current.total += 1;
@@ -202,7 +202,7 @@ export function buildBusClosureStates(
       current.boarded += 1;
     } else {
       current.canClose = false;
-      current.outstandingParticipantCodes.push(participant.participant_code);
+      current.outstandingParticipantNames.push(participant.display_name);
     }
 
     groups.set(participant.bus_id, current);

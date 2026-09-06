@@ -8,7 +8,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import MapView, { Marker, type Region } from "react-native-maps";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -31,14 +30,8 @@ import { openNavigation } from "@/features/places/openNavigation";
 import { useTripGuidance } from "@/features/trip-guidance/trip-guidance-context";
 import { useTheme } from "@/hooks/use-theme";
 
-import { nativeMapProvider } from "./native-map-provider";
-
-const iraqRegion: Region = {
-  latitude: 33.1,
-  longitude: 43.9,
-  latitudeDelta: 7.5,
-  longitudeDelta: 7.5,
-};
+import { MapCanvas, type MapCanvasHandle } from "./MapCanvas";
+import { IRAQ_REGION, type MapPoint } from "./map-types";
 
 type LocationStatus = "idle" | "loading" | "granted" | "denied" | "error";
 
@@ -46,7 +39,7 @@ export function MapExperience() {
   const theme = useTheme();
   const { language, t } = useI18n();
   const { navigationDestinations } = useTripGuidance();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<MapCanvasHandle>(null);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(
     allPlaces[0],
   );
@@ -134,58 +127,87 @@ export function MapExperience() {
     }
   };
 
-  const markerColor = useMemo(() => theme.accent, [theme.accent]);
+  const mapPoints = useMemo<MapPoint[]>(() => {
+    const placePoints = allPlaces.map((rawPlace) => {
+      const place = localizePlace(rawPlace, language);
+      const description = formatPlaceLocation(place, language, true);
+      return {
+        accessibilityLabel: `${place.name}, ${description}`,
+        color: theme.accent,
+        coordinate: {
+          latitude: place.latitude,
+          longitude: place.longitude,
+        },
+        description,
+        id: `place:${place.id}`,
+        title: place.name,
+      };
+    });
+    const destinationPoints = navigationDestinations.map((destination) => ({
+      accessibilityLabel: `${t("map.tripDestination")}: ${destination.name}`,
+      color: theme.danger,
+      coordinate: {
+        latitude: destination.latitude,
+        longitude: destination.longitude,
+      },
+      description: destination.details ?? t("map.tripDestination"),
+      id: `destination:${destination.id}`,
+      title: destination.name,
+    }));
+    const userPoint: MapPoint[] = userLocation
+      ? [
+          {
+            accessibilityLabel: t("common.currentLocation"),
+            color: theme.warning,
+            coordinate: {
+              latitude: userLocation.coords.latitude,
+              longitude: userLocation.coords.longitude,
+            },
+            id: "user-location",
+            title: t("common.currentLocation"),
+          },
+        ]
+      : [];
+
+    return [...placePoints, ...destinationPoints, ...userPoint];
+  }, [language, navigationDestinations, t, theme.accent, theme.danger, theme.warning, userLocation]);
+
+  const handlePointPress = useCallback(
+    (id: string) => {
+      if (id.startsWith("place:")) {
+        const place = allPlaces.find((item) => `place:${item.id}` === id);
+        if (!place) return;
+        setSelectedDestination(null);
+        setSelectedPlace(place);
+        return;
+      }
+
+      if (id.startsWith("destination:")) {
+        const destination = navigationDestinations.find(
+          (item) => `destination:${item.id}` === id,
+        );
+        if (!destination) return;
+        setSelectedPlace(null);
+        setSelectedDestination(destination);
+      }
+    },
+    [navigationDestinations],
+  );
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
     >
-      <MapView
+      <MapCanvas
+        accessibilityLabel={t("map.title")}
+        initialRegion={IRAQ_REGION}
+        onPointPress={handlePointPress}
+        points={mapPoints}
         ref={mapRef}
-        initialRegion={iraqRegion}
-        provider={nativeMapProvider}
-        style={styles.map}
-      >
-        {allPlaces.map((rawPlace) => {
-          const place = localizePlace(rawPlace, language);
-          return (
-            <Marker
-              coordinate={{
-                latitude: place.latitude,
-                longitude: place.longitude,
-              }}
-              description={formatPlaceLocation(place, language, true)}
-              key={place.id}
-              onPress={() => {
-                setSelectedDestination(null);
-                setSelectedPlace(rawPlace);
-              }}
-              pinColor={markerColor}
-              title={place.name}
-            />
-          );
-        })}
-        {navigationDestinations.map((destination) => (
-          <Marker
-            coordinate={destination}
-            description={destination.details ?? t("map.tripDestination")}
-            key={`destination-${destination.id}`}
-            onPress={() => {
-              setSelectedPlace(null);
-              setSelectedDestination(destination);
-            }}
-            pinColor={theme.danger}
-            title={destination.name}
-          />
-        ))}
-        {userLocation ? (
-          <Marker
-            coordinate={userLocation.coords}
-            pinColor={theme.warning}
-            title={t("common.currentLocation")}
-          />
-        ) : null}
-      </MapView>
+        tileErrorMessage={t("map.tilesUnavailable")}
+        zoomInLabel={t("map.zoomIn")}
+        zoomOutLabel={t("map.zoomOut")}
+      />
 
       {navigationDestinations.length > 0 ? (
         <View style={styles.topBar}>
@@ -450,9 +472,6 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.half,
     minWidth: 0,
-  },
-  map: {
-    ...StyleSheet.absoluteFill,
   },
   locationButton: {
     alignItems: "center",

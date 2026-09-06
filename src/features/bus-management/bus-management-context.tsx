@@ -54,6 +54,7 @@ type BusManagementContextValue = {
     status: BusBoardingStatus,
   ) => Promise<BusManagementActionResult>;
   syncErrorKind: SupabaseReadFailureKind | null;
+  trips: Trip[];
 };
 
 const BusManagementContext = createContext<BusManagementContextValue | null>(null);
@@ -67,6 +68,7 @@ type BusManagementSnapshot = {
   escalations: BusBoardingEscalation[];
   participants: TripParticipant[];
   responses: BusBoardingResponse[];
+  trips: Trip[];
 };
 
 const emptySnapshot: BusManagementSnapshot = {
@@ -76,6 +78,7 @@ const emptySnapshot: BusManagementSnapshot = {
   escalations: [],
   participants: [],
   responses: [],
+  trips: [],
 };
 
 export function BusManagementProvider({ children }: PropsWithChildren) {
@@ -125,22 +128,24 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
     );
 
     try {
-      const { data: activeTrip, error: tripError } = await withSupabaseReadTimeout((signal) =>
+      const { data: trips, error: tripError } = await withSupabaseReadTimeout((signal) =>
         supabase
           .from('trips')
           .select('id, name, created_by_profile_id, created_at, archived_at')
-          .is('archived_at', null)
+          .order('created_at', { ascending: false })
           .abortSignal(signal)
-          .maybeSingle(),
       );
 
       if (tripError) {
         throw tripError;
       }
 
+      const visibleTrips = trips ?? [];
+      const activeTrip = visibleTrips.find((trip) => trip.archived_at === null) ?? null;
+
       if (!activeTrip) {
         if (requestVersion === stateVersion.current) {
-          setSnapshot(emptySnapshot);
+          setSnapshot({ ...emptySnapshot, trips: visibleTrips });
           syncedUserIdRef.current = userId;
           setSyncedUserId(userId);
           setSyncErrorKind(null);
@@ -153,7 +158,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
         withSupabaseReadTimeout((signal) =>
           supabase
             .from('trip_buses')
-            .select('id, trip_id, name, sort_order, created_at')
+            .select('id, trip_id, name, sort_order, leader_participant_id, created_at')
             .eq('trip_id', activeTrip.id)
             .order('sort_order')
             .abortSignal(signal),
@@ -162,10 +167,10 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
           supabase
             .from('trip_participants')
             .select(
-              'id, trip_id, bus_id, profile_id, participant_code, display_name, created_at, updated_at',
+              'id, trip_id, bus_id, profile_id, assignment_family_id, participant_code, display_name, created_at, updated_at',
             )
             .eq('trip_id', activeTrip.id)
-            .order('participant_code')
+            .order('display_name')
             .abortSignal(signal),
         ),
         withSupabaseReadTimeout((signal) =>
@@ -225,6 +230,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
           escalations,
           participants: participantsResult.data ?? [],
           responses,
+          trips: visibleTrips,
         });
         syncedUserIdRef.current = userId;
         setSyncedUserId(userId);
@@ -379,8 +385,9 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
       refresh,
       setStatus,
       syncErrorKind,
+      trips: snapshot.trips,
     }),
-    [participants, refresh, setStatus, snapshot.activeBoarding, snapshot.activeTrip, snapshot.buses, syncErrorKind, syncState, syncedUserId, userId],
+    [participants, refresh, setStatus, snapshot.activeBoarding, snapshot.activeTrip, snapshot.buses, snapshot.trips, syncErrorKind, syncState, syncedUserId, userId],
   );
 
   return <BusManagementContext.Provider value={value}>{children}</BusManagementContext.Provider>;

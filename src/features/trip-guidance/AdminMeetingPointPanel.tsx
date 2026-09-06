@@ -230,12 +230,6 @@ export function AdminMeetingPointPanel() {
               {t('navigation.admin.count', { count: navigationDestinations.length })}
             </ThemedText>
           </View>
-          <Button
-            icon="plus"
-            label={t('navigation.admin.add')}
-            onPress={startNew}
-            variant="secondary"
-          />
         </View>
 
         {navigationDestinations.length === 0 ? (

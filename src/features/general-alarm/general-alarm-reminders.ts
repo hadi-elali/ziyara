@@ -6,7 +6,7 @@ export type GeneralAlarmReminderPlan = {
   boardingId: number;
   fireDates: Date[];
   nextStatus: BusBoardingStatus;
-  participantCode: string;
+  participantName: string;
   participantId: number;
 };
 
@@ -20,7 +20,7 @@ export function buildGeneralAlarmReminderPlans(
   >,
   participants: Pick<
     BusParticipantState,
-    'id' | 'participant_code' | 'response_updated_at' | 'status'
+    'display_name' | 'id' | 'response_updated_at' | 'status'
   >[],
   now = new Date(),
 ): GeneralAlarmReminderPlan[] {
@@ -57,7 +57,7 @@ export function buildGeneralAlarmReminderPlans(
         boardingId: boarding.id,
         fireDates,
         nextStatus,
-        participantCode: participant.participant_code,
+        participantName: participant.display_name,
         participantId: participant.id,
       },
     ];

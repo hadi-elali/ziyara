@@ -12,6 +12,7 @@ import {
 } from '@/features/trip-guidance/trip-guidance-state';
 
 const participant: TripParticipant = {
+  assignment_family_id: null,
   bus_id: 2,
   created_at: '2026-08-27T08:00:00Z',
   display_name: 'Teilnehmer',

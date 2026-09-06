@@ -1,35 +1,27 @@
 import * as Location from 'expo-location';
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import MapView, { Marker, type MapPressEvent, type Region } from 'react-native-maps';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Spacing } from '@/constants/theme';
 import { useI18n } from '@/features/i18n/i18n';
-import { clampCoordinateToIraq } from '@/features/map/map-types';
+import { LeafletMapView } from '@/features/map/LeafletMapView';
+import {
+  clampCoordinateToIraq,
+  IRAQ_BOUNDS,
+  IRAQ_REGION,
+  type MapPoint,
+} from '@/features/map/map-types';
 import type {
   MeetingPointCoordinate,
   MeetingPointPickerProps,
 } from '@/features/trip-guidance/meeting-point-picker-types';
 import { useTheme } from '@/hooks/use-theme';
 
-const iraqRegion: Region = {
-  latitude: 33.1,
-  latitudeDelta: 7.5,
-  longitude: 43.9,
-  longitudeDelta: 7.5,
-};
-
 type LocationStatus = 'denied' | 'error' | 'idle' | 'loading';
 
-function regionFor(coordinate: MeetingPointCoordinate): Region {
-  return {
-    ...coordinate,
-    latitudeDelta: 0.025,
-    longitudeDelta: 0.025,
-  };
-}
+const EMPTY_POINTS: MapPoint[] = [];
 
 export function MeetingPointPicker({
   coordinate,
@@ -38,35 +30,34 @@ export function MeetingPointPicker({
 }: MeetingPointPickerProps) {
   const theme = useTheme();
   const { t } = useI18n();
-  const mapRef = useRef<MapView>(null);
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
   const center = coordinate ?? fallbackCoordinate;
   const centerLatitude = center?.latitude;
   const centerLongitude = center?.longitude;
-
-  useEffect(() => {
-    if (centerLatitude === undefined || centerLongitude === undefined) return;
-    mapRef.current?.animateToRegion(
-      regionFor(
-        clampCoordinateToIraq({
-          latitude: centerLatitude,
-          longitude: centerLongitude,
-        }),
-      ),
-      400,
-    );
-  }, [centerLatitude, centerLongitude]);
+  const visibleCenter = useMemo(
+    () =>
+      centerLatitude === undefined || centerLongitude === undefined
+        ? IRAQ_REGION
+        : clampCoordinateToIraq({
+            latitude: centerLatitude,
+            longitude: centerLongitude,
+          }),
+    [centerLatitude, centerLongitude],
+  );
+  const focusRequest = useMemo(
+    () =>
+      centerLatitude !== undefined && centerLongitude !== undefined
+        ? {
+            ...visibleCenter,
+            key: `${centerLatitude}:${centerLongitude}`,
+            zoom: 14,
+          }
+        : undefined,
+    [centerLatitude, centerLongitude, visibleCenter],
+  );
 
   const chooseCoordinate = (nextCoordinate: MeetingPointCoordinate) => {
     onChange(nextCoordinate);
-    mapRef.current?.animateToRegion(
-      regionFor(clampCoordinateToIraq(nextCoordinate)),
-      300,
-    );
-  };
-
-  const handleMapPress = (event: MapPressEvent) => {
-    chooseCoordinate(event.nativeEvent.coordinate);
   };
 
   const requestCurrentLocation = async () => {
@@ -98,41 +89,27 @@ export function MeetingPointPicker({
         {t('guide.admin.mapPickerBody')}
       </ThemedText>
       <View style={[styles.mapFrame, { borderColor: theme.border }]}>
-        <MapView
+        <LeafletMapView
           accessibilityLabel={t('guide.admin.mapPickerAccessibilityLabel')}
-          initialRegion={center ? regionFor(clampCoordinateToIraq(center)) : iraqRegion}
-          mapType="standard"
-          maxDelta={10}
-          minDelta={0.006}
-          onPress={handleMapPress}
-          onRegionChangeComplete={(nextRegion) => {
-            const clamped = clampCoordinateToIraq(nextRegion);
-            if (
-              clamped.latitude !== nextRegion.latitude ||
-              clamped.longitude !== nextRegion.longitude
-            ) {
-              mapRef.current?.animateToRegion({ ...nextRegion, ...clamped }, 200);
-            }
-          }}
-          pitchEnabled={false}
-          ref={mapRef}
-          rotateEnabled={false}
-          showsBuildings={false}
-          showsIndoors={false}
-          showsPointsOfInterests={false}
-          showsTraffic={false}
-          style={styles.map}>
-          {coordinate ? (
-            <Marker
-              accessibilityLabel={t('guide.admin.mapPickerMarkerLabel')}
-              coordinate={coordinate}
-              draggable
-              onDragEnd={(event) => chooseCoordinate(event.nativeEvent.coordinate)}
-              pinColor={theme.danger}
-              title={t('guide.admin.mapPickerMarkerLabel')}
-            />
-          ) : null}
-        </MapView>
+          backgroundColor={theme.backgroundElement}
+          borderColor={theme.border}
+          center={IRAQ_REGION}
+          focusRequest={focusRequest}
+          interactiveSelection
+          maxBounds={IRAQ_BOUNDS}
+          onCoordinateChange={chooseCoordinate}
+          points={EMPTY_POINTS}
+          selectedColor={theme.danger}
+          selectedCoordinate={coordinate}
+          selectedLabel={t('guide.admin.mapPickerMarkerLabel')}
+          style={styles.map}
+          surfaceColor={theme.surface}
+          textColor={theme.text}
+          tileErrorMessage={t('map.tilesUnavailable')}
+          zoom={5}
+          zoomInLabel={t('map.zoomIn')}
+          zoomOutLabel={t('map.zoomOut')}
+        />
       </View>
       <View style={styles.actions}>
         <Button

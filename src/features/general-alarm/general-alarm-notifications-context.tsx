@@ -109,7 +109,7 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
       plan.fireDates.map((fireDate) => ({
         boardingId: plan.boardingId,
         body: t(`generalAlarm.notification.reminder.${plan.nextStatus}`, {
-          code: plan.participantCode,
+          name: plan.participantName,
         }),
         fireDate,
         nextStatus: plan.nextStatus,

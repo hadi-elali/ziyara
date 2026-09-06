@@ -1,6 +1,5 @@
 import { createElement, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { Region } from 'react-native-maps';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -8,13 +7,11 @@ import { useI18n } from '@/features/i18n/i18n';
 import { localizeCountryName } from '@/features/i18n/localizedData';
 import { useTheme } from '@/hooks/use-theme';
 
-type CityLocationMapProps = {
-  city: string;
-  placeCount: number;
-  region: Region;
-};
+import type { MapRegion } from '@/features/map/map-types';
 
-function osmEmbedUrl(region: Region) {
+import type { CityLocationMapProps } from './city-location-map-types';
+
+function osmEmbedUrl(region: MapRegion) {
   const latitudeDelta = Math.max(0.006, region.latitudeDelta);
   const longitudeDelta = Math.max(0.006, region.longitudeDelta);
   const west = region.longitude - longitudeDelta / 2;

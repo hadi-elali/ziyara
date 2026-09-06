@@ -380,7 +380,9 @@ function AdminContent() {
                   statusColor="accent"
                   title={t('admin.section.bus.title')}
                 />
-                {expandedSections.bus ? <AdminBusManagementPanel users={users} /> : null}
+                {expandedSections.bus ? (
+                  <AdminBusManagementPanel families={families} users={users} />
+                ) : null}
               </View>
 
               <View style={styles.section}>

@@ -239,8 +239,7 @@ function ParticipantCard({
     <Card style={styles.participantCard}>
       <View style={styles.participantHeader}>
         <View style={styles.participantText}>
-          <ThemedText type="heading">{participant.participant_code}</ThemedText>
-          <ThemedText themeColor="textSecondary">{participant.display_name}</ThemedText>
+          <ThemedText type="heading">{participant.display_name}</ThemedText>
           <ThemedText type="smallBold" themeColor="accent">
             {participant.bus_name ?? t('bus.unassignedBus')}
           </ThemedText>

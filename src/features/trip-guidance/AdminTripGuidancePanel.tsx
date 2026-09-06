@@ -494,10 +494,7 @@ export function AdminTripGuidancePanel() {
                 <Card key={participant.id} style={styles.responseCard}>
                   <View style={styles.responseHeading}>
                     <View style={styles.flexText}>
-                      <ThemedText type="heading">{participant.participant_code}</ThemedText>
-                      <ThemedText themeColor="textSecondary">
-                        {participant.display_name}
-                      </ThemedText>
+                      <ThemedText type="heading">{participant.display_name}</ThemedText>
                     </View>
                     <View
                       style={[

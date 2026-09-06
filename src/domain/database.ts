@@ -127,12 +127,14 @@ export type TripDailyProgramInput = {
 export type TripBus = {
   created_at: string;
   id: number;
+  leader_participant_id: number | null;
   name: string;
   sort_order: number;
   trip_id: number;
 };
 
 export type TripParticipant = {
+  assignment_family_id: number | null;
   bus_id: number | null;
   created_at: string;
   display_name: string;
@@ -734,6 +736,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: never;
+          leader_participant_id?: number | null;
           name: string;
           sort_order?: number;
           trip_id: number;
@@ -741,6 +744,7 @@ export type Database = {
         Relationships: [];
         Row: TripBus;
         Update: {
+          leader_participant_id?: number | null;
           name?: string;
           sort_order?: number;
         };
@@ -824,6 +828,7 @@ export type Database = {
       };
       trip_participants: {
         Insert: {
+          assignment_family_id?: number | null;
           bus_id?: number | null;
           created_at?: string;
           display_name: string;
@@ -836,6 +841,7 @@ export type Database = {
         Relationships: [];
         Row: TripParticipant;
         Update: {
+          assignment_family_id?: number | null;
           bus_id?: number | null;
           display_name?: string;
           participant_code?: string;
@@ -976,6 +982,14 @@ export type Database = {
         Args: { p_name: string; p_trip_id: number };
         Returns: TripBus;
       };
+      admin_create_trip_bus_with_leader: {
+        Args: { p_leader_user_id: string; p_name: string; p_trip_id: number };
+        Returns: TripBus;
+      };
+      admin_copy_trip_bus_setup: {
+        Args: { p_name: string; p_source_trip_id: number };
+        Returns: Trip;
+      };
       admin_delete_trip_group: {
         Args: { p_group_id: number };
         Returns: TripGroup;
@@ -1087,6 +1101,10 @@ export type Database = {
         };
         Returns: BusBoardingResponse;
       };
+      admin_set_trip_bus_leader: {
+        Args: { p_bus_id: number; p_leader_user_id: string };
+        Returns: TripBus;
+      };
       admin_start_bus_boarding: {
         Args: { p_departure_at: string; p_title: string; p_trip_id: number };
         Returns: BusBoarding;
@@ -1099,6 +1117,14 @@ export type Database = {
           p_trip_id: number;
           p_user_id: string | null;
         };
+        Returns: TripParticipant;
+      };
+      admin_assign_trip_family: {
+        Args: { p_bus_id: number; p_family_id: number; p_trip_id: number };
+        Returns: TripParticipant[];
+      };
+      admin_assign_trip_person: {
+        Args: { p_bus_id: number; p_trip_id: number; p_user_id: string };
         Returns: TripParticipant;
       };
       admin_upsert_account_family: {

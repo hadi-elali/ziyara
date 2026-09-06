@@ -130,7 +130,7 @@ Files to create or modify:
 
 Risks:
 
-- `react-native-maps` does not provide the same experience on web, so a platform-specific fallback is needed.
+- iOS, Android, and web need separate map renderers: Apple Maps on iOS, locally bundled Leaflet/OpenStreetMap HTML hosted directly by `react-native-webview` on Android, and the schematic offline fallback on web.
 - Location permission denial must not block place markers.
 - Map tile availability can fail offline even though place data is offline.
 - Native map/location changes require a development build, not just Expo Go in all cases.
@@ -138,7 +138,7 @@ Risks:
 
 Acceptance criteria:
 
-- Native map shows Iraq-centered markers for seeded places.
+- iOS and Android maps show Iraq-centered markers for seeded places; Android is geographically bounded to Iraq and needs no paid map API key.
 - Web shows a functional fallback map/list without importing native-only map modules.
 - Users can request location, see denied-permission messaging, and still browse places.
 - Tapping markers opens a preview with place name, city, description, details, navigation, and acts actions.
@@ -367,14 +367,17 @@ Files to create or modify:
 - `src/app/admin.tsx`
 - `src/domain/database.ts`
 - `supabase/migrations/20260827000000_add_bus_management.sql`
+- `supabase/migrations/20260906000000_redesign_bus_trip_assignments.sql`
 - `supabase/tests/database/phase8_bus_management*.test.sql`
 - `e2e/phase7-smoke.spec.ts`
 
 Acceptance criteria:
 
-- Admins create one active trip, named buses, physical participant IDs and account links.
-- One account may control multiple physical participant IDs; unlinked IDs remain visible to trip admins.
-- Participants report `on_way`, `boarded` or `problem` only for their linked IDs.
+- Admins create one active trip and named buses; every newly created bus requires a registered leader.
+- Admins assign either one registered person or an entire account family to a bus. After a family assignment, its members are not offered as individual choices.
+- The active trip can be collapsed and closed. With no active trip, admins can start empty or copy buses, leaders and person/family assignments from a closed trip without copying boarding state.
+- Participant records keep an internal legacy key for relational compatibility, but the current workflow neither asks for nor displays that key.
+- Participants report `on_way`, `boarded` or `problem` only for their account-backed assignment.
 - Admins see not-confirmed participants and may set any participant status manually.
 - Realtime, focus and fallback refreshes retain the latest optimistic state and ignore stale reads.
 - An expired authenticated session is refreshed once before retrying a participant or admin status mutation; final errors refresh the authoritative state and remain actionable in the UI.
@@ -408,7 +411,7 @@ Acceptance criteria:
 
 - An admin publishes one current itinerary point for the active trip with current place, next item, departure, meeting point, relevant gate, distance hint, description and actions.
 - Meeting-point corrections update the current item in place; publishing a new item closes the old version and starts fresh participant reports.
-- Linked participants report `on_way`, `almost_there`, `at_meeting_point`, `problem`, `lost` or `medical_help` for their physical participant IDs.
+- Assigned participants report `on_way`, `almost_there`, `at_meeting_point`, `problem`, `lost` or `medical_help` for their account-backed assignment.
 - An admin explicitly accepts a problem report, and the participant sees the accepting leader’s captured display name.
 - Place links, external meeting-point navigation and a one-shot distance check work without continuous tracking or backend location storage.
 - The admin dashboard exposes trip destinations and navigation as its own section, separate from trip-guidance editing. Admins can create and edit multiple named destinations, place each on a platform-specific map, drag the native marker or use their current location, preview navigation and archive obsolete entries.
@@ -444,7 +447,7 @@ Files to create or modify:
 Acceptance criteria:
 
 - The admin area exposes Generalalarm as its own section, separate from bus setup. An admin explicitly configures and enables it there, sees its active/inactive state and can end it there.
-- Participants confirm `read`, `on_way` and `boarded` in sequence per linked physical participant ID; `problem` remains available as an exception path.
+- Participants confirm `read`, `on_way` and `boarded` in sequence for their account-backed assignment; `problem` remains available as an exception path.
 - A missing next stage becomes due after five minutes. Native clients reconcile bounded local reminders, while an idempotent server dispatcher claims at most one Expo push attempt per device, participant, stage and reminder window.
 - Push tokens are never client-readable. Registration is profile-bound, dispatch requires a verified admin or scheduler secret, and privileged claims/completions are limited to `service_role`.
 - The admin overview shows confirmed and missing totals, every outstanding participant, per-bus closure readiness, urgency near departure and an explicit manual escalation action.
@@ -477,7 +480,7 @@ Acceptance criteria:
 
 - Admins can publish one day or prepare multiple consecutive days in one form, with an optional heading and a separate organizational program for each date.
 - One row per trip and calendar date is updated atomically through an authenticated admin RPC; direct client writes remain unavailable.
-- Every signed-in account can read the active trip's programs even before a physical participant ID is linked.
+- Every signed-in account can read the active trip's programs even before it is assigned to a bus.
 - Home shows a compact preview of today's program. Opening it shows today and the next six days in separate day sections with structured agenda lines.
 - The last validated per-user program snapshot is available immediately after restart while the server refresh continues in the background; an empty successful response remains authoritative.
 - Realtime, app focus and staggered fallback refreshes retain the last visible data during background read failures.
@@ -508,9 +511,9 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- Admins create, edit and delete named subgroups from existing physical participant IDs. One participant belongs to at most one subgroup.
-- Every subgroup has exactly one leader who is also a member and whose participant ID is linked to an app account.
-- Any app role, including an admin, can be a member or leader through a linked physical participant ID. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.
+- Admins create, edit and delete named subgroups from people assigned to the active trip. One person belongs to at most one subgroup.
+- Every subgroup has exactly one registered leader who is also a member.
+- Any app role, including an admin, can be a member or leader through its account-backed trip assignment. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.
 - Admins can issue one current location request to the group leader. Re-requesting clears previously shared coordinates.
 - Only the current leader sees and answers the request. The leader can decline without granting device permission or explicitly share one foreground location.
 - There is no background or continuous tracking. Shared coordinates are readable only by the leader and admins, expire from client access after fifteen minutes, and are removed when the group changes or is deleted.
@@ -548,7 +551,7 @@ Acceptance criteria:
 - Signed-in users can update only their own SIM-card count from the account page reached through Settings.
 - Admins can create, rename and delete named account families and assign registered user accounts to them.
 - One account belongs to at most one account family. Assigning it elsewhere moves it atomically, while deleting a family preserves the accounts and clears their assignment.
-- Account families remain separate from `party_size`, physical participants and trip groups.
+- Account families remain separate from `party_size` and trip groups and can be selected as one bus-assignment unit.
 - Direct family writes remain unavailable to clients. Minimal authenticated admin RPCs handle management, and RLS lets members read only their own family name without exposing other memberships.
 - German, English and Arabic UI copy includes loading, validation, empty, move, success and error states.
 - The admin people overview shows registered accounts, represented people, brother/sister account counts, legacy accounts without a member type, created families, total suitcases and total SIM cards. Per-account details show member type and SIM-card count.

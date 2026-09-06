@@ -15,8 +15,8 @@ import {
 } from '@/features/bus-management/bus-management-state';
 
 const buses: TripBus[] = [
-  { created_at: '2026-08-27T00:00:00Z', id: 20, name: 'Bus 2', sort_order: 2, trip_id: 1 },
-  { created_at: '2026-08-27T00:00:00Z', id: 40, name: 'Bus 1', sort_order: 1, trip_id: 1 },
+  { created_at: '2026-08-27T00:00:00Z', id: 20, leader_participant_id: null, name: 'Bus 2', sort_order: 2, trip_id: 1 },
+  { created_at: '2026-08-27T00:00:00Z', id: 40, leader_participant_id: null, name: 'Bus 1', sort_order: 1, trip_id: 1 },
 ];
 
 function participant(
@@ -25,6 +25,7 @@ function participant(
   busId: number | null,
 ): TripParticipant {
   return {
+    assignment_family_id: null,
     bus_id: busId,
     created_at: '2026-08-27T00:00:00Z',
     display_name: `Person ${id}`,
@@ -50,7 +51,7 @@ function response(participantId: number, status: BusBoardingResponse['status']):
 }
 
 describe('bus management state', () => {
-  it('ordnet Teilnehmer nach Bus-Reihenfolge und Teilnehmer-ID', () => {
+  it('ordnet Teilnehmer nach Bus-Reihenfolge und Name', () => {
     const states = buildBusParticipantStates(
       [participant(1, 'DUS02', 20), participant(2, 'FRA01', null), participant(3, 'DUS01', 40)],
       buses,
@@ -124,7 +125,7 @@ describe('bus management state', () => {
     expect(getGeneralAlarmUrgency(boarding, new Date('2026-08-27T09:15:00Z'))).toBe('overdue');
   });
 
-  it('zeigt pro Bus, ob noch physische Teilnehmer fehlen', () => {
+  it('zeigt pro Bus, ob noch Personen fehlen', () => {
     const states = buildBusParticipantStates(
       [
         participant(1, 'BER01', 40),
@@ -141,7 +142,7 @@ describe('bus management state', () => {
         busId: 40,
         busName: 'Bus 1',
         canClose: false,
-        outstandingParticipantCodes: ['BER02'],
+        outstandingParticipantNames: ['Person 2'],
         total: 2,
       },
       {
@@ -149,7 +150,7 @@ describe('bus management state', () => {
         busId: 20,
         busName: 'Bus 2',
         canClose: true,
-        outstandingParticipantCodes: [],
+        outstandingParticipantNames: [],
         total: 1,
       },
     ]);

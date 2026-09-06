@@ -300,7 +300,7 @@ export function AdminGeneralAlarmPanel() {
                   </ThemedText>
                   {!busState.canClose ? (
                     <ThemedText type="small" themeColor="textSecondary">
-                      {busState.outstandingParticipantCodes.join(', ')}
+                      {busState.outstandingParticipantNames.join(', ')}
                     </ThemedText>
                   ) : null}
                 </View>
@@ -517,8 +517,7 @@ function AlarmParticipantRow({
     <Card style={styles.participantRow}>
       <View style={styles.participantHeader}>
         <View style={styles.participantText}>
-          <ThemedText type="heading">{participant.participant_code}</ThemedText>
-          <ThemedText themeColor="textSecondary">{participant.display_name}</ThemedText>
+          <ThemedText type="heading">{participant.display_name}</ThemedText>
           <ThemedText type="smallBold" themeColor="accent">
             {participant.bus_name ?? t('bus.unassignedBus')}
           </ThemedText>
@@ -533,7 +532,7 @@ function AlarmParticipantRow({
       {reminderDue ? (
         <ThemedText type="smallBold" themeColor="danger">
           {t('generalAlarm.admin.participantReminderDue', {
-            code: participant.participant_code,
+            name: participant.display_name,
           })}
         </ThemedText>
       ) : null}

@@ -246,7 +246,7 @@ export function AdminTripGroupPanel() {
             linkedLeaderCandidates.map((participant) => (
               <ChoiceRow
                 key={participant.id}
-                label={`${participant.participant_code} · ${participant.display_name}`}
+                label={participant.display_name}
                 onPress={() => selectLeader(participant.id)}
                 selected={leaderParticipantId === participant.id}
                 type="radio"
@@ -270,7 +270,7 @@ export function AdminTripGroupPanel() {
                 <ChoiceRow
                   disabled={disabled || participant.id === leaderParticipantId}
                   key={participant.id}
-                  label={`${participant.participant_code} · ${participant.display_name}`}
+                  label={participant.display_name}
                   note={
                     disabled
                       ? t('tripGroups.admin.alreadyAssigned')
@@ -354,7 +354,7 @@ export function AdminTripGroupPanel() {
                     <ThemedText type="smallBold">{t('tripGroups.leader')}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
                       {group.leader
-                        ? `${group.leader.participant_code} · ${group.leader.display_name}`
+                        ? group.leader.display_name
                         : t('tripGroups.admin.leaderUnavailable')}
                     </ThemedText>
                   </View>
@@ -369,7 +369,7 @@ export function AdminTripGroupPanel() {
                         { backgroundColor: theme.backgroundElement },
                       ]}>
                       <ThemedText type="tinyBold">
-                        {member.participant_code} · {member.display_name}
+                        {member.display_name}
                       </ThemedText>
                     </View>
                   ))}

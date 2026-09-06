@@ -16,13 +16,13 @@ describe('general alarm reminder planning', () => {
       [
         {
           id: 1,
-          participant_code: 'BER01',
+          display_name: 'Person 1',
           response_updated_at: null,
           status: null,
         },
         {
           id: 2,
-          participant_code: 'BER02',
+          display_name: 'Person 2',
           response_updated_at: '2026-08-27T09:02:00Z',
           status: 'read',
         },
@@ -31,9 +31,9 @@ describe('general alarm reminder planning', () => {
     );
 
     expect(plans).toHaveLength(2);
-    expect(plans[0]).toMatchObject({ nextStatus: 'read', participantCode: 'BER01' });
+    expect(plans[0]).toMatchObject({ nextStatus: 'read', participantName: 'Person 1' });
     expect(plans[0].fireDates[0].toISOString()).toBe('2026-08-27T09:05:00.000Z');
-    expect(plans[1]).toMatchObject({ nextStatus: 'on_way', participantCode: 'BER02' });
+    expect(plans[1]).toMatchObject({ nextStatus: 'on_way', participantName: 'Person 2' });
     expect(plans[1].fireDates[0].toISOString()).toBe('2026-08-27T09:07:00.000Z');
   });
 
@@ -43,19 +43,19 @@ describe('general alarm reminder planning', () => {
       [
         {
           id: 1,
-          participant_code: 'BER01',
+          display_name: 'Person 1',
           response_updated_at: null,
           status: null,
         },
         {
           id: 2,
-          participant_code: 'BER02',
+          display_name: 'Person 2',
           response_updated_at: '2026-08-27T09:03:00Z',
           status: 'boarded',
         },
         {
           id: 3,
-          participant_code: 'BER03',
+          display_name: 'Person 3',
           response_updated_at: '2026-08-27T09:03:00Z',
           status: 'problem',
         },

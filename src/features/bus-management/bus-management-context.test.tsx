@@ -71,11 +71,13 @@ const activeTrip: Trip = {
 const bus: TripBus = {
   created_at: '2026-08-27T08:01:00Z',
   id: 20,
+  leader_participant_id: 30,
   name: 'Bus 1',
   sort_order: 0,
   trip_id: activeTrip.id,
 };
 const participant: TripParticipant = {
+  assignment_family_id: null,
   bus_id: bus.id,
   created_at: '2026-08-27T08:02:00Z',
   display_name: 'Testteilnehmer',
@@ -143,7 +145,7 @@ function dequeue(table: string) {
 }
 
 function queueSnapshot(response: BusBoardingResponse[] = [onWayResponse]) {
-  enqueue('trips', { data: activeTrip, error: null });
+  enqueue('trips', { data: [activeTrip], error: null });
   enqueue('trip_buses', { data: [bus], error: null });
   enqueue('trip_participants', { data: [participant], error: null });
   enqueue('bus_boardings', { data: activeBoarding, error: null });
@@ -227,7 +229,7 @@ describe('BusManagementProvider', () => {
       query.order.mockReturnValue(query);
       query.select.mockReturnValue(query);
       query.abortSignal.mockImplementation(() =>
-        table === 'trips' || table === 'bus_boardings' ? query : dequeue(table),
+        table === 'bus_boardings' ? query : dequeue(table),
       );
       query.maybeSingle.mockImplementation(() => dequeue(table));
       return query;
@@ -326,7 +328,7 @@ describe('BusManagementProvider', () => {
 
   it('zeigt die gespeicherte Antwort optimistisch bis zum autoritativen Refresh', async () => {
     await renderLoadedProvider();
-    const tripRefresh = deferred<QueryResult<Trip | null>>();
+    const tripRefresh = deferred<QueryResult<Trip[]>>();
     enqueue('trips', tripRefresh.promise);
 
     let mutation: Promise<{ error: PostgrestError | null }> | null = null;
@@ -344,7 +346,7 @@ describe('BusManagementProvider', () => {
     enqueue('bus_boarding_escalations', { data: [], error: null });
 
     await act(async () => {
-      tripRefresh.resolve({ data: activeTrip, error: null });
+      tripRefresh.resolve({ data: [activeTrip], error: null });
       await mutation;
     });
 
@@ -358,7 +360,7 @@ describe('BusManagementProvider', () => {
 
   it('ignoriert einen älteren Refresh nach einer bestätigten Mutation', async () => {
     await renderLoadedProvider();
-    const staleTrip = deferred<QueryResult<Trip | null>>();
+    const staleTrip = deferred<QueryResult<Trip[]>>();
     enqueue('trips', staleTrip.promise);
     await act(async () => {
       void context().refresh();
@@ -377,7 +379,7 @@ describe('BusManagementProvider', () => {
     enqueue('bus_boarding_responses', { data: [onWayResponse], error: null });
     enqueue('bus_boarding_escalations', { data: [], error: null });
     await act(async () => {
-      staleTrip.resolve({ data: activeTrip, error: null });
+      staleTrip.resolve({ data: [activeTrip], error: null });
       await flush();
     });
 

@@ -150,6 +150,10 @@ function GroupContent() {
           const request = group.location_request;
           const pendingRequest = request?.status === 'pending' ? request : null;
           const responseIsCurrent = isCurrentLocationResponse(request);
+          const sharedFeedbackIsAlreadyVisible =
+            feedback?.kind === 'shared' &&
+            request?.status === 'shared' &&
+            responseIsCurrent;
           return (
             <Card key={group.id} style={styles.groupCard}>
               <View style={styles.groupHeader}>
@@ -174,7 +178,7 @@ function GroupContent() {
                     key={member.participant_id}
                     style={[styles.member, { borderColor: theme.border }]}>
                     <ThemedText type="smallBold">
-                      {member.participant_code} · {member.display_name}
+                      {member.display_name}
                     </ThemedText>
                     {member.is_leader ? (
                       <ThemedText type="tinyBold" themeColor="accent">
@@ -237,7 +241,9 @@ function GroupContent() {
                 </ThemedText>
               ) : null}
 
-              {feedback && feedback.requestId === request?.id ? (
+              {feedback &&
+              feedback.requestId === request?.id &&
+              !sharedFeedbackIsAlreadyVisible ? (
                 <ThemedText
                   accessibilityLiveRegion="polite"
                   type="small"

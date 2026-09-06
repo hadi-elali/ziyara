@@ -180,10 +180,10 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
           supabase
             .from('trip_participants')
             .select(
-              'id, trip_id, bus_id, profile_id, participant_code, display_name, created_at, updated_at',
+              'id, trip_id, bus_id, profile_id, assignment_family_id, participant_code, display_name, created_at, updated_at',
             )
             .eq('trip_id', activeTrip.id)
-            .order('participant_code')
+            .order('display_name')
             .abortSignal(signal),
         ),
         withSupabaseReadTimeout((signal) =>

@@ -76,6 +76,7 @@ const activeTrip: Trip = {
   name: 'Ziyara 2026',
 };
 const participant: TripParticipant = {
+  assignment_family_id: null,
   bus_id: 20,
   created_at: '2026-08-27T08:02:00Z',
   display_name: 'Testteilnehmer',

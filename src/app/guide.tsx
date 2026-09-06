@@ -409,8 +409,7 @@ function ParticipantStatusCard({
     <Card style={styles.participantCard}>
       <View style={styles.participantHeading}>
         <View style={styles.flexText}>
-          <ThemedText type="heading">{participant.participant_code}</ThemedText>
-          <ThemedText themeColor="textSecondary">{participant.display_name}</ThemedText>
+          <ThemedText type="heading">{participant.display_name}</ThemedText>
         </View>
         {participant.status ? (
           <View
