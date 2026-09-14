@@ -19,10 +19,7 @@ type PlaceTranslation = Partial<
 type RecommendedActTranslation = Pick<RecommendedAct, 'shortInstruction' | 'title'>;
 
 type ReligiousContentTranslation = Partial<
-  Pick<
-    ReligiousContent,
-    'arabicText' | 'language' | 'notes' | 'title' | 'translation' | 'transliteration'
-  >
+  Pick<ReligiousContent, 'language' | 'notes' | 'paragraphs' | 'title'>
 >;
 
 type SourceReferenceTranslation = Partial<Pick<SourceReference, 'language' | 'notes' | 'title'>>;
@@ -404,18 +401,6 @@ const recommendedActTranslations: Record<
   string,
   Partial<Record<Language, RecommendedActTranslation>>
 > = {
-  'act-ziyarah-imam-hussain': {
-    en: {
-      title: 'Review Ziyarah Nahiya via duas.org',
-      shortInstruction:
-        'Source: duas.org. Add the full text offline only after rights and content review.',
-    },
-    ar: {
-      title: 'مراجعة زيارة الناحية عبر duas.org',
-      shortInstruction:
-        'المصدر: duas.org. يضاف النص الكامل دون اتصال فقط بعد مراجعة الحقوق والمحتوى.',
-    },
-  },
   'act-ziyarat-ashura-imam-hussain': {
     en: {
       title: 'Read Ziyarat Ashura',
@@ -474,94 +459,126 @@ const religiousContentTranslations: Record<
     en: {
       language: 'Arabic',
       notes:
-        'Ziyarat Ashura for Imam Hussain (a.). The Arabic text and transliteration have been added in segmented form; a complete line-by-line translation can be added after review.',
+        'Ziyarat Ashura for Imam Hussain (a.). The reviewed text is stored in paragraphs with Arabic, transliteration, and the available German translation.',
       title: 'Ziyarat Ashura',
     },
     ar: {
       language: 'العربية',
       notes:
-        'زيارة عاشوراء للإمام الحسين (ع). أضيف النص العربي والنقل الصوتي على شكل مقاطع، ويمكن إضافة ترجمة كاملة سطرا بسطر بعد المراجعة.',
+        'زيارة عاشوراء للإمام الحسين (ع). حُفظ النص المُراجع في فقرات تضم العربية والنقل الصوتي والترجمة الألمانية المتاحة.',
       title: 'زيارة عاشوراء',
     },
   },
   'ziyarah-imam-hussain-placeholder': {
     en: {
-      arabicText: placeholderTranslations.en,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.en,
+          transliteration: placeholderTranslations.en,
+          translation_de: placeholderTranslations.en,
+        },
+      ],
       language: 'Arabic',
       notes:
         'Source-bound entry based on duas.org. The full text is not copied into the app until rights and content review are complete.',
       title: 'Ziyarah Nahiya for Imam Hussain',
-      translation: placeholderTranslations.en,
-      transliteration: placeholderTranslations.en,
     },
     ar: {
-      arabicText: placeholderTranslations.ar,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.ar,
+          transliteration: placeholderTranslations.ar,
+          translation_de: placeholderTranslations.ar,
+        },
+      ],
       language: 'العربية',
       notes:
         'إدخال مرتبط بالمصدر اعتمادا على duas.org. لا ينسخ النص الكامل إلى التطبيق حتى تكتمل مراجعة الحقوق والمحتوى.',
       title: 'زيارة الناحية للإمام الحسين',
-      translation: placeholderTranslations.ar,
-      transliteration: placeholderTranslations.ar,
     },
   },
   'ziyarah-imam-ali-placeholder': {
     en: {
-      arabicText: placeholderTranslations.en,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.en,
+          transliteration: placeholderTranslations.en,
+          translation_de: placeholderTranslations.en,
+        },
+      ],
       language: 'Arabic',
       notes:
         'Source-bound entry based on duas.org. The full text is not copied into the app until rights and content review are complete.',
       title: 'Ziyarat Ameenallah for Imam Ali',
-      translation: placeholderTranslations.en,
-      transliteration: placeholderTranslations.en,
     },
     ar: {
-      arabicText: placeholderTranslations.ar,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.ar,
+          transliteration: placeholderTranslations.ar,
+          translation_de: placeholderTranslations.ar,
+        },
+      ],
       language: 'العربية',
       notes:
         'إدخال مرتبط بالمصدر اعتمادا على duas.org. لا ينسخ النص الكامل إلى التطبيق حتى تكتمل مراجعة الحقوق والمحتوى.',
       title: 'زيارة أمين الله للإمام علي',
-      translation: placeholderTranslations.ar,
-      transliteration: placeholderTranslations.ar,
     },
   },
   'ziyarat-arbaeen-placeholder': {
     en: {
-      arabicText: placeholderTranslations.en,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.en,
+          transliteration: placeholderTranslations.en,
+          translation_de: placeholderTranslations.en,
+        },
+      ],
       language: 'English',
       notes:
         'duas.org assigns this Ziyarah to 20 Safar. The full text will be added offline only after rights and content review.',
       title: 'Ziyarat Arbaeen',
-      translation: placeholderTranslations.en,
-      transliteration: placeholderTranslations.en,
     },
     ar: {
-      arabicText: placeholderTranslations.ar,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.ar,
+          transliteration: placeholderTranslations.ar,
+          translation_de: placeholderTranslations.ar,
+        },
+      ],
       language: 'العربية',
       notes:
         'ينسب موقع duas.org هذه الزيارة إلى يوم 20 صفر. سيضاف النص الكامل دون اتصال فقط بعد مراجعة الحقوق والمحتوى.',
       title: 'زيارة الأربعين',
-      translation: placeholderTranslations.ar,
-      transliteration: placeholderTranslations.ar,
     },
   },
   'dua-safwan-placeholder': {
     en: {
-      arabicText: placeholderTranslations.en,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.en,
+          transliteration: placeholderTranslations.en,
+          translation_de: placeholderTranslations.en,
+        },
+      ],
       language: 'English',
       notes:
         'duas.org describes this dua as recited after Ziyarat Ashura and known as Dua Safwan. Full text follows after rights and content review.',
       title: 'Dua Safwan / Alqama after Ziyarat Ashura',
-      translation: placeholderTranslations.en,
-      transliteration: placeholderTranslations.en,
     },
     ar: {
-      arabicText: placeholderTranslations.ar,
+      paragraphs: [
+        {
+          arabic: placeholderTranslations.ar,
+          transliteration: placeholderTranslations.ar,
+          translation_de: placeholderTranslations.ar,
+        },
+      ],
       language: 'العربية',
       notes:
         'يصف موقع duas.org هذا الدعاء بأنه يقرأ بعد زيارة عاشوراء ويعرف بدعاء صفوان. يتبع النص الكامل بعد مراجعة الحقوق والمحتوى.',
       title: 'دعاء صفوان / علقمة بعد زيارة عاشوراء',
-      translation: placeholderTranslations.ar,
-      transliteration: placeholderTranslations.ar,
     },
   },
 };

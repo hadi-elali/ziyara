@@ -20,17 +20,6 @@ function twoRakatPrayerAct(
 
 export const recommendedActs: RecommendedAct[] = [
   {
-    id: 'act-ziyarah-imam-hussain',
-    title: 'Ziyarah Nahiya über duas.org prüfen',
-    type: 'ziyarah',
-    shortInstruction: 'Quelle: duas.org. Volltext erst nach Rechte- und Inhaltsprüfung offline ergänzen.',
-    contentId: 'ziyarah-imam-hussain-placeholder',
-    recommendedAtPlaceId: 'place-imam-hussain',
-    priority: 1,
-    sourceReferences: ['duas-ziyarat-nahiya'],
-    verificationStatus: 'needs_review',
-  },
-  {
     id: 'act-ziyarat-ashura-imam-hussain',
     title: 'Ziyarat Ashura lesen',
     type: 'ziyarah',
@@ -38,9 +27,9 @@ export const recommendedActs: RecommendedAct[] = [
       'Lies Ziyarat Ashura für Imam Hussain (a.) in der abschnittsweisen Ansicht.',
     contentId: 'ziyarat-ashura',
     recommendedAtPlaceId: 'place-imam-hussain',
-    priority: 2,
+    priority: 1,
     sourceReferences: ['duas-ziyarat-ashura'],
-    verificationStatus: 'needs_review',
+    verificationStatus: 'verified',
   },
   twoRakatPrayerAct('act-two-rakat-imam-hussain', 'place-imam-hussain', 3),
   {

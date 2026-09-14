@@ -13,6 +13,7 @@ import {
 } from "@/features/auth/auth-context";
 import { useGeneralAlarmNotifications } from "@/features/general-alarm/general-alarm-notifications-context";
 import { languageOptions, useI18n } from "@/features/i18n/i18n";
+import { ReaderPreferenceControls } from "@/features/reader/ReaderPreferenceControls";
 import {
   busRoute,
   emergencyDashboardRoute,
@@ -140,6 +141,10 @@ export default function SettingsScreen() {
             })}
           </View>
         </ThemedView>
+      </Section>
+
+      <Section title={t("settings.reader")}>
+        <ReaderPreferenceControls />
       </Section>
 
       <Section title={t("settings.account")}>

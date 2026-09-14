@@ -1,25 +1,30 @@
-import type { ReligiousTextSegment } from '@/domain/types';
+import type { TextParagraph } from '@/domain/types';
 
-export const ziyaratAshuraSegments: ReligiousTextSegment[] = [
+const ziyaratAshuraParagraphDrafts: Partial<TextParagraph>[] = [
   {
-    "arabic": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\nبِسْمِ اللهِ الرّحْمٰنِ الرّحِیْمِ",
-    "transliteration": "bismillahi alrrahmani alrraheemi"
+    "arabic": "بِسْمِ اللهِ الرّحْمٰنِ الرّحِیْمِ",
+    "transliteration": "bismillahi alrrahmani alrraheemi",
+    "translation_de": "Im Namen Allahs, des Allerbarmers, des Barmherzigen."
   },
   {
     "arabic": "اَلسَّلاَمُ عَلَيْكَ يَا أَبَا عَبْدِ ٱللَّهِ",
-    "transliteration": "alssalamu `alayka ya aba `abdillahi"
+    "transliteration": "alssalamu `alayka ya aba `abdillahi",
+    "translation_de": "Friede sei mit dir, o Abū ʿAbdillāh."
   },
   {
     "arabic": "اَلسَّلاَمُ عَلَيْكَ يَا بْنَ رَسُولِ ٱللَّهِ",
-    "transliteration": "alssalamu `alayka yabna rasuli allahi"
+    "transliteration": "alssalamu `alayka yabna rasuli allahi",
+    "translation_de": "Friede sei mit dir, o Sohn des Gesandten Allahs."
   },
   {
     "arabic": "السَّلاَمُ عَلَيكَ يَا خِيَرَةِ ٱللَّهِ وَٱبْنَ خَيرَتِهِ",
-    "transliteration": "alssalamu `alayka ya khiyarata allahi wabna khiyaratihi"
+    "transliteration": "alssalamu `alayka ya khiyarata allahi wabna khiyaratihi",
+    "translation_de": "Friede sei mit dir, o Auserwählter Allahs und Sohn Seines Auserwählten."
   },
   {
     "arabic": "اَلسَّلاَمُ عَلَيْكَ يَا بْنَ أَمِيرِ ٱلْمُؤْمِنِينَ",
-    "transliteration": "alssalamu `alayka yabna amiri almu'minina"
+    "transliteration": "alssalamu `alayka yabna amiri almu'minina",
+    "translation_de": "Friede sei mit dir, o Sohn des Fürsten der Gläubigen."
   },
   {
     "arabic": "وَٱبْنَ سَيِّدِ ٱلْوَصِيِّينَ",
@@ -426,7 +431,7 @@ export const ziyaratAshuraSegments: ReligiousTextSegment[] = [
     "transliteration": "`alayhi wa `alayhim alssalamu"
   },
   {
-    "translation": "Dann kann die folgende Laʿn hundertmal (oder einmal) wiederholt werden:"
+    "translation_de": "Dann kann die folgende Laʿn hundertmal (oder einmal) wiederholt werden:"
   },
   {
     "arabic": "اَللَّهُمَّ ٱلْعَنْ أَوَّلَ ظَالِمٍ",
@@ -453,7 +458,7 @@ export const ziyaratAshuraSegments: ReligiousTextSegment[] = [
     "transliteration": "allahumma il`anhum jami`an"
   },
   {
-    "translation": "Dann kann der folgende Salam hundertmal (oder einmal) wiederholt werden:"
+    "translation_de": "Dann kann der folgende Salam hundertmal (oder einmal) wiederholt werden:"
   },
   {
     "arabic": "اَلسَّلاَمُ عَلَيْكَ يَا أَبَا عَبْدِ ٱللَّهِ",
@@ -492,7 +497,7 @@ export const ziyaratAshuraSegments: ReligiousTextSegment[] = [
     "transliteration": "wa `ala ashabi alhusayni"
   },
   {
-    "translation": "Dann kann Folgendes gesagt werden:"
+    "translation_de": "Dann kann Folgendes gesagt werden:"
   },
   {
     "arabic": "اَللَّهُمَّ خُصَّ أَنْتَ أَوَّلَ ظَالِمٍ بِٱللَّعْنِ مِنِّي",
@@ -527,7 +532,7 @@ export const ziyaratAshuraSegments: ReligiousTextSegment[] = [
     "transliteration": "ila yawmi alqiyamati"
   },
   {
-    "translation": "Dann kann man sich niederwerfen und Folgendes sagen:"
+    "translation_de": "Dann kann man sich niederwerfen und Folgendes sagen:"
   },
   {
     "arabic": "اَللَّهُمَّ لَكَ ٱلْحَمْدُ",
@@ -558,15 +563,17 @@ export const ziyaratAshuraSegments: ReligiousTextSegment[] = [
     "transliteration": "alladhina badhalu muhajahum duna alhusayni"
   },
   {
-    "translation": "Gebet nach der Ziyarat"
+    "translation_de": "Gebet nach der Ziyarat"
   },
   {
-    "translation": "Danach kann ein Gebet mit zwei Rakʿah verrichtet werden. Nach dem Abschluss kann das folgende Dua gelesen werden:"
+    "translation_de": "Danach kann ein Gebet mit zwei Rakʿah verrichtet werden. Nach dem Abschluss kann das folgende Dua gelesen werden:"
   }
 ];
 
-export const ziyaratAshuraArabicText = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\nبِسْمِ اللهِ الرّحْمٰنِ الرّحِیْمِ\nاَلسَّلاَمُ عَلَيْكَ يَا أَبَا عَبْدِ ٱللَّهِ\nاَلسَّلاَمُ عَلَيْكَ يَا بْنَ رَسُولِ ٱللَّهِ\nالسَّلاَمُ عَلَيكَ يَا خِيَرَةِ ٱللَّهِ وَٱبْنَ خَيرَتِهِ\nاَلسَّلاَمُ عَلَيْكَ يَا بْنَ أَمِيرِ ٱلْمُؤْمِنِينَ\nوَٱبْنَ سَيِّدِ ٱلْوَصِيِّينَ\nاَلسَّلاَمُ عَلَيْكَ يَا بْنَ فَاطِمَةَ\nسَيِّدَةِ نِسَاءِ ٱلْعَالَمِينَ\nاَلسَّلاَمُ عَلَيْكَ يَا ثَارَ ٱللَّهِ وَٱبْنَ ثَارِهِ وَٱلْوِتْرَ ٱلْمَوْتُورَ\nاَلسَّلاَمُ عَلَيْكَ وَعَلَىٰ ٱلأَرْوَاحِ ٱلَّتِي حَلَّتْ بِفِنَائِكَ\nعَلَيْكُمْ مِنِّي جَمِيعاً سَلاَمُ ٱللَّهِ أَبَداً\nمَا بَقيتُ وَبَقِيَ ٱللَّيْلُ وَٱلنَّهَارُ\nيَا أَبَا عَبْدِ ٱللَّهِ\nلَقَدْ عَظُمَتِ ٱلرَّزِيَّةُ\nوَجَلَّتْ وَعَظُمَتِ ٱلْمُصيبَةُ بِكَ\nعَلَيْنَا وَعَلَىٰ جَمِيعِ أَهْلِ ٱلإِسْلاَمِ\nوَجَلَّتْ وَعَظُمَتْ مُصيبَتُكَ\nفِي ٱلسَّمَاوَاتِ عَلَىٰ جَمِيعِ أَهْلِ ٱلسَّمَاوَاتِ\nفَلَعَنَ ٱللَّهُ أُمَّةً أَسَّسَتْ أَسَاسَ ٱلظُّلْمِ وَٱلْجَوْرِ عَلَيْكُمْ أَهْلَ ٱلْبَيْتِ\nوَلَعَنَ ٱللَّهُ أُمَّةً دَفَعَتْكُمْ عَنْ مَقَامِكُمْ\nوَأَزَالَتْكُمْ عَنْ مَرَاتِبِكُمُ ٱلَّتِي رَتَّبَكُمُ ٱللَّهُ فِيهَا\nوَلَعَنَ ٱللَّهُ أُمَّةً قَتَلَتْكُمْ\nوَلَعَنَ ٱللَّهُ ٱلْمُمَهِّدِينَ لَهُمْ\nبِٱلتَّمْكِينِ مِنْ قِتَالِكُمْ\nبَرِئْتُ إِلَىٰ ٱللَّهِ وَإِلَيْكُمْ مِنْهُمْ\nوَمِنْ أَشْيَاعِهِمْ وَأَتْبَاعِهِمْ وَأَوْلِيَائِهِمْ\nيَا أَبَا عَبْدِ ٱللَّهِ\nإِنِّي سِلْمٌ لِمَنْ سَالَمَكُمْ\nوَحَرْبٌ لِمَنْ حَارَبَكُمْ إِلَىٰ يَوْمِ ٱلْقِيَامَةِ\nوَلَعَنَ ٱللَّهُ آلَ زِيَادٍ وَآلَ مَرْوَانَ\nوَلَعَنَ ٱللَّهُ بَنِي أُمَيَّةَ قَاطِبَةً\nوَلَعَنَ ٱللَّهُ ٱبْنَ مَرْجَانَةَ\nوَلَعَنَ ٱللَّهُ عُمَرَ بْنَ سَعْدٍ\nوَلَعَنَ ٱللَّهُ شِمْراً\nوَلَعَنَ ٱللَّهُ أُمَّةً أَسْرَجَتْ وَأَلْجَمَتْ\nوَتَنَقَّبَتْ لِقِتَالِكَ\nبِأَبِي أَنْتَ وَأُمِّي\nلَقَدْ عَظُمَ مُصَابِي بِكَ\nفَأَسْأَلُ ٱللَّهَ ٱلَّذِي أَكْرَمَ مَقَامَكَ وَأَكْرَمَنِي بِكَ\nأَنْ يَرْزُقَنِي طَلَبَ ثَأْرِكَ\nمَعَ إِمَامٍ مَنْصُورٍ مِنْ أَهْلِ بَيْتِ مُحَمَّدٍ\nصَلَّىٰ ٱللَّهُ عَلَيْهِ وَآلِهِ\nاَللَّهُمَّ ٱجْعَلْنِي عِنْدَكَ وَجِيهاً\nبِٱلْحُسَيْنِ عَلَيْهِ ٱلسَّلاَمُ فِي ٱلدُّنْيَا وَٱلآخِرَةِ\nيَا أَبَا عَبْدِ ٱللَّهِ\nإِنِّي أَتَقَرَّبُ إِلَىٰ ٱللَّهِ وَإِلَىٰ رَسُولِهِ\nوَإِلَىٰ أَمِيرِ ٱلْمُؤْمِنِينَ وَإِلَىٰ فَاطِمَةَ\nوَإِلَىٰ ٱلْحَسَنِ وَإِلَيْكَ بِمُوَالاَتِكَ\nوَبِٱلْبَرَاءَةِ (مِمَّنْ قَاتَلَكَ\nوَنَصَبَ لَكَ ٱلْحَرْبَ\nوَبِٱلْبَرَاءَةِ مِمَّنْ أَسَّسَ أَسَاسَ ٱلظُّلْمِ وَٱلْجَوْرِ عَلَيْكُمْ\nوَأَبْرَأُ إِلَىٰ ٱللَّهِ وَإِلَىٰ رَسُولِهِ)\nمِمَّنْ أَسَّسَ أَسَاسَ ذٰلِكَ\nوَبَنَىٰ عَلَيْهِ بُنْيَانَهُ\nوَجَرَىٰ فِي ظُلْمِهِ وَجَوْرِهِ عَلَيْكُمْ وَعلىٰ أَشْيَاعِكُمْ\nبَرِئْتُ إِلَىٰ ٱللَّهِ وَإِلَيْكُمْ مِنْهُمْ\nوَأَتَقَرَّبُ إِلَىٰ ٱللَّهِ ثُمَّ إِلَيْكُمْ\nبِمُوَالاَتِكُمْ وَمُوَالاَةِ وَلِيِّكُمْ\nوَبِٱلْبَرَاءَةِ مِنْ أَعْدَائِكُمْ\nوَٱلنَّاصِبِينَ لَكُمُ ٱلْحَرْبَ\nوَبِٱلْبَرَاءَةِ مِنْ أَشْيَاعِهِمْ وَأَتْبَاعِهِمْ\nإِنِّي سِلْمٌ لِمَنْ سَالَمَكُمْ\nوَحَرْبٌ لِمَنْ حَارَبَكُمْ\nوَوَلِيٌّ لِمَنْ وَالاَكُمْ\nوَعَدُوٌّ لِمَنْ عَادَاكُمْ\nفَأَسْأَلُ ٱللَّهَ ٱلَّذِي أَكْرَمَنِي بِمَعْرِفَتِكُمْ\nوَمَعْرِفَةِ أَوْلِيَائِكُمْ\nوَرَزَقَنِيَ ٱلْبَرَاءَةَ مِنْ أَعْدَائِكُمْ\nأَنْ يَجْعَلَنِي مَعَكُمْ فِي ٱلدُّنْيَا وَٱلآخِرَةِ\nوَأَنْ يُثَبِّتَ لِي عِنْدَكُمْ قَدَمَ صِدْقٍ\nفِي ٱلدُّنْيَا وَٱلآخِرَةِ\nوَأَسْأَلُهُ أَنْ يُبَلِّغَنِيَ ٱلْمَقَامَ ٱلْمَحْمُودَ لَكُمْ عِنْدَ ٱللَّهِ\nوَأَنْ يَرْزُقَنِي طَلَبَ ثَأْرِي\nمَعَ إِمَامِ هُدىًٰ ظَاهِرٍ\nنَاطِقٍ بِٱلْحَقِّ مِنْكُمْ\nوَأَسْأَلُ ٱللَّهَ بِحَقِّكُمْ\nوَبِٱلشَّأْنِ ٱلَّذِي لَكُمْ عِنْدَهُ\nأَنْ يُعْطِيَنِي بِمُصَابِي بِكُمْ\nأَفْضَلَ مَا يُعْطِي مُصَاباً بِمُصِيبَتِهِ\nمُصِيبَةً مَا أَعْظَمَهَا\nوَأَعْظَمَ رَزِيَّتَهَا فِي ٱلإِسْلاَمِ\nوَفِي جَمِيعِ ٱلسَّمَاوَاتِ وَٱلأَرْضِ\nاَللَّهُمَّ ٱجْعَلْنِي فِي مَقَامِي هٰذَا\nمِمَّنْ تَنَالُهُ مِنْكَ صَلَوَاتٌ وَرَحْمَةٌ وَمَغْفِرَةٌ\nاَللَّهُمَّ ٱجْعَلْ مَحْيَايَ مَحْيَا مُحَمَّدٍ وَآلِ مُحَمَّدٍ\nوَمَمَاتِي مَمَاتَ مُحَمَّدٍ وَآلِ مُحَمَّدٍ\nاَللَّهُمَّ إِنَّ هٰذَا يَوْمٌ\nتَبَرَّكَتْ بِهِ بَنُو أُمَيَّةَ\nوَٱبْنُ آكِلَةِ ٱلأَكبَادِ\nٱللَّعِينُ ٱبْنُ ٱللَّعِينِ\nعَلَىٰ لِسَانِكَ وَلِسَانِ نَبِيِّكَ\nصَلَّىٰ ٱللَّهُ عَلَيْهِ وَآلِهِ\nفِي كُلِّ مَوْطِنٍ وَمَوْقِفٍ\nوَقَفَ فِيهِ نَبِيُّكَ صَلَّىٰ ٱللَّهُ عَلَيْهِ وَآلِهِ\nاَللَّهُمَّ ٱلْعَنْ أَبَا سُفْيَانَ وَمُعَاوِيَةَ وَيَزيدَ بْنَ مُعَاوِيَةَ\nعَلَيْهِمْ مِنْكَ ٱللَّعْنَةُ أَبَدَ ٱلآبِدِينَ\nوَهٰذَا يَوْمٌ فَرِحَتْ بِهِ آلُ زِيَادٍ وَآلُ مَرْوَانَ\nبِقَتْلِهِمُ ٱلْحُسَيْنَ صَلَوَاتُ ٱللَّهِ عَلَيْهِ\nاَللَّهُمَّ فَضَاعِفْ عَلَيْهِمُ ٱللَّعْنَ مِنْكَ\nوَٱلْعَذَابَ (ٱلأَلِيمَ)\nاَللَّهُمَّ إِنِّي أَتَقَرَّبُ إِلَيْكَ فِي هٰذَا ٱلْيَوْمِ\nوَفِي مَوْقِفِي هٰذَا\nوَأَيَّامِ حَيَاتِي\nبِٱلْبَرَاءَةِ مِنْهُمْ وَٱللَّعْنَةِ عَلَيْهِمْ\nوَبِٱلْمُوَالاَةِ لِنَبِيِّكَ وَآلِ نَبِيِّكَ\nعَلَيْهِ وَعَلَيْهِمُ ٱلسَّلاَمُ\nاَللَّهُمَّ ٱلْعَنْ أَوَّلَ ظَالِمٍ\nظَلَمَ حَقَّ مُحَمَّدٍ وَآلِ مُحَمَّدٍ\nوَآخِرَ تَابِعٍ لَهُ عَلَىٰ ذٰلِكَ\nاَللَّهُمَّ ٱلْعَنِ ٱلْعِصَابَةَ ٱلَّتِي جَاهَدَتِ ٱلْحُسَيْنَ\nوَشَايَعَتْ وَبَايَعَتْ وَتَابَعَتْ عَلَىٰ قَتْلِهِ\nاَللَّهُمَّ ٱلْعَنْهُمْ جَمِيعاً\nاَلسَّلاَمُ عَلَيْكَ يَا أَبَا عَبْدِ ٱللَّهِ\nوَعَلَىٰ ٱلأَرْوَاحِ ٱلَّتِي حَلَّتْ بِفِنَائِكَ\nعَلَيْكَ مِنِّي سَلاَمُ ٱللَّهِ أَبَداً\nمَا بَقيتُ وَبَقِيَ ٱللَّيْلُ وَٱلنَّهَارُ\nوَلاَ جَعَلَهُ ٱللَّهُ آخِرَ ٱلْعَهْدِ مِنِّي لِزِيَارَتِكُمْ\nاَلسَّلاَمُ عَلَىٰ ٱلْحُسَيْنِ\nوَعَلَىٰ عَلِيِّ بْنِ ٱلْحُسَيْنِ\nوَعَلَىٰ أَوْلاَدِ ٱلْحُسَيْنِ\nوَعَلَىٰ أَصْحَابِ ٱلْحُسَيْنِ\nاَللَّهُمَّ خُصَّ أَنْتَ أَوَّلَ ظَالِمٍ بِٱللَّعْنِ مِنِّي\nوَٱبْدَأْ بِهِ أَوَّلًا\nثُمَّ ٱلْعَنِ ٱلثَّانِيَ وَٱلثَّالِثَ وَٱلرَّابِعَ\nاَللَّهُمَّ ٱلْعَنْ يَزِيدَ خَامِساً\nوَٱلْعَنْ عُبَيْدَ ٱللَّهِ بْنَ زِيَادٍ وَٱبْنَ مَرْجَانَةَ\nوَعُمَرَ بْنَ سَعْدٍ وَشِمْراً\nوَآلَ أَبِي سُفْيَانَ وَآلَ زِيَادٍ وَآلَ مَرْوَانَ\nإِلَىٰ يَوْمِ ٱلْقِيَامَةِ\nاَللَّهُمَّ لَكَ ٱلْحَمْدُ\nحَمْدَ ٱلشَّاكِرِينَ لَكَ عَلَىٰ مُصَابِهِمْ\nاَلْحَمْدُ لِلَّهِ عَلَىٰ عَظِيمِ رَزِيَّتِي\nاَللَّهُمَّ ٱرْزُقْنِي شَفَاعَةَ ٱلْحُسَيْنِ يَوْمَ ٱلْوُرُودِ\nوَثَبِّتْ لِي قَدَمَ صِدْقٍ عِنْدَكَ\nمَعَ ٱلْحُسَيْنِ وَأَصْحَابِ ٱلْحُسَيْنِ\nٱلَّذينَ بَذَلُوٱ مُهَجَهُمْ دُونَ ٱلْحُسَيْنِ عَلَيْهِ ٱلسَّلاَمُ";
-
-export const ziyaratAshuraTransliteration = "bismillahi alrrahmani alrraheemi\nalssalamu `alayka ya aba `abdillahi\nalssalamu `alayka yabna rasuli allahi\nalssalamu `alayka ya khiyarata allahi wabna khiyaratihi\nalssalamu `alayka yabna amiri almu'minina\nwabna sayyidi alwasiyyina\nalssalamu `alayka yabna fatimata\nsayyidati nisa'i al`alamina\nalssalamu `alayka ya thara allahi wabna tharihi walwitra almawtura\nalssalamu `alayka wa `ala al-arwahi allati hallat bifina'ika\n`alaykum minni jami`an salamu allahi abadan\nma baqitu wa baqiya allaylu walnnaharu\nya aba `abdillahi\nlaqad `azumat alrraziyyatu\nwa jallat wa `azumat almusibatu bika\n`alayna wa `ala jami`i ahli al-islami\nwa jallat wa `azumat musibatuka\nfi alssamawati `ala jami`i ahli alssamawati\nfala`ana allahu ummatan assasat asasa alzzulmi waljawri `alaykum ahla albayti\nwa la`ana allahu ummatan dafa`atkum `an maqamikum\nwa azalatkum `an maratibikum allati rattabakum allahu fiha\nwa la`ana allahu ummatan qatalatkum\nwa la`ana allahu almumahhidina lahum\nbilttamkini min qitalikum\nbari'tu ila allahi wa ilaykum minhum\nwa min ashya`ihim wa atba`ihim wa awliya'ihim\nya aba `abdillahi\ninni silmun liman salamakum\nwa harbun liman harabakum ila yawmi alqiyamati\nwa la`ana allahu ala ziyadin wa ala marwana\nwa la`ana allahu bani umayyata qatibatan\nwa la`ana allahu ibna marjanata\nwa la`ana allahu `umara bna sa`din\nwa la`ana allahu shimran\nwa la`ana allahu ummatan asrajat wa aljamat\nwa tanaqqabat liqitalika\nbi'abi anta wa ummi\nlaqad `azuma musabi bika\nfa'as'alu allaha alladhi akrama maqamaka wa akramani bika\nan yarzuqani talaba tha'rika\nma`a imamin mansurin min ahli bayti muhammadin\nsalla allahu `alayhi wa alihi\nallahumma ij`alni `indaka wajihan\nbilhusayni `alayhi alssalamu fi alddunya wal-akhirati\nya aba `abdillahi\ninni ataqarrabu ila allahi wa ila rasulihi\nwa ila amiri almu'minina wa ila fatimata\nwa ila alhasani wa ilayka bimuwalatika\nwa bilbara'ati (mimman qatalaka\nwa nasaba laka alharba\nwa bilbara'ati mimman assasa asasa alzzulmi waljawri `alaykum\nwa abra'u ila allahi wa ila rasulihi)\nmimman assasa asasa dhalika\nwa bana `alayhi bunyanahu\nwa jara fi zulmihi wa jawrihi `alaykum wa `ala ashya`ikum\nbari'tu ila allahi wa ilaykum minhum\nwa ataqarrabu ila allahi thumma ilaykum\nbimuwalatikum wa muwalati waliyyikum\nwa bilbara'ati min a`da'ikum\nwalnnasibina lakum alharba\nwa bilbara'ati min ashya`ihim wa atba`ihim\ninni silmun liman salamakum\nwa harbun liman harabakum\nwa waliyyun liman walakum\nwa `aduwwun liman `adakum\nfa'as'alu allaha alladhi akramani bima`rifatikum\nwa ma`rifati awliya'ikum\nwa razaqani albara'ata min a`da'ikum\nan yaj`alani ma`akum fi alddunya wal-akhirati\nwa an yuthabbita li `indakum qadama sidqin\nfi alddunya wal-akhirati\nwa as'aluhu an yuballighani almaqama almahmuda lakum `inda allahi\nwa an yarzuqani talaba tha'ri\nma`a imami hudan zahirin\nnatiqin bilhaqqi minkum\nwa as'alu allaha bihaqqikum\nwa bilshsha'ni alladhi lakum `indahu\nan yu`tiyani bimusabi bikum\nafdala ma yu`ti musaban bimusibatihi\nmusibatan ma a`zamaha\nwa a`zama raziyyataha fi al-islami\nwa fi jami`i alssamawati wal-ardi\nallahumma ij`alni fi maqami hadha\nmimman tanaluhu minka salawatun wa rahmatun wa maghfiratun\nallahumma ij`al mahyaya mahya muhammadin wa ali muhammadin\nwa mamati mamata muhammadin wa ali muhammadin\nallahumma inna hadha yawmun\ntabarrakat bihi banu umayyata\nwabnu akilati al-akbadi\nalla`inu ibnu alla`ini\n`ala lisanika wa lisani nabiyyika\nsalla allahu `alayhi wa alihi\nfi kulli mawtinin wa mawqifin\nwaqafa fihi nabiyyuka salla allahu `alayhi wa alihi\nallahumma il`an aba sufyana wa mu`awiyata wa yazida bna mu`awiyata\n`alayhim minka alla`natu abada al-abidina\nwa hadha yawmun farihat bihi alu ziyadin wa alu marwana\nbiqatlihim alhusayna salawatu allahi `alayhi\nallahumma fada`if `alayhim alla`na minka\nwal`adhaba (al-alima)\nallahumma inni ataqarrabu ilayka fi hadha alyawmi\nwa fi mawqifi hadha\nwa ayyami hayati\nbilbara'ati minhum walla`nati `alayhim\nwa bilmuwalati linabiyyika wa ali nabiyyika\n`alayhi wa `alayhim alssalamu\nallahumma il`an awwala zalimin\nzalama haqqa muhammadin wa ali muhammadin\nwa akhira tabi`in lahu `ala dhalika\nallahumma il`an al`isabata allati jahadat alhusayna\nwa shaya`at wa baya`at wa taba`at `ala qatlihi\nallahumma il`anhum jami`an\nalssalamu `alayka ya aba `abdillahi\nwa `ala al-arwahi allati hallat bifina'ika\n`alayka minni salamu allahi abadan\nma baqitu wa baqiya allaylu walnnaharu\nwa la ja`alahu allahu akhira al`ahdi minni liziyaratikum\nalssalamu `ala alhusayni\nwa `ala `aliyyi bni alhusayni\nwa `ala awladi alhusayni\nwa `ala ashabi alhusayni\nallahumma khussa anta awwala zalimin billa`ni minni\nwabda' bihi awwalan\nthumma il`an alththaniya walththalitha walrrabi`a\nallahumma il`an yazida khamisan\nwal`an `ubaydallahi bna ziyadin wabna marjanata\nwa `umara bna sa`din wa shimran\nwa ala abi sufyana wa ala ziyadin wa ala marwana\nila yawmi alqiyamati\nallahumma laka alhamdu\nhamda alshshakirina laka `ala musabihim\nalhamdu lillahi `ala `azimi raziyyati\nallahumma irzuqni shafa`ata alhusayni yawma alwurudi\nwa thabbit li qadama sidqin `indaka\nma`a alhusayni wa ashabi alhusayni\nalladhina badhalu muhajahum duna alhusayni";
-
-export const ziyaratAshuraTranslationNotes = "Dann kann die folgende Laʿn hundertmal (oder einmal) wiederholt werden:\nDann kann der folgende Salam hundertmal (oder einmal) wiederholt werden:\nDann kann Folgendes gesagt werden:\nDann kann man sich niederwerfen und Folgendes sagen:\nGebet nach der Ziyarat\nDanach kann ein Gebet mit zwei Rakʿah verrichtet werden. Nach dem Abschluss kann das folgende Dua gelesen werden:";
+export const ziyaratAshuraParagraphs: TextParagraph[] = ziyaratAshuraParagraphDrafts.map(
+  (paragraph) => ({
+    arabic: paragraph.arabic ?? '',
+    transliteration: paragraph.transliteration ?? '',
+    translation_de: paragraph.translation_de ?? '',
+  }),
+);

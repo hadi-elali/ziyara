@@ -159,6 +159,7 @@ Files to create or modify:
 
 - `src/app/reader/[slug].tsx`
 - `src/data/religiousContent.ts`
+- `src/features/reader/SegmentedReligiousText.tsx`
 - `src/features/storage/useReaderPreferences.ts`
 - `src/features/storage/useReadingPosition.ts`
 - `src/components/ui/button.tsx`
@@ -173,11 +174,13 @@ Risks:
 
 Acceptance criteria:
 
-- Reader shows title, type, review status, Arabic block, transliteration, translation, notes, and sources.
+- Reader shows title, type, review status, paragraph blocks, notes, and sources.
 - Placeholder text is visibly used where verified content is unavailable.
-- Arabic block uses RTL writing direction and adjustable font size.
+- Every paragraph keeps Arabic, transliteration, and German translation in one structured record.
+- Arabic uses RTL writing direction; all three text components have separate persistent font sizes and visibility switches.
+- Reader display controls are collapsed behind a settings icon.
 - Bookmark, copy, share, and reading-position persistence are implemented.
-- Source references are shown or clearly marked pending review.
+- Source references are shown or clearly marked pending review; the Reader does not link to an external full-text page.
 
 Tests/checks:
 

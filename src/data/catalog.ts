@@ -94,9 +94,11 @@ export function searchCatalog(
             matches(query, [
               content.title,
               content.type,
-              content.arabicText,
-              content.transliteration,
-              content.translation,
+              ...content.paragraphs.flatMap((paragraph) => [
+                paragraph.arabic,
+                paragraph.transliteration,
+                paragraph.translation_de,
+              ]),
               ...sourceSearchFields(content.sourceReferences, language),
             ]),
           )

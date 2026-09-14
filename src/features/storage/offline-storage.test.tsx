@@ -13,32 +13,50 @@ const originalActEnvironment = actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT;
 let renderer: ReactTestRenderer | null;
 let storageState: {
   bookmarks: string[];
-  lineByLine: boolean;
-  scale: number;
-  setLineByLine: (value: boolean) => void;
-  setScale: (value: number) => void;
+  arabicScale: number;
+  setArabicScale: (value: number) => void;
+  setShowTranslation: (value: boolean) => void;
+  setTranslationScale: (value: number) => void;
+  setTransliterationScale: (value: number) => void;
+  showTranslation: boolean;
+  translationScale: number;
+  transliterationScale: number;
   toggleBookmark: (key: string) => void;
 } | null;
 
 function StorageProbe() {
   const { bookmarks, toggleBookmark } = useBookmarks();
-  const { preferences, setArabicFontScale, setLineByLine } = useReaderPreferences();
+  const {
+    preferences,
+    setArabicFontScale,
+    setShowTranslation,
+    setTranslationFontScale,
+    setTransliterationFontScale,
+  } = useReaderPreferences();
 
   useEffect(() => {
     storageState = {
       bookmarks,
-      lineByLine: preferences.lineByLine,
-      scale: preferences.arabicFontScale,
-      setLineByLine,
-      setScale: setArabicFontScale,
+      arabicScale: preferences.arabicFontScale,
+      setArabicScale: setArabicFontScale,
+      setShowTranslation,
+      setTranslationScale: setTranslationFontScale,
+      setTransliterationScale: setTransliterationFontScale,
+      showTranslation: preferences.showTranslation,
+      translationScale: preferences.translationFontScale,
+      transliterationScale: preferences.transliterationFontScale,
       toggleBookmark,
     };
   }, [
     bookmarks,
     preferences.arabicFontScale,
-    preferences.lineByLine,
+    preferences.showTranslation,
+    preferences.translationFontScale,
+    preferences.transliterationFontScale,
     setArabicFontScale,
-    setLineByLine,
+    setShowTranslation,
+    setTranslationFontScale,
+    setTransliterationFontScale,
     toggleBookmark,
   ]);
 
@@ -83,15 +101,19 @@ describe('offline storage', () => {
 
     await act(async () => {
       getStorageState().toggleBookmark('place:shrine-imam-hussain');
-      getStorageState().setScale(1.3);
-      getStorageState().setLineByLine(false);
+      getStorageState().setArabicScale(1.3);
+      getStorageState().setTransliterationScale(1.2);
+      getStorageState().setTranslationScale(1.1);
+      getStorageState().setShowTranslation(false);
       await Promise.resolve();
     });
 
     expect(getStorageState()).toMatchObject({
       bookmarks: ['place:shrine-imam-hussain'],
-      lineByLine: false,
-      scale: 1.3,
+      arabicScale: 1.3,
+      showTranslation: false,
+      translationScale: 1.1,
+      transliterationScale: 1.2,
     });
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       'ziyara.bookmarks',
@@ -99,7 +121,14 @@ describe('offline storage', () => {
     );
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       'ziyara.reader.preferences',
-      JSON.stringify({ arabicFontScale: 1.3, lineByLine: false }),
+      JSON.stringify({
+        arabicFontScale: 1.3,
+        showArabic: true,
+        showTranslation: false,
+        showTransliteration: true,
+        translationFontScale: 1.1,
+        transliterationFontScale: 1.2,
+      }),
     );
   });
 });

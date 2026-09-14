@@ -17,6 +17,7 @@ import {
   summarizeBusBoarding,
   type BusParticipantState,
 } from '@/features/bus-management/bus-management-state';
+import { parseGeneralAlarmDepartureMinutes } from '@/features/general-alarm/general-alarm-time';
 import { useI18n } from '@/features/i18n/i18n';
 import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
@@ -38,9 +39,7 @@ export function AdminGeneralAlarmPanel() {
     syncErrorKind,
   } = useBusManagement();
   const [alarmTitle, setAlarmTitle] = useState('');
-  const [departureMinutes, setDepartureMinutes] = useState<(typeof departureMinuteOptions)[number]>(
-    15,
-  );
+  const [departureMinutesInput, setDepartureMinutesInput] = useState('15');
   const [isWorking, setIsWorking] = useState(false);
   const [hasActionError, setHasActionError] = useState(false);
   const [pushDispatchState, setPushDispatchState] = useState<
@@ -57,6 +56,7 @@ export function AdminGeneralAlarmPanel() {
     [participants],
   );
   const alarmUrgency = activeBoarding ? getGeneralAlarmUrgency(activeBoarding, now) : 'normal';
+  const departureMinutes = parseGeneralAlarmDepartureMinutes(departureMinutesInput);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 15_000);
@@ -124,7 +124,7 @@ export function AdminGeneralAlarmPanel() {
   };
 
   const enableAlarm = () => {
-    if (!activeTrip) return;
+    if (!activeTrip || departureMinutes === null) return;
     const departureAt = new Date(Date.now() + departureMinutes * 60_000).toISOString();
     void runAction(
       () =>
@@ -361,13 +361,28 @@ export function AdminGeneralAlarmPanel() {
                 <SelectionChip
                   key={minutes}
                   label={t('bus.admin.minutes', { count: minutes })}
-                  onPress={() => setDepartureMinutes(minutes)}
+                  onPress={() => setDepartureMinutesInput(String(minutes))}
                   selected={departureMinutes === minutes}
                 />
               ))}
             </View>
+            <AlarmField
+              inputMode="numeric"
+              label={t('generalAlarm.admin.customDepartureMinutes')}
+              maxLength={4}
+              onChangeText={setDepartureMinutesInput}
+              placeholder={t('generalAlarm.admin.customDepartureMinutesPlaceholder')}
+              value={departureMinutesInput}
+            />
+            {departureMinutes === null ? (
+              <ThemedText accessibilityLiveRegion="polite" themeColor="danger" type="small">
+                {t('generalAlarm.admin.invalidDepartureMinutes')}
+              </ThemedText>
+            ) : null}
             <Button
-              disabled={isWorking || alarmTitle.trim().length < 3}
+              disabled={
+                isWorking || alarmTitle.trim().length < 3 || departureMinutes === null
+              }
               icon="warning"
               label={t('generalAlarm.admin.enable')}
               onPress={enableAlarm}
@@ -407,12 +422,16 @@ export function AdminGeneralAlarmPanel() {
 }
 
 function AlarmField({
+  inputMode,
   label,
+  maxLength,
   onChangeText,
   placeholder,
   value,
 }: {
+  inputMode?: 'numeric' | 'text';
   label: string;
+  maxLength?: number;
   onChangeText: (value: string) => void;
   placeholder: string;
   value: string;
@@ -423,6 +442,8 @@ function AlarmField({
       <ThemedText type="smallBold">{label}</ThemedText>
       <TextInput
         accessibilityLabel={label}
+        inputMode={inputMode}
+        maxLength={maxLength}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={theme.textSecondary}

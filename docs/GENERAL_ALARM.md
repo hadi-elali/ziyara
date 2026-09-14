@@ -1,6 +1,6 @@
 # Generalalarm: Bedienung, Betrieb und Grenzen
 
-Der Generalalarm ist im Adminbereich ein eigener, vom Busmanagement getrennter Punkt. Das Busmanagement dient nur dazu, Reise, Busse und Teilnehmer-IDs vorzubereiten. Danach öffnet der Admin **Generalalarm**, legt Meldung und Abfahrtszeit fest und schaltet den Alarm ausdrücklich ein. Ein eingeschalteter Generalalarm führt die Teilnehmer durch die feste Folge:
+Der Generalalarm ist im Adminbereich ein eigener, vom Busmanagement getrennter Punkt. Das Busmanagement dient nur dazu, Reise, Busse und Teilnehmer-IDs vorzubereiten. Danach öffnet der Admin **Generalalarm**, legt Meldung und eine Abfahrtszeit zwischen 1 und 1440 Minuten fest und schaltet den Alarm ausdrücklich ein. 15, 30 und 60 Minuten stehen als Schnellauswahl bereit; eine andere ganze Minutenanzahl kann direkt eingegeben werden. Ein eingeschalteter Generalalarm führt die Teilnehmer durch die feste Folge:
 
 1. `Gelesen`
 2. `Ich bin unterwegs`

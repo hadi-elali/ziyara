@@ -1,87 +1,96 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
-import type { ReligiousTextSegment } from '@/domain/types';
+import { Fonts, Spacing } from '@/constants/theme';
+import type { TextParagraph } from '@/domain/types';
+import { useI18n } from '@/features/i18n/i18n';
+import type { ReaderPreferences } from '@/features/storage/useReaderPreferences';
 import { useTheme } from '@/hooks/use-theme';
 
 type SegmentedReligiousTextProps = {
-  arabicFontScale: number;
-  arabicText: string;
-  segments?: ReligiousTextSegment[];
-  translation: string;
-  transliteration: string;
+  paragraphs: TextParagraph[];
+  preferences: ReaderPreferences;
 };
 
-type BuildSegmentsInput = Pick<
-  SegmentedReligiousTextProps,
-  'arabicText' | 'translation' | 'transliteration'
->;
-
-function splitTextIntoSegments(text: string) {
-  return text
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function buildSegments({
-  arabicText,
-  translation,
-  transliteration,
-}: BuildSegmentsInput): ReligiousTextSegment[] {
-  const arabicLines = splitTextIntoSegments(arabicText);
-  const transliterationLines = splitTextIntoSegments(transliteration);
-  const translationLines = splitTextIntoSegments(translation);
-  const segmentCount = Math.max(arabicLines.length, transliterationLines.length, translationLines.length);
-
-  return Array.from({ length: segmentCount }, (_, index) => ({
-    arabic: arabicLines[index],
-    transliteration: transliterationLines[index],
-    translation: translationLines[index],
-  })).filter((segment) => segment.arabic || segment.transliteration || segment.translation);
-}
-
 export function SegmentedReligiousText({
-  arabicFontScale,
-  arabicText,
-  segments: providedSegments,
-  translation,
-  transliteration,
+  paragraphs,
+  preferences,
 }: SegmentedReligiousTextProps) {
+  const { t } = useI18n();
   const theme = useTheme();
-  const segments = providedSegments ?? buildSegments({ arabicText, translation, transliteration });
+  const hasVisibleContent = paragraphs.some(
+    (paragraph) =>
+      (preferences.showArabic && paragraph.arabic.trim()) ||
+      (preferences.showTransliteration && paragraph.transliteration.trim()) ||
+      (preferences.showTranslation && paragraph.translation_de.trim()),
+  );
+
+  if (!hasVisibleContent) {
+    return <ThemedText themeColor="textSecondary">{t('reader.noVisibleText')}</ThemedText>;
+  }
 
   return (
     <View style={styles.list}>
-      {segments.map((segment, index) => (
-        <View
-          key={`${segment.arabic ?? ''}-${segment.transliteration ?? ''}-${index}`}
-          style={[styles.segment, { borderColor: theme.border }]}>
-          {segment.arabic ? (
-            <ThemedText
-              style={[
-                styles.arabic,
-                {
-                  fontSize: 28 * arabicFontScale,
-                  lineHeight: 46 * arabicFontScale,
-                },
-              ]}>
-              {segment.arabic}
-            </ThemedText>
-          ) : null}
+      {paragraphs.map((paragraph, index) => {
+        const showArabic = preferences.showArabic && paragraph.arabic.trim();
+        const showTransliteration =
+          preferences.showTransliteration && paragraph.transliteration.trim();
+        const showTranslation =
+          preferences.showTranslation && paragraph.translation_de.trim();
 
-          {segment.transliteration ? (
-            <ThemedText style={styles.transliteration} themeColor="textSecondary">
-              {segment.transliteration}
-            </ThemedText>
-          ) : null}
+        if (!showArabic && !showTransliteration && !showTranslation) {
+          return null;
+        }
 
-          {segment.translation ? (
-            <ThemedText style={styles.translation}>{segment.translation}</ThemedText>
-          ) : null}
-        </View>
-      ))}
+        return (
+          <View
+            key={`${index}-${paragraph.arabic}-${paragraph.transliteration}`}
+            style={[
+              styles.paragraph,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}>
+            {showArabic ? (
+              <ThemedText
+                style={[
+                  styles.arabic,
+                  {
+                    fontSize: 28 * preferences.arabicFontScale,
+                    lineHeight: 46 * preferences.arabicFontScale,
+                  },
+                ]}>
+                {paragraph.arabic}
+              </ThemedText>
+            ) : null}
+
+            {showTransliteration ? (
+              <ThemedText
+                style={[
+                  styles.transliteration,
+                  {
+                    fontSize: 15 * preferences.transliterationFontScale,
+                    lineHeight: 22 * preferences.transliterationFontScale,
+                  },
+                ]}
+                themeColor="textSecondary">
+                {paragraph.transliteration}
+              </ThemedText>
+            ) : null}
+
+            {showTranslation ? (
+              <ThemedText
+                style={[
+                  styles.translation,
+                  {
+                    fontSize: 16 * preferences.translationFontScale,
+                    lineHeight: 24 * preferences.translationFontScale,
+                  },
+                ]}>
+                {paragraph.translation_de}
+              </ThemedText>
+            ) : null}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -90,19 +99,20 @@ const styles = StyleSheet.create({
   list: {
     gap: Spacing.three,
   },
-  segment: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.two,
-    paddingBottom: Spacing.three,
+  paragraph: {
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.four,
   },
   arabic: {
+    fontFamily: Fonts.serif,
     textAlign: 'right',
     writingDirection: 'rtl',
   },
   transliteration: {
-    fontSize: 15,
     fontStyle: 'italic',
-    lineHeight: 22,
     textAlign: 'left',
     writingDirection: 'ltr',
   },

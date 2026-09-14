@@ -1,13 +1,13 @@
 import type { ReligiousContent } from '@/domain/types';
-import {
-  ziyaratAshuraArabicText,
-  ziyaratAshuraSegments,
-  ziyaratAshuraTranslationNotes,
-  ziyaratAshuraTransliteration,
-} from '@/data/ziyaratAshura';
+import { ziyaratAshuraParagraphs } from '@/data/ziyaratAshura';
 
 const placeholder =
   'Volltext wird nach Rechte- und Inhaltsprüfung ergänzt. Quelle siehe unten.';
+const placeholderParagraph = {
+  arabic: placeholder,
+  transliteration: placeholder,
+  translation_de: placeholder,
+};
 
 export const religiousContent: ReligiousContent[] = [
   {
@@ -15,25 +15,22 @@ export const religiousContent: ReligiousContent[] = [
     slug: 'ziyarat-ashura',
     title: 'Ziyarat Ashura',
     type: 'ziyarah',
-    arabicText: ziyaratAshuraArabicText,
-    transliteration: ziyaratAshuraTransliteration,
-    translation: ziyaratAshuraTranslationNotes,
-    segments: ziyaratAshuraSegments,
+    paragraphs: ziyaratAshuraParagraphs,
     language: 'Arabisch',
     notes:
-      'Ziyarat Ashura für Imam Hussain (a.). Arabischer Text und Transliteration sind abschnittsweise eingetragen; eine vollständige deutsche Zeilenübersetzung kann später ergänzt werden.',
+      'Ziyarat Ashura für Imam Hussain (a.). Der geprüfte Text ist absatzweise mit Arabisch, Transliteration und vorhandener deutscher Übersetzung hinterlegt.',
     sourceReferences: ['duas-ziyarat-ashura'],
-    verificationStatus: 'needs_review',
-    version: '0.1.0',
+    verificationStatus: 'verified',
+    reviewedBy: 'Projektinhaber',
+    reviewedAt: '2026-09-14',
+    version: '1.0.0',
   },
   {
     id: 'ziyarah-imam-hussain-placeholder',
     slug: 'ziyarah-imam-hussain-placeholder',
     title: 'Ziyarah Nahiya für Imam Hussain',
     type: 'ziyarah',
-    arabicText: placeholder,
-    transliteration: placeholder,
-    translation: placeholder,
+    paragraphs: [placeholderParagraph],
     language: 'Arabisch',
     notes:
       'Quellengebundener Eintrag nach duas.org. Der vollständige Text wird nicht in die App kopiert, bis Rechte- und Inhaltsprüfung abgeschlossen sind.',
@@ -46,9 +43,7 @@ export const religiousContent: ReligiousContent[] = [
     slug: 'ziyarah-imam-ali-placeholder',
     title: 'Ziyarat Ameenallah für Imam Ali',
     type: 'ziyarah',
-    arabicText: placeholder,
-    transliteration: placeholder,
-    translation: placeholder,
+    paragraphs: [placeholderParagraph],
     language: 'Arabisch',
     notes:
       'Quellengebundener Eintrag nach duas.org. Der vollständige Text wird nicht in die App kopiert, bis Rechte- und Inhaltsprüfung abgeschlossen sind.',
@@ -61,9 +56,7 @@ export const religiousContent: ReligiousContent[] = [
     slug: 'ziyarat-arbaeen-placeholder',
     title: 'Ziyarat Arbaeen',
     type: 'ziyarah',
-    arabicText: placeholder,
-    transliteration: placeholder,
-    translation: placeholder,
+    paragraphs: [placeholderParagraph],
     language: 'Deutsch',
     notes:
       'duas.org ordnet diese Ziyarah dem 20. Safar zu. Der vollständige Text wird erst nach Rechte- und Inhaltsprüfung offline ergänzt.',
@@ -76,9 +69,7 @@ export const religiousContent: ReligiousContent[] = [
     slug: 'dua-safwan-placeholder',
     title: 'Dua Safwan / Alqama nach Ziyarat Ashura',
     type: 'dua',
-    arabicText: placeholder,
-    transliteration: placeholder,
-    translation: placeholder,
+    paragraphs: [placeholderParagraph],
     language: 'Deutsch',
     notes:
       'duas.org beschreibt diese Dua als nach Ziyarat Ashura rezitiert und als Dua Safwan bekannt. Volltext folgt nach Rechte- und Inhaltsprüfung.',

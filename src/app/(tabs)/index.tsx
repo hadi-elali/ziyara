@@ -70,17 +70,19 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <View
-        style={[
-          styles.hero,
-          {
-            backgroundColor: "#618764",
-            flex: 1,
-          },
-        ]}
-      >
-        {session ? <DailyProgramHome /> : null}
-      </View>
+      {session ? (
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: "#618764",
+              flex: 1,
+            },
+          ]}
+        >
+          <DailyProgramHome />
+        </View>
+      ) : null}
 
       {session && activeCheck ? (
         <View

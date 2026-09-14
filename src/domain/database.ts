@@ -90,6 +90,34 @@ export type QuestionSubmissionLimit = {
   submission_count: number;
 };
 
+export type ReligiousContentRecord = {
+  content_policy: 'approved_for_offline' | 'linked_not_copied' | 'pending_rights_review';
+  content_type: 'dua' | 'instruction' | 'salawat' | 'surah' | 'ziyarah';
+  created_at: string;
+  id: string;
+  is_published: boolean;
+  language: string;
+  notes: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  slug: string;
+  source_references: string[];
+  title: string;
+  updated_at: string;
+  verification_status: 'draft' | 'needs_review' | 'rejected' | 'verified';
+  version: string;
+};
+
+export type ReligiousTextParagraphRecord = {
+  arabic: string;
+  content_id: string;
+  created_at: string;
+  id: number;
+  position: number;
+  translation_de: string;
+  transliteration: string;
+};
+
 export type RoleAssignmentAudit = {
   changed_by_profile_id: number | null;
   created_at: string;
@@ -673,6 +701,70 @@ export type Database = {
           role?: AppRole;
           sim_card_count?: number;
           updated_at?: string;
+        };
+      };
+      religious_contents: {
+        Insert: {
+          content_policy?: ReligiousContentRecord['content_policy'];
+          content_type: ReligiousContentRecord['content_type'];
+          created_at?: string;
+          id: string;
+          is_published?: boolean;
+          language?: string;
+          notes?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          slug: string;
+          source_references: string[];
+          title: string;
+          updated_at?: string;
+          verification_status?: ReligiousContentRecord['verification_status'];
+          version: string;
+        };
+        Relationships: [];
+        Row: ReligiousContentRecord;
+        Update: {
+          content_policy?: ReligiousContentRecord['content_policy'];
+          content_type?: ReligiousContentRecord['content_type'];
+          is_published?: boolean;
+          language?: string;
+          notes?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          slug?: string;
+          source_references?: string[];
+          title?: string;
+          updated_at?: string;
+          verification_status?: ReligiousContentRecord['verification_status'];
+          version?: string;
+        };
+      };
+      religious_text_paragraphs: {
+        Insert: {
+          arabic: string;
+          content_id: string;
+          created_at?: string;
+          id?: never;
+          position: number;
+          translation_de: string;
+          transliteration: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'religious_text_paragraphs_content_id_fkey';
+            columns: ['content_id'];
+            isOneToOne: false;
+            referencedRelation: 'religious_contents';
+            referencedColumns: ['id'];
+          },
+        ];
+        Row: ReligiousTextParagraphRecord;
+        Update: {
+          arabic?: string;
+          content_id?: string;
+          position?: number;
+          translation_de?: string;
+          transliteration?: string;
         };
       };
       push_notification_devices: {

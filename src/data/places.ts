@@ -172,13 +172,11 @@ export const allPlaces: Place[] = [
     longDescription: 'Der Schrein von Imam Hussain (a.) ist das Herz von Karbala und einer der bedeutendsten Orte der Ziyārah. Er erinnert an Opferbereitschaft, Standhaftigkeit und die Treue zu Allah.',
     historicalNotes: '',
     recommendedActs: [
-      'act-ziyarah-imam-hussain',
       'act-ziyarat-ashura-imam-hussain',
       'act-two-rakat-imam-hussain',
       'act-ziyarat-arbaeen-imam-hussain',
     ],
     relatedContentIds: [
-      'ziyarah-imam-hussain-placeholder',
       'ziyarat-ashura',
       'dua-safwan-placeholder',
       'ziyarat-arbaeen-placeholder',
@@ -187,7 +185,7 @@ export const allPlaces: Place[] = [
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
     images: imamHussainImages,
-    sourceReferences: ['duas-ziyarat-nahiya', 'duas-ziyarat-ashura', 'duas-ziyarat-arbaeen'],
+    sourceReferences: ['duas-ziyarat-ashura', 'duas-ziyarat-arbaeen'],
     verificationStatus: 'needs_review',
   },
   {

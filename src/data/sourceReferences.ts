@@ -32,8 +32,8 @@ export const sourceReferences: SourceReference[] = [
     url: 'https://www.duas.org/ziaratashura.htm',
     language: 'Arabisch / Englisch',
     quotedExcerpt: 'This Ziyarat is recited for Imam Hussain(as) on the day of Ashura & everyday.',
-    contentPolicy: 'pending_rights_review',
-    lastCheckedAt: '2026-07-04',
+    contentPolicy: 'approved_for_offline',
+    lastCheckedAt: '2026-09-14',
     notes:
       'duas.org beschreibt Ziyarat Ashura als Ziyarat für Imam Hussain am Tag von Ashura und für die tägliche Rezitation.',
   },

@@ -48,6 +48,12 @@ describe('catalog integrity', () => {
     });
 
     religiousContent.forEach((content) => {
+      expect(content.paragraphs.length).toBeGreaterThan(0);
+      content.paragraphs.forEach((paragraph) => {
+        expect(typeof paragraph.arabic).toBe('string');
+        expect(typeof paragraph.transliteration).toBe('string');
+        expect(typeof paragraph.translation_de).toBe('string');
+      });
       content.sourceReferences.forEach((id) => expect(sourceIds).toContain(id));
     });
   });
