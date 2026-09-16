@@ -12,12 +12,12 @@ Solange die nächste Stufe fehlt, wird sie alle fünf Minuten erneut fällig. Di
 
 Code allein aktiviert keinen produktiven Push-Kanal. Vor Nutzung mit der Reisegruppe sind diese Schritte erforderlich:
 
-1. Ein echtes EAS-Projekt mit `expo.extra.eas.projectId` verbinden und die iOS-/Android-Push-Credentials einrichten.
-2. Erledigt am 28. August 2026: Die Migrationen `20260827130000_add_bus_boarding_read_status.sql`, `20260827140000_add_general_alarm.sql` und `20260827150000_enforce_general_alarm_status_order.sql` sind auf dem verknüpften Supabase-Projekt angewandt. Die letzte Migration erzwingt die Teilnehmerfolge auch serverseitig; nur das Reiseteam darf Status administrativ korrigieren.
-3. Die Edge Function `dispatch-general-alarm` deployen.
-4. Das Function-Secret `GENERAL_ALARM_CRON_SECRET` setzen. Falls im Expo-Projekt Push-Zugriffsschutz aktiviert ist, zusätzlich `EXPO_ACCESS_TOKEN` setzen.
-5. In Supabase Cron beziehungsweise einem gleichwertigen Scheduler jede Minute einen authentifizierten `POST` an `dispatch-general-alarm` auslösen und `x-general-alarm-cron-secret` mitsenden. Der periodische Aufruf aus dem geöffneten Adminpanel ist nur ein betrieblicher Fallback und ersetzt keinen Server-Scheduler.
-6. Einen neuen nativen Development-/Produktionsbuild verteilen und Push, App-Neustart, gesperrtes Gerät, Fokus/Lautlosmodus, schwaches Netz, Tokenwechsel und mehrere Teilnehmer-IDs pro Konto auf echten iOS-/Android-Geräten testen.
+1. Erledigt am 14. September 2026: Das EAS-Projekt `@hadi_ea/al-batoul` ist über `expo.extra.eas.projectId` verbunden. Für `de.albatoul.ziyara` sind ein APNs-Push-Key und ein FCM-V1-Service-Account hinterlegt.
+2. Erledigt: Die Migrationen `20260827130000_add_bus_boarding_read_status.sql`, `20260827140000_add_general_alarm.sql` und `20260827150000_enforce_general_alarm_status_order.sql` sind auf dem verknüpften Supabase-Projekt angewandt. Die letzte Migration erzwingt die Teilnehmerfolge auch serverseitig; nur das Reiseteam darf Status administrativ korrigieren.
+3. Erledigt am 14. September 2026: Die Edge Function `dispatch-general-alarm` ist remote aktiv.
+4. Erledigt am 14. September 2026: `GENERAL_ALARM_CRON_SECRET` wurde neu gesetzt und zusätzlich geschützt im Supabase Vault für den Scheduler hinterlegt. Expo Enhanced Push Security ist derzeit nicht aktiviert; deshalb wird noch kein `EXPO_ACCESS_TOKEN` benötigt.
+5. Erledigt am 14. September 2026: Der Supabase-Cronjob `dispatch-general-alarm-every-minute` ruft den Dispatcher jede Minute authentifiziert auf. Mehrere kontrollierte Läufe antworteten mit HTTP 200. Der periodische Aufruf aus dem geöffneten Adminpanel bleibt nur ein betrieblicher Fallback.
+6. Teilweise erledigt am 14. September 2026: Ein signierter iOS-Preview-Build wurde erfolgreich erstellt; der Android-Preview-Build ist bei EAS gestartet. Offen bleiben Installation, Push-Aktivierung und reale Tests mit App-Neustart, gesperrtem Gerät, Fokus/Lautlosmodus, schwachem Netz, Tokenwechsel und mehreren Teilnehmer-IDs pro Konto auf echten iOS-/Android-Geräten.
 
 Die App speichert Expo-Push-Tokens in einer nicht clientlesbaren Tabelle. Registrierung und Abmeldung laufen über benutzergebundene RPCs. Der Dispatcher akzeptiert entweder einen serverseitig geprüften Admin-Access-Token oder das Scheduler-Secret; nur `service_role` darf fällige Versandfenster beanspruchen. Die Oberfläche bezeichnet ein erfolgreiches Expo-Ticket bewusst nur als Übergabe an den Expo-Dienst, nicht als Zustellnachweis.
 

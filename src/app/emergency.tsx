@@ -571,7 +571,8 @@ function EmergencyContent() {
             {notifications.availability === "checking" ||
             notifications.isWorking ? (
               <ActivityIndicator color={theme.accent} />
-            ) : notifications.availability === "denied" ||
+            ) : notifications.availability === "disabled" ||
+              notifications.availability === "denied" ||
               notifications.availability === "error" ? (
               <View style={styles.inlineActions}>
                 <Button

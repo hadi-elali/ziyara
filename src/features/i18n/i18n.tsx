@@ -152,6 +152,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.notifications.checking": "Benachrichtigungsstatus wird geprüft …",
     "emergency.notifications.denied":
       "Push ist nicht freigegeben. Neue Meldungen bleiben trotzdem im Postfach lesbar.",
+    "emergency.notifications.disabled":
+      "Push ist in den Einstellungen ausgeschaltet. Neue Meldungen bleiben trotzdem im Postfach lesbar.",
     "emergency.notifications.error":
       "Push konnte nicht eingerichtet werden. Neue Meldungen bleiben trotzdem im Postfach lesbar.",
     "emergency.notifications.expo_go":
@@ -391,6 +393,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.notification.title": "Generalalarm",
     "generalAlarm.notifications.checking": "Benachrichtigungsstatus wird geprüft …",
     "generalAlarm.notifications.denied": "Benachrichtigungen sind nicht freigegeben.",
+    "generalAlarm.notifications.disabled": "Mitteilungen sind in den Einstellungen ausgeschaltet.",
     "generalAlarm.notifications.error": "Push konnte nicht eingerichtet werden. Lokale Hinweise können eingeschränkt sein.",
     "generalAlarm.notifications.expo_go": "Benachrichtigungen sind in Expo Go für diese App deaktiviert. Bitte verwende einen Development Build.",
     "generalAlarm.notifications.missing_project_id": "Dieser Build ist noch nicht mit einer EAS-Projekt-ID für Push verbunden.",
@@ -1150,6 +1153,15 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Wähle die Sprache der App-Oberfläche und der lokalen Platzhaltertexte.",
     "settings.languageTitle": "Sprache",
     "settings.light": "Hell",
+    "settings.notifications": "Mitteilungen",
+    "settings.notificationsBody":
+      "Steuert Push-Mitteilungen und lokale Erinnerungen für Generalalarm, Notfälle und Notfalldienste auf diesem Gerät.",
+    "settings.notificationsGuestBody":
+      "Melde dich an, um Mitteilungen für dieses Gerät zu verwalten.",
+    "settings.notificationsHint":
+      "Schaltet Push-Mitteilungen und lokale Erinnerungen für dieses Gerät ein oder aus.",
+    "settings.notificationsOpenSettings": "Geräteeinstellungen öffnen",
+    "settings.notificationsTitle": "Mitteilungen erlauben",
     "settings.openAdmin": "Adminbereich öffnen",
     "settings.openEmergencyDashboard": "Notfall-Dashboard öffnen",
     "settings.openBusManagement": "Meinen Bus öffnen",
@@ -1289,6 +1301,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.notifications.checking": "Checking notification status …",
     "emergency.notifications.denied":
       "Push has not been allowed. New reports remain readable in the inbox.",
+    "emergency.notifications.disabled":
+      "Push is turned off in Settings. New reports remain readable in the inbox.",
     "emergency.notifications.error":
       "Push could not be configured. New reports remain readable in the inbox.",
     "emergency.notifications.expo_go":
@@ -1524,6 +1538,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.notification.title": "General alarm",
     "generalAlarm.notifications.checking": "Checking notification status …",
     "generalAlarm.notifications.denied": "Notifications have not been allowed.",
+    "generalAlarm.notifications.disabled": "Notifications are turned off in Settings.",
     "generalAlarm.notifications.error": "Push could not be configured. Local reminders may be limited.",
     "generalAlarm.notifications.expo_go": "Notifications are disabled in Expo Go for this app. Please use a development build.",
     "generalAlarm.notifications.missing_project_id": "This build is not yet linked to an EAS project ID for push.",
@@ -2270,6 +2285,15 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Choose the language for the app interface and local placeholder text.",
     "settings.languageTitle": "Language",
     "settings.light": "Light",
+    "settings.notifications": "Notifications",
+    "settings.notificationsBody":
+      "Controls push notifications and local reminders for general alarms, emergencies, and emergency duty on this device.",
+    "settings.notificationsGuestBody":
+      "Sign in to manage notifications for this device.",
+    "settings.notificationsHint":
+      "Turns push notifications and local reminders on or off for this device.",
+    "settings.notificationsOpenSettings": "Open device settings",
+    "settings.notificationsTitle": "Allow notifications",
     "settings.openAdmin": "Open admin area",
     "settings.openEmergencyDashboard": "Open emergency dashboard",
     "settings.openBusManagement": "Open my bus",
@@ -2407,6 +2431,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.notifications.checking": "جارٍ فحص حالة الإشعارات …",
     "emergency.notifications.denied":
       "لم يُسمح بالإشعارات. تبقى البلاغات الجديدة مقروءة في صندوق الرسائل.",
+    "emergency.notifications.disabled":
+      "تم إيقاف الإشعارات في الإعدادات. تبقى البلاغات الجديدة مقروءة في صندوق الرسائل.",
     "emergency.notifications.error":
       "تعذر إعداد الإشعارات. تبقى البلاغات الجديدة مقروءة في صندوق الرسائل.",
     "emergency.notifications.expo_go":
@@ -2643,6 +2669,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.notification.title": "الإنذار العام",
     "generalAlarm.notifications.checking": "جارٍ فحص حالة الإشعارات …",
     "generalAlarm.notifications.denied": "لم يتم السماح بالإشعارات.",
+    "generalAlarm.notifications.disabled": "تم إيقاف الإشعارات في الإعدادات.",
     "generalAlarm.notifications.error": "تعذر إعداد الإشعارات. قد تكون التذكيرات المحلية محدودة.",
     "generalAlarm.notifications.expo_go": "الإشعارات معطّلة في Expo Go لهذا التطبيق. يرجى استخدام نسخة تطوير.",
     "generalAlarm.notifications.missing_project_id": "هذا الإصدار غير مرتبط بعد بمعرّف مشروع EAS للإشعارات.",
@@ -3376,6 +3403,15 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "settings.languageBody": "اختر لغة واجهة التطبيق والنصوص المحلية المؤقتة.",
     "settings.languageTitle": "اللغة",
     "settings.light": "فاتح",
+    "settings.notifications": "الإشعارات",
+    "settings.notificationsBody":
+      "يتحكم في الإشعارات والتذكيرات المحلية للإنذار العام والطوارئ ومناوبات الطوارئ على هذا الجهاز.",
+    "settings.notificationsGuestBody":
+      "سجّل الدخول لإدارة الإشعارات على هذا الجهاز.",
+    "settings.notificationsHint":
+      "يشغّل الإشعارات والتذكيرات المحلية أو يوقفها على هذا الجهاز.",
+    "settings.notificationsOpenSettings": "فتح إعدادات الجهاز",
+    "settings.notificationsTitle": "السماح بالإشعارات",
     "settings.openAdmin": "فتح قسم المشرف",
     "settings.openEmergencyDashboard": "فتح لوحة الطوارئ",
     "settings.openBusManagement": "فتح حافلتي",

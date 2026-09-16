@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "313936118117",
+    "project_id": "al-batul",
+    "storage_bucket": "al-batul.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:313936118117:android:85182d29042f09a637618c",
+        "android_client_info": {
+          "package_name": "de.albatoul.ziyara"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBS0EtfyoncIiw8Tfb3xMGZWS4i1KAlys0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -13,10 +13,10 @@ Die Sichtbereiche und Diensteinteilungen werden durch Datenbank-RPCs und RLS ges
 
 ## Produktiv bereitstellen
 
-1. Migrationen `20260903000000_add_emergency_requests.sql`, `20260904000000_add_emergency_dashboard_and_duty.sql` und `20260904010000_require_emergency_location_label.sql` auf das Supabase-Projekt anwenden. Vor einem pauschalen `supabase db push` mit `npx supabase migration list --linked` und `npx supabase db push --linked --dry-run` prüfen, welche Migrationen im selben Lauf angewandt würden.
-2. Edge Functions `dispatch-emergency-alert` und `dispatch-emergency-duty` bereitstellen. Beide prüfen den Bearer-Token selbst; `verify_jwt = false` deaktiviert nur den vorgeschalteten Legacy-Gateway-Check.
-3. Eine EAS-Projekt-ID und gültige Expo-Push-Credentials konfigurieren. Bei Push-Security kann zusätzlich das bereits vom Generalalarm verwendete `EXPO_ACCESS_TOKEN` gesetzt werden.
-4. Einen neuen nativen Build erstellen. Der iOS-Berechtigungstext und der Android-Benachrichtigungskanal sind Teil des App-Binaries.
+1. Erledigt am 14. September 2026: Die Migrationen `20260903000000_add_emergency_requests.sql`, `20260904000000_add_emergency_dashboard_and_duty.sql` und `20260904010000_require_emergency_location_label.sql` sind remote angewandt; lokale und Remote-Migrationsliste sind synchron.
+2. Erledigt am 14. September 2026: `dispatch-emergency-alert` und `dispatch-emergency-duty` sind remote aktiv. Beide prüfen den Bearer-Token selbst; `verify_jwt = false` deaktiviert nur den vorgeschalteten Legacy-Gateway-Check.
+3. Erledigt am 14. September 2026: Das EAS-Projekt ist verbunden; APNs und FCM V1 sind für `de.albatoul.ziyara` hinterlegt. Expo Enhanced Push Security ist derzeit nicht aktiviert.
+4. Teilweise erledigt am 14. September 2026: Der signierte iOS-Preview-Build ist fertig; der Android-Preview-Build ist gestartet. Der iOS-Berechtigungstext und der Android-Benachrichtigungskanal sind Bestandteil dieser nativen Builds.
 5. Mit je einem echten Konto der Rollen `medical_staff` und `organization_team` Push aktivieren, den Dienst durch einen Admin zuweisen und beide Zielwege auf einem echten iOS-/Android-Gerät prüfen.
 
 Die eigentliche Bereitstellung erfolgt aus dem verknüpften Projekt mit:

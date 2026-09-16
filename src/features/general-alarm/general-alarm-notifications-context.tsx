@@ -24,18 +24,25 @@ import {
 } from '@/features/general-alarm/general-alarm-notifications';
 import type { GeneralAlarmNotificationState } from '@/features/general-alarm/general-alarm-notifications.types';
 import { buildGeneralAlarmReminderPlans } from '@/features/general-alarm/general-alarm-reminders';
+import { useNotificationsDisabled } from '@/features/general-alarm/useNotificationPreference';
 import { useI18n } from '@/features/i18n/i18n';
 import { emergencyDashboardRoute, emergencyRoute } from '@/features/navigation/routes';
 
 type GeneralAlarmNotificationsContextValue = GeneralAlarmNotificationState & {
   disable: () => Promise<void>;
   enable: () => Promise<void>;
+  enabled: boolean;
   isWorking: boolean;
   openSettings: () => Promise<void>;
+  unregisterDevice: () => Promise<void>;
 };
 
 const initialState: GeneralAlarmNotificationState = {
   availability: 'checking',
+  permissionGranted: false,
+};
+const disabledState: GeneralAlarmNotificationState = {
+  availability: 'disabled',
   permissionGranted: false,
 };
 
@@ -47,6 +54,8 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
   const { isAdmin, session } = useAuth();
   const { activeBoarding, participants } = useBusManagement();
   const { language, t } = useI18n();
+  const [notificationsDisabled, setNotificationsDisabled, preferenceLoaded] =
+    useNotificationsDisabled();
   const [notificationState, setNotificationState] = useState(initialState);
   const [isWorking, setIsWorking] = useState(false);
 
@@ -71,7 +80,14 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
   useEffect(() => {
     let isActive = true;
 
-    if (!session?.user.id) {
+    if (!session?.user.id || !preferenceLoaded) {
+      void cancelGeneralAlarmReminders();
+      return () => {
+        isActive = false;
+      };
+    }
+
+    if (notificationsDisabled) {
       void cancelGeneralAlarmReminders();
       return () => {
         isActive = false;
@@ -91,12 +107,13 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
     return () => {
       isActive = false;
     };
-  }, [language, session?.user.id]);
+  }, [language, notificationsDisabled, preferenceLoaded, session?.user.id]);
 
   useEffect(() => {
     if (
       !session?.user.id ||
       isAdmin ||
+      notificationsDisabled ||
       !notificationState.permissionGranted ||
       !activeBoarding
     ) {
@@ -124,15 +141,26 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
         permissionGranted: current.permissionGranted,
       }));
     });
-  }, [activeBoarding, isAdmin, notificationState.permissionGranted, participants, session?.user.id, t]);
+  }, [
+    activeBoarding,
+    isAdmin,
+    notificationState.permissionGranted,
+    notificationsDisabled,
+    participants,
+    session?.user.id,
+    t,
+  ]);
 
   const enable = useCallback(async () => {
     if (isWorking) return;
     setIsWorking(true);
     const state = await registerGeneralAlarmNotifications(language, true);
     setNotificationState(state);
+    if (state.permissionGranted) {
+      setNotificationsDisabled(false);
+    }
     setIsWorking(false);
-  }, [isWorking, language]);
+  }, [isWorking, language, setNotificationsDisabled]);
 
   const disable = useCallback(async () => {
     if (isWorking) return;
@@ -140,7 +168,8 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
 
     try {
       await unregisterGeneralAlarmNotifications();
-      setNotificationState({ availability: 'denied', permissionGranted: false });
+      setNotificationsDisabled(true);
+      setNotificationState(disabledState);
     } catch {
       setNotificationState((current) => ({
         availability: 'error',
@@ -149,17 +178,43 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
     } finally {
       setIsWorking(false);
     }
-  }, [isWorking]);
+  }, [isWorking, setNotificationsDisabled]);
+
+  const unregisterDevice = useCallback(async () => {
+    try {
+      await unregisterGeneralAlarmNotifications();
+    } catch {
+      // Signing out must not be blocked by a best-effort device cleanup.
+    } finally {
+      setNotificationState(
+        notificationsDisabled ? disabledState : initialState,
+      );
+    }
+  }, [notificationsDisabled]);
+
+  const effectiveNotificationState = notificationsDisabled
+    ? disabledState
+    : notificationState;
 
   const value = useMemo<GeneralAlarmNotificationsContextValue>(
     () => ({
-      ...notificationState,
+      ...effectiveNotificationState,
       disable,
       enable,
+      enabled:
+        Boolean(session?.user.id) && effectiveNotificationState.permissionGranted,
       isWorking,
       openSettings: openGeneralAlarmNotificationSettings,
+      unregisterDevice,
     }),
-    [disable, enable, isWorking, notificationState],
+    [
+      disable,
+      effectiveNotificationState,
+      enable,
+      isWorking,
+      session?.user.id,
+      unregisterDevice,
+    ],
   );
 
   return (

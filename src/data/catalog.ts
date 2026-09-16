@@ -68,6 +68,8 @@ export function searchCatalog(
           .filter((place) =>
             matches(query, [
               place.name,
+              place.shortDescription,
+              place.longDescription,
               formatPlaceLocation(place, language, true),
               place.city,
               place.category,

@@ -3,6 +3,7 @@ import type { BusBoardingStatus } from '@/domain/database';
 export type GeneralAlarmNotificationAvailability =
   | 'checking'
   | 'denied'
+  | 'disabled'
   | 'error'
   | 'expo_go'
   | 'missing_project_id'

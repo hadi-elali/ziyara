@@ -83,7 +83,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 ## Stack
 
 - Node `22.13.0` aus `.nvmrc`
-- Expo SDK `57` (`expo ~57.0.18`)
+- Expo SDK `57` (`expo ~57.0.22`)
 - React Native `0.86.3`, React `19.2.3`, TypeScript `~6.0.3` im Strict Mode
 - Expo Router mit typed routes und nativen Tabs
 - Supabase JS `^2.112.3` für Auth, Postgres, RPC und Realtime
@@ -156,11 +156,11 @@ npm run test:e2e
 
 ## Remote-Backend-Stand
 
-Nach ausdrücklicher Freigabe wurden am 27. August 2026 die Migrationen `20260826000000` bis `20260826021000` sowie `20260827000000_add_bus_management.sql` auf das verknüpfte Supabase-Projekt ausgerollt. Am 28. August 2026 folgten `20260827120000_add_trip_guidance.sql`, `20260827130000_add_bus_boarding_read_status.sql`, `20260827140000_add_general_alarm.sql` und `20260827150000_enforce_general_alarm_status_order.sql`. Die Mehrzielmigration `20260828120000_add_trip_navigation_destinations.sql` ist ebenfalls remote angewandt; am 30. August 2026 wurden die zuvor fehlende Migration `20260828130000_add_daily_program.sql` und anschließend `20260830000000_add_trip_groups_and_location_requests.sql` ausgerollt. Bis dahin zeigte die Migrationsliste lokal und remote denselben Stand. Die neue additive Migration `20260830010000_add_account_families_and_luggage.sql` ist nur lokal angewandt und noch nicht remote ausgerollt. Keine bestehende Migration wurde verändert, gelöscht oder zusammengefasst.
+Am 14. September 2026 wurden lokale und verknüpfte Remote-Migrationsliste erneut geprüft. Beide enthalten denselben Stand bis einschließlich `20260914010000`; der Dry Run meldete die Remote-Datenbank als aktuell. Keine bestehende Migration wurde verändert, gelöscht oder zusammengefasst.
 
-Die Edge Function `delete-account` ist remote als aktive Version 1 mit `verify_jwt = false` bereitgestellt. Das schaltet nur die vorgeschaltete Legacy-JWT-Prüfung aus; die Function verlangt weiterhin einen Bearer-Token und validiert ihn über Supabase Auth. Ein anonymer Remote-Aufruf wurde erwartungsgemäß mit HTTP 401 abgewiesen. Es wurde kein reales Konto testweise gelöscht.
+Die Edge Functions `delete-account`, `dispatch-general-alarm`, `dispatch-emergency-alert` und `dispatch-emergency-duty` sind remote aktiv. `verify_jwt = false` schaltet nur die vorgeschaltete Legacy-JWT-Prüfung aus; die Functions prüfen ihre jeweilige Berechtigung weiterhin selbst.
 
-Die Remote-Auth-Redirect-Allowlist wurde nicht verändert. Der zuletzt ergänzte Busstatus-Session-Retry, die Reiseführungsoberfläche und der Generalalarm befinden sich im lokalen Clientcode und benötigen für bereits installierte Apps einen neuen Build beziehungsweise ein App-Update. Die zugehörigen Datenbankmigrationen sind remote ausgerollt. `dispatch-general-alarm`, Push-Secrets und Scheduler wurden noch nicht remote eingerichtet. Es wurde kein Client-Build deployed, committed oder gepusht.
+Für Push ist das EAS-Projekt `@hadi_ea/al-batoul` mit dem nativen Identifier `de.albatoul.ziyara` verbunden. APNs und FCM V1 sind hinterlegt. Das Generalalarm-Scheduler-Secret liegt als Function-Secret und geschützt im Supabase Vault; `dispatch-general-alarm-every-minute` läuft jede Minute und antwortete in mehreren kontrollierten Läufen mit HTTP 200. Ein signierter iOS-Preview-Build wurde erstellt, der Android-Preview-Build wurde gestartet. Ein realer Push ist noch nicht nachgewiesen, weil zum Prüfzeitpunkt kein Gerät einen Expo-Push-Token registriert hatte. Die Remote-Auth-Redirect-Allowlist wurde nicht verändert.
 
 ## CI
 
@@ -181,7 +181,7 @@ Die Kernarchitektur und die automatisierten lokalen Prüfungen sind stabil, die 
 - aktualisierten Client verteilen und Tagesprogramm-Realtime/Zeitzone auf kleinen Zielgeräten prüfen
 - Migration `20260830010000_add_account_families_and_luggage.sql` nach ausdrücklicher Freigabe remote ausrollen, den aktualisierten Client verteilen und Registrierung, Kofferänderung sowie Familienverwaltung mit mehreren Testkonten prüfen
 - Wegen der angepassten iOS-Berechtigungsbeschreibung einen neuen nativen Build erstellen und Reisegruppen einschließlich Adminmitgliedschaft, Anfrage, Ablehnung, einmaliger Standortfreigabe sowie 15-Minuten-Ablauf auf echten iOS-/Android-Geräten prüfen
-- Generalalarm-Dispatcher nach ausdrücklicher Freigabe remote ausrollen, EAS-Projekt-ID/Push-Credentials und minutenweisen Scheduler einrichten, neuen nativen Build verteilen und den Ablauf auf echten Geräten prüfen
+- iOS-/Android-Preview-Builds installieren, Push in der App aktivieren und Generalalarm sowie beide Notfallwege auf echten Geräten unter Vordergrund, Hintergrund, Gerätesperre und schwachem Netz prüfen
 - SDK-kompatible Fixes für die verbleibenden High-/Moderate-Auditmeldungen übernehmen, sobald Expo/Metro sie bereitstellt
 
 ## Inhaltsregel

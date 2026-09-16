@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Switch, View } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,10 @@ export default function SettingsScreen() {
   const { mode, resolvedTheme, setMode } = useThemeMode();
   const { language, setLanguage, t } = useI18n();
   const { isAdmin, profile, signOut, user } = useAuth();
-  const { disable: unregisterGeneralAlarmDevice } =
-    useGeneralAlarmNotifications();
+  const notifications = useGeneralAlarmNotifications();
 
   const handleSignOut = async () => {
-    await unregisterGeneralAlarmDevice();
+    await notifications.unregisterDevice();
     const { error } = await signOut();
 
     if (error) {
@@ -143,6 +142,64 @@ export default function SettingsScreen() {
         </ThemedView>
       </Section>
 
+      <Section title={t("settings.notifications")}>
+        <ThemedView
+          type="surface"
+          style={[styles.panel, { borderColor: theme.border }]}
+        >
+          <View style={styles.row}>
+            <View style={styles.rowText}>
+              <ThemedText type="smallBold">
+                {t("settings.notificationsTitle")}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {user
+                  ? t("settings.notificationsBody")
+                  : t("settings.notificationsGuestBody")}
+              </ThemedText>
+            </View>
+            <Switch
+              accessibilityHint={t("settings.notificationsHint")}
+              accessibilityLabel={t("settings.notificationsTitle")}
+              disabled={
+                !user ||
+                notifications.isWorking ||
+                notifications.availability === "checking" ||
+                notifications.availability === "expo_go" ||
+                notifications.availability === "unsupported"
+              }
+              ios_backgroundColor={theme.border}
+              onValueChange={(enabled) =>
+                void (enabled
+                  ? notifications.enable()
+                  : notifications.disable())
+              }
+              thumbColor={
+                notifications.enabled ? theme.accent : theme.textSecondary
+              }
+              trackColor={{
+                false: theme.border,
+                true: theme.accentSoft,
+              }}
+              value={notifications.enabled}
+            />
+          </View>
+          {user ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t(`generalAlarm.notifications.${notifications.availability}`)}
+            </ThemedText>
+          ) : null}
+          {user && notifications.availability === "denied" ? (
+            <Button
+              icon="settings"
+              label={t("settings.notificationsOpenSettings")}
+              onPress={() => void notifications.openSettings()}
+              variant="secondary"
+            />
+          ) : null}
+        </ThemedView>
+      </Section>
+
       <Section title={t("settings.reader")}>
         <ReaderPreferenceControls />
       </Section>
@@ -206,7 +263,7 @@ export default function SettingsScreen() {
               <Button
                 icon="account"
                 label={t("settings.signIn")}
-                onPress={() => router.push(loginRoute("/account"))}
+                onPress={() => router.push(loginRoute())}
               />
             </>
           )}

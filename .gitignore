@@ -45,3 +45,6 @@ example
 # generated native folders
 /ios
 /android
+
+# push notifcation
+al-batul-firebase-adminsdk-fbsvc-65d0cc1272.json
