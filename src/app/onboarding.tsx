@@ -56,15 +56,20 @@ export default function OnboardingScreen() {
           showsVerticalScrollIndicator={false}>
           <View style={styles.container}>
             <View style={styles.intro}>
-              <ThemedText style={[styles.centeredText, styles.eyebrow]} type="eyebrow">
-                Ziyara
-              </ThemedText>
               <ThemedText style={[styles.centeredText, styles.primaryText]} type="title">
+                Al Batoul
+              </ThemedText>
+              <ThemedText style={[styles.centeredText, styles.primaryText]} type="subtitle">
+                Reiseapp
+              </ThemedText>
+              <View style={{marginBottom: 10}}/>
+              <ThemedText style={[styles.centeredText, styles.eyebrow]} type="subtitle">
                 {t('onboarding.title')}
               </ThemedText>
               <ThemedText style={[styles.centeredText, styles.secondaryText]}>
                 {t('onboarding.body')}
               </ThemedText>
+              
               {videoStatus === 'error' ? (
                 <ThemedText style={[styles.centeredText, styles.secondaryText]} type="small">
                   {t('onboarding.videoUnavailable')}

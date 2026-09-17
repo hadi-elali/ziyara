@@ -148,7 +148,7 @@ npm run android
 npm run web
 ```
 
-`app.json` konfiguriert Portrait-Modus, das Scheme `ziyara`, automatische Systemdarstellung, Standortberechtigungen, statischen Web-Export, Expo Router und Splash Screen. `package.json` schließt auf Android `react-native-maps` und die ungenutzte `@expo/dom-webview`-Native-View aus; auf iOS bleiben die WebView-Native-Module ausgeschlossen und Apple Maps aktiv. `eas.json` besitzt interne Preview- und Production-Buildprofile. Änderungen an nativen Abhängigkeiten oder App-Konfiguration können einen neuen Development Build erfordern.
+`app.json` konfiguriert Portrait-Modus, das Scheme `ziyara`, automatische Systemdarstellung, Standortberechtigungen, statischen Web-Export, Expo Router und einen nativen Splash Screen mit dem Al-Batoul-Logo. `package.json` schließt auf Android `react-native-maps` und die ungenutzte `@expo/dom-webview`-Native-View aus; auf iOS bleiben die WebView-Native-Module ausgeschlossen und Apple Maps aktiv. `eas.json` besitzt interne Preview- und Production-Buildprofile. Änderungen an nativen Abhängigkeiten oder App-Konfiguration können einen neuen Development Build erfordern.
 
 ## Architektur und Verzeichnisstruktur
 

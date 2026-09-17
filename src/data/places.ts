@@ -89,7 +89,7 @@ const imamAliImages = [
 const wadiSalamImages = [
   localPlaceImage(
     'wadi-as-salam',
-    require('@/assets/images/places/wadi as-salam.jpg'),
+    require('@/assets/images/places/wadi-as-salam.jpg'),
     'Blick auf den Friedhof Wadi al-Salam in Najaf.',
     'Tripadvisor',
     'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2f/b0/94/35/caption.jpg?w=1200&h=1200&s=1',
