@@ -35,11 +35,13 @@ const mockSession = {
   user: { id: mockProfile.user_id },
 } as Session;
 const mockAuthState: {
+  hasProfileError: boolean;
   isAdmin: boolean;
   isLoading: boolean;
   profile: UserProfile | null;
   session: Session | null;
 } = {
+  hasProfileError: false,
   isAdmin: false,
   isLoading: false,
   profile: mockProfile,
@@ -173,6 +175,7 @@ describe('GroupCheckProvider request versioning', () => {
     renderer = null;
     responseResponses = [];
     jest.clearAllMocks();
+    mockAuthState.hasProfileError = false;
     mockAuthState.isAdmin = false;
     mockAuthState.isLoading = false;
     mockAuthState.profile = mockProfile;
@@ -250,6 +253,29 @@ describe('GroupCheckProvider request versioning', () => {
 
     expect(getContext().isLoading).toBe(true);
     expect(getContext().isBlocking).toBe(false);
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+  });
+
+  it('startet bei einem initialen Profilfehler keine zweite Serverabfrage', async () => {
+    mockAuthState.hasProfileError = true;
+    mockAuthState.profile = null;
+
+    await act(async () => {
+      renderer = create(
+        <GroupCheckProvider>
+          <GroupCheckProbe />
+        </GroupCheckProvider>,
+      );
+      await flushAsyncWork();
+    });
+
+    expect(getContext()).toMatchObject({
+      activeCheck: null,
+      currentResponse: null,
+      hasSyncError: false,
+      isBlocking: true,
+      isLoading: true,
+    });
     expect(mockSupabase.from).not.toHaveBeenCalled();
   });
 

@@ -1,6 +1,6 @@
 # Ziyarah – verbindlicher Projektkontext für LLMs
 
-Stand: 14. September 2026
+Stand: 17. September 2026
 
 ## Zweck und Pflege
 
@@ -148,7 +148,7 @@ npm run android
 npm run web
 ```
 
-`app.json` konfiguriert Portrait-Modus, das Scheme `ziyara`, automatische Systemdarstellung, Standortberechtigungen, statischen Web-Export, Expo Router und einen nativen Splash Screen mit dem Al-Batoul-Logo. `package.json` schließt auf Android `react-native-maps` und die ungenutzte `@expo/dom-webview`-Native-View aus; auf iOS bleiben die WebView-Native-Module ausgeschlossen und Apple Maps aktiv. `eas.json` besitzt interne Preview- und Production-Buildprofile. Änderungen an nativen Abhängigkeiten oder App-Konfiguration können einen neuen Development Build erfordern.
+`app.json` konfiguriert Portrait-Modus, das Scheme `ziyara`, automatische Systemdarstellung, Standortberechtigungen, statischen Web-Export, Expo Router und die beiden bereitgestellten Markenassets: `assets/images/icon.png` dient als App-Icon auf iOS, Android und Web; `assets/images/logo.png` wird für den nativen Splash Screen sowie das Android-Monochrom- und Benachrichtigungssymbol verwendet. `package.json` schließt auf Android `react-native-maps` und die ungenutzte `@expo/dom-webview`-Native-View aus; auf iOS bleiben die WebView-Native-Module ausgeschlossen und Apple Maps aktiv. `eas.json` besitzt interne Preview- und Production-Buildprofile. Änderungen an nativen Abhängigkeiten oder App-Konfiguration können einen neuen Development Build erfordern.
 
 ## Architektur und Verzeichnisstruktur
 
@@ -208,7 +208,7 @@ Die Reihenfolge ist relevant: Bus-, Reisegruppen-, Tagesprogramm-, Generalalarm-
 
 `AppErrorBoundary` verwendet absichtlich keine Theme-, I18n-, Auth- oder Netzwerkabhängigkeit, damit der Fallback auch bei einem Providerfehler rendern kann. Die Fehlergrenze arbeitet vollständig lokal; externes Crash-Reporting ist nicht Bestandteil der App.
 
-`AuthProvider` trennt das initiale Session-/Profil-Laden und echte Benutzerwechsel von Hintergrundaktualisierungen. Beim App-Resume, einem manuellen Refresh oder einer Realtime-Profiländerung bleiben das vorhandene Profil, die Navigation und der Screen-State erhalten; `isRefreshing` und `profileRefreshError` bilden den nicht-blockierenden Zustand ab. Ein fehlgeschlagener Hintergrundrefresh zeigt global einen wiederholbaren Hinweis. Logout, Wechsel der Auth-User-ID oder eine erfolgreiche Serverantwort ohne Profil entfernen alte Profildaten dagegen sofort. Rollen stammen weiterhin ausschließlich aus dem serverseitigen Profil; RLS und geschützte RPCs bleiben auch bei vorübergehend veraltetem Client-State die Berechtigungsinstanz.
+`AuthProvider` trennt das initiale Session-/Profil-Laden und echte Benutzerwechsel von Hintergrundaktualisierungen. Beim App-Resume, einem manuellen Refresh oder einer Realtime-Profiländerung bleiben das vorhandene Profil, die Navigation und der Screen-State erhalten; `isRefreshing` und `profileRefreshError` bilden den nicht-blockierenden Zustand ab. Ein fehlgeschlagener Hintergrundrefresh zeigt global einen wiederholbaren Hinweis. Schlägt dagegen der initiale Profilabruf fehl, startet der profilabhängige Gruppencheck keine zusätzliche Serverabfrage: Die Navigation bleibt vorsorglich gesperrt und zeigt eine einzige Profilfehlermeldung, deren Wiederholungsaktion zuerst das Profil lädt. Logout, Wechsel der Auth-User-ID oder eine erfolgreiche Serverantwort ohne Profil entfernen alte Profildaten dagegen sofort. Rollen stammen weiterhin ausschließlich aus dem serverseitigen Profil; RLS und geschützte RPCs bleiben auch bei vorübergehend veraltetem Client-State die Berechtigungsinstanz.
 
 Der gleiche Provider registriert den nativen Linking-Listener für Passwort-Recovery. `detectSessionInUrl` bleibt am Supabase-Client deaktiviert, damit Links nicht pauschal als Login verarbeitet werden. `src/features/auth/password-recovery-link.ts` akzeptiert Recovery-Zugangsdaten nur auf `/reset-password`; der neue Passwort-Screen bleibt außerhalb der normalen Login-Weiterleitung erreichbar, obwohl die Recovery-Session technisch bereits authentifiziert ist.
 
@@ -489,7 +489,7 @@ Der letzte vollständige Prüfstand vom 14. September 2026: `npm run validate` b
 - Kartenkacheln sind offline nicht garantiert. Bereits vom Betriebssystem beziehungsweise der Android-WebView zwischengespeicherte Kacheln können wiederverwendet werden; es wird bewusst kein vollständiges Offline-Tilepaket vorinstalliert oder unkontrolliert vorabgeladen.
 - Android verwendet die öffentlichen Standardkacheln von OpenStreetMap ohne API-Schlüssel oder Zahlungsdaten. Deren Tile Usage Policy, faire Nutzung, verpflichtende Attribution und fehlende Verfügbarkeitsgarantie sind zu beachten. Bei größerem Produktivverkehr ist ein eigener oder ausdrücklich freigegebener Tile-Dienst nötig. Wegen des Android-Autolinking-Ausschlusses von `react-native-maps` ist nach dieser Umstellung ein neuer Android-Build erforderlich.
 - Finale Store-Metadaten und veröffentlichungsfertige Datenschutz-/Supportseiten fehlen. Externes Crash-Reporting ist nicht integriert.
-- App-Icon und Splash-Grafik sind noch Expo-Startergrafiken und müssen vor einem Store-Release durch freigegebene Markenassets ersetzt werden.
+- App-Icon, Web-Favicon, Android-Adaptive-/Benachrichtigungssymbol und Splash Screen verwenden ausschließlich die beiden bereitgestellten Markenassets. Ihre finale Darstellung muss noch in signierten iOS- und Android-Preview-Builds geprüft werden.
 - Die nativen Identifier sind als `de.albatoul.ziyara` konfiguriert; finale Store-Metadaten und Produktionsfreigabe fehlen weiterhin.
 - Die Recovery- und Account-Löschpfade sind lokal vollständig implementiert; Migrationen und Löschfunktion sind remote ausgerollt. Vor einem Release fehlen noch die Remote-Auth-Redirect-Allowlist sowie Recovery- und Löschtests auf einem signierten nativen Build mit einem ausdrücklich freigegebenen Testkonto.
 - Kontofamilien, Kofferanzahl und SIM-Karten-Erweiterung sind im Client implementiert; die zugehörigen Migrationen `20260830010000` und `20260902000000` sind lokal und remote vorhanden. Es fehlen reale Tests von Registrierung, nachträglichen Mengenänderungen, Adminsummen und Familienverschiebung mit mehreren Konten auf kleinen iOS-, Android- und Weboberflächen.

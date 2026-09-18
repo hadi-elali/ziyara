@@ -44,7 +44,13 @@ const fallbackRefreshIntervalMs = 60_000;
 const fallbackRefreshJitterMs = 30_000;
 
 export function GroupCheckProvider({ children }: PropsWithChildren) {
-  const { isAdmin, isLoading: isAuthLoading, profile, session } = useAuth();
+  const {
+    hasProfileError,
+    isAdmin,
+    isLoading: isAuthLoading,
+    profile,
+    session,
+  } = useAuth();
   const [activeCheck, setActiveCheck] = useState<GroupCheck | null>(null);
   const [currentResponse, setCurrentResponse] = useState<boolean | null>(null);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
@@ -124,7 +130,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
   }, [profileId, userId]);
 
   useEffect(() => {
-    if (isAuthLoading) {
+    if (isAuthLoading || (userId !== null && hasProfileError)) {
       return;
     }
 
@@ -178,7 +184,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
       appStateSubscription?.remove();
       void supabase.removeChannel(channel);
     };
-  }, [isAuthLoading, refresh, userId]);
+  }, [hasProfileError, isAuthLoading, refresh, userId]);
 
   const startCheck = useCallback(
     async (question: string) => {

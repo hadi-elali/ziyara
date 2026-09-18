@@ -27,6 +27,7 @@ import {
 
 jest.mock('@/features/auth/auth-context', () => ({
   useAuth: () => ({
+    hasProfileError: false,
     isAdmin: false,
     isLoading: false,
     profile: null,

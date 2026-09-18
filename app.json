@@ -4,11 +4,11 @@
     "slug": "al-batoul",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "ziyara",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Erlaube Al-Batoul, deinen Standort auf der Karte anzuzeigen, als Treffpunkt zu übernehmen, die Entfernung zu berechnen oder ihn nach deiner ausdrücklichen Zustimmung einmalig mit der Reiseleitung beziehungsweise einem ausgewählten Notfallteam zu teilen.",
         "ITSAppUsesNonExemptEncryption": false
@@ -21,10 +21,9 @@
         "ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#798F7A",
+        "foregroundImage": "./assets/images/icon.png",
+        "monochromeImage": "./assets/images/logo.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "de.albatoul.ziyara",
@@ -32,11 +31,17 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/logo.png",
+          "color": "#798F7A"
+        }
+      ],
       [
         "expo-splash-screen",
         {

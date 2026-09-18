@@ -31,7 +31,11 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
   const router = useRouter();
   const theme = useTheme();
   const { t } = useI18n();
-  const { isAdmin } = useAuth();
+  const {
+    hasProfileError,
+    isAdmin,
+    refreshProfile,
+  } = useAuth();
   const {
     activeCheck,
     currentResponse,
@@ -66,24 +70,30 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     }
   };
 
-  if (!activeCheck) {
-    if (!isLoading && !hasSyncError) {
+  if (hasProfileError || !activeCheck) {
+    if (!hasProfileError && !isLoading && !hasSyncError) {
       return <Redirect href={returnTo as Href} />;
     }
 
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <View style={styles.centeredContent}>
-          {hasSyncError ? (
+          {hasProfileError || hasSyncError ? (
             <Card style={styles.statusCard}>
-              <ThemedText type="heading">{t('groupCheck.syncErrorTitle')}</ThemedText>
+              <ThemedText type="heading">
+                {t(hasProfileError ? 'auth.profileErrorTitle' : 'groupCheck.syncErrorTitle')}
+              </ThemedText>
               <ThemedText themeColor="textSecondary">
-                {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+                {t(
+                  hasProfileError
+                    ? 'auth.profileErrorBody'
+                    : supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'),
+                )}
               </ThemedText>
               <Button
                 icon="refresh"
-                label={t('groupCheck.retry')}
-                onPress={() => void refresh()}
+                label={t(hasProfileError ? 'auth.profileRetry' : 'groupCheck.retry')}
+                onPress={() => void (hasProfileError ? refreshProfile() : refresh())}
               />
             </Card>
           ) : (

@@ -159,7 +159,7 @@ function RootNavigation() {
           <SymbolIcon color={colors.surface} name="alarm" size={25} />
         </Pressable>
       ) : null}
-      {profileSyncErrorKind ? (
+      {profileSyncErrorKind && !isBlocking ? (
         <View
           accessibilityLiveRegion="polite"
           accessibilityRole="alert"
