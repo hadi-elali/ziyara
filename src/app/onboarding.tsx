@@ -1,98 +1,164 @@
-import { useEvent } from 'expo';
+import { useEventListener } from 'expo';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { ThemedText } from '@/components/themed-text';
-import { MaxContentWidth, MediaBackdrop, Spacing } from '@/constants/theme';
+import { SymbolIcon } from '@/components/ui/symbol-icon';
+import { Fonts, OnboardingPalette, Spacing } from '@/constants/theme';
 import { languageOptions, type Language, useI18n } from '@/features/i18n/i18n';
 import { registerRoute } from '@/features/navigation/routes';
 import { useOnboarding } from '@/features/onboarding/onboarding-state';
-import { useTheme } from '@/hooks/use-theme';
 
 // Metro resolves bundled local media through a static require expression.
 const onboardingVideo = require('../../assets/videos/intro.mp4');
+const onboardingBackground = require('../../assets/images/background-intro.png');
+const onboardingLogo = require('../../assets/images/logo.png');
+
+type OnboardingPhase = 'language' | 'video';
 
 export default function OnboardingScreen() {
-  const theme = useTheme();
-  const { setLanguage, t } = useI18n();
+  const { width } = useWindowDimensions();
+  const { language, setLanguage, t } = useI18n();
   const { completeOnboarding } = useOnboarding();
+  const [phase, setPhase] = useState<OnboardingPhase>('video');
+  const [videoUnavailable, setVideoUnavailable] = useState(false);
   const player = useVideoPlayer(onboardingVideo, (videoPlayer) => {
-    videoPlayer.audioMixingMode = 'mixWithOthers';
-    videoPlayer.loop = true;
+    videoPlayer.audioMixingMode = 'doNotMix';
+    videoPlayer.loop = false;
     videoPlayer.muted = false;
+    videoPlayer.volume = 1;
     videoPlayer.play();
   });
-  const { status: videoStatus } = useEvent(player, 'statusChange', {
-    status: player.status,
+
+  useEventListener(player, 'playToEnd', () => {
+    setPhase('language');
   });
 
-  const chooseLanguage = (language: Language) => {
-    setLanguage(language);
+  useEventListener(player, 'statusChange', ({ status }) => {
+    if (status === 'error') {
+      setVideoUnavailable(true);
+      setPhase('language');
+    }
+  });
+
+  const chooseLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
     completeOnboarding();
     router.replace(registerRoute());
   };
 
+  if (phase === 'video') {
+    return (
+      <View style={styles.videoRoot}>
+        <VideoView
+          accessibilityLabel={t('onboarding.videoLabel')}
+          contentFit="cover"
+          nativeControls={false}
+          player={player}
+          playsInline
+          style={styles.backgroundVideo}
+        />
+      </View>
+    );
+  }
+
+  const logoSize = Math.min(172, Math.max(122, width * 0.38));
+  const titleSize = Math.min(54, Math.max(42, width * 0.125));
+
   return (
-    <View style={[styles.root, { backgroundColor: theme.background }]}>
-      {videoStatus === 'error' ? null : (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <VideoView
-            accessibilityLabel={t('onboarding.videoLabel')}
-            contentFit="cover"
-            nativeControls={false}
-            player={player}
-            playsInline
-            style={styles.backgroundVideo}
-            surfaceType={Platform.OS === 'android' ? 'textureView' : undefined}
-          />
-        </View>
-      )}
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.scrim]} />
+    <View style={styles.root}>
+      <Image
+        accessible={false}
+        blurRadius={3}
+        contentFit="cover"
+        source={onboardingBackground}
+        style={StyleSheet.absoluteFill}
+      />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.imageOverlay]} />
 
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           <View style={styles.container}>
-            <View style={styles.intro}>
-              <ThemedText style={[styles.centeredText, styles.primaryText]} type="title">
-                Al Batoul
+            <View style={styles.brand}>
+              <Image
+                accessible={false}
+                contentFit="contain"
+                source={onboardingLogo}
+                style={{ height: logoSize, width: logoSize }}
+              />
+              <ThemedText
+                numberOfLines={1}
+                style={[styles.centeredText, styles.brandName, { fontSize: titleSize }]}>
+                {t('onboarding.brandName')}
               </ThemedText>
-              <ThemedText style={[styles.centeredText, styles.primaryText]} type="subtitle">
-                Reiseapp
+              <View style={styles.brandSubtitleRow}>
+                <View style={styles.brandLine} />
+                <ThemedText style={[styles.centeredText, styles.brandSubtitle]}>
+                  {t('onboarding.brandSubtitle')}
+                </ThemedText>
+                <View style={styles.brandLine} />
+              </View>
+              <ThemedText style={[styles.centeredText, styles.tagline]}>
+                {t('onboarding.tagline')}
               </ThemedText>
-              <View style={{marginBottom: 10}}/>
-              <ThemedText style={[styles.centeredText, styles.eyebrow]} type="subtitle">
+            </View>
+
+            <View style={styles.languageSection}>
+              <ThemedText style={[styles.centeredText, styles.languageTitle]} type="heading">
                 {t('onboarding.title')}
               </ThemedText>
-              <ThemedText style={[styles.centeredText, styles.secondaryText]}>
-                {t('onboarding.body')}
-              </ThemedText>
-              
-              {videoStatus === 'error' ? (
-                <ThemedText style={[styles.centeredText, styles.secondaryText]} type="small">
+
+              <View style={styles.languageList}>
+                {languageOptions.map((option) => {
+                  const isSelected = option.value === language;
+
+                  return (
+                    <Pressable
+                      accessibilityHint={t('onboarding.languageHint')}
+                      accessibilityRole="button"
+                      key={option.value}
+                      onPress={() => chooseLanguage(option.value)}
+                      style={({ pressed }) => [
+                        styles.languageButton,
+                        isSelected && styles.languageButtonSelected,
+                        pressed && styles.languageButtonPressed,
+                      ]}>
+                      <SymbolIcon
+                        color={isSelected ? OnboardingPalette.background : OnboardingPalette.text}
+                        name="globe"
+                        size={22}
+                      />
+                      <ThemedText
+                        numberOfLines={1}
+                        style={[
+                          styles.languageLabel,
+                          isSelected && styles.languageLabelSelected,
+                        ]}
+                        type="smallBold">
+                        {option.nativeLabel}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {videoUnavailable ? (
+                <ThemedText style={[styles.centeredText, styles.videoUnavailable]} type="small">
                   {t('onboarding.videoUnavailable')}
                 </ThemedText>
               ) : null}
-            </View>
-
-            <View style={styles.languageList}>
-              {languageOptions.map((option) => (
-                <Pressable
-                  accessibilityHint={t('onboarding.languageHint')}
-                  accessibilityRole="button"
-                  key={option.value}
-                  onPress={() => chooseLanguage(option.value)}
-                  style={({ pressed }) => [
-                    styles.languageButton,
-                    pressed && styles.pressed,
-                  ]}>
-                  <ThemedText style={styles.languageLabel} type="heading">
-                    {option.nativeLabel}
-                  </ThemedText>
-                </Pressable>
-              ))}
             </View>
           </View>
         </ScrollView>
@@ -103,6 +169,11 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   root: {
+    backgroundColor: OnboardingPalette.background,
+    flex: 1,
+  },
+  videoRoot: {
+    backgroundColor: OnboardingPalette.videoBackground,
     flex: 1,
   },
   backgroundVideo: {
@@ -113,8 +184,8 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  scrim: {
-    backgroundColor: MediaBackdrop.scrim,
+  imageOverlay: {
+    backgroundColor: OnboardingPalette.overlay,
   },
   scrollContent: {
     alignItems: 'center',
@@ -123,45 +194,98 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
   },
   container: {
-    gap: Spacing.four,
-    maxWidth: Math.min(MaxContentWidth, 560),
-    paddingVertical: Spacing.three,
+    gap: Spacing.five,
+    maxWidth: 560,
+    paddingBottom: Spacing.four,
+    paddingTop: Spacing.three,
     width: '100%',
   },
-  intro: {
-    gap: Spacing.two,
+  brand: {
+    alignItems: 'center',
+    gap: Spacing.one,
   },
   centeredText: {
     textAlign: 'center',
+    writingDirection: 'auto',
   },
-  eyebrow: {
-    color: MediaBackdrop.textSecondary,
+  brandName: {
+    color: OnboardingPalette.text,
+    fontFamily: Fonts.serif,
+    fontWeight: '500',
+    lineHeight: 62,
+    marginTop: -Spacing.two,
   },
-  primaryText: {
-    color: MediaBackdrop.text,
+  brandSubtitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.two,
+    justifyContent: 'center',
+    maxWidth: 390,
+    width: '86%',
   },
-  secondaryText: {
-    color: MediaBackdrop.textSecondary,
+  brandLine: {
+    backgroundColor: OnboardingPalette.gold,
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    maxWidth: 62,
+  },
+  brandSubtitle: {
+    color: OnboardingPalette.brandGreen,
+    fontSize: 23,
+    fontWeight: '500',
+    letterSpacing: 1.2,
+    lineHeight: 30,
+  },
+  tagline: {
+    color: OnboardingPalette.textSecondary,
+    fontSize: 17,
+    lineHeight: 25,
+    marginTop: Spacing.two,
+  },
+  languageSection: {
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  languageTitle: {
+    color: OnboardingPalette.text,
   },
   languageList: {
+    flexDirection: 'row',
     gap: Spacing.two,
+    width: '100%',
   },
   languageButton: {
     alignItems: 'center',
-    backgroundColor: MediaBackdrop.surface,
-    borderRadius: 12,
-    borderColor: MediaBackdrop.border,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: OnboardingPalette.border,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.two,
     justifyContent: 'center',
-    minHeight: 58,
-    paddingHorizontal: Spacing.three,
+    minHeight: 56,
+    paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.two,
   },
-  languageLabel: {
-    color: MediaBackdrop.text,
-    textAlign: 'center',
+  languageButtonSelected: {
+    backgroundColor: OnboardingPalette.gold,
+    borderColor: OnboardingPalette.gold,
   },
-  pressed: {
-    opacity: 0.72,
+  languageButtonPressed: {
+    backgroundColor: OnboardingPalette.goldPressed,
+    borderColor: OnboardingPalette.goldPressed,
+    opacity: 0.82,
+  },
+  languageLabel: {
+    color: OnboardingPalette.text,
+    textAlign: 'center',
+    writingDirection: 'auto',
+  },
+  languageLabelSelected: {
+    color: OnboardingPalette.background,
+  },
+  videoUnavailable: {
+    color: OnboardingPalette.textSecondary,
+    maxWidth: 420,
   },
 });

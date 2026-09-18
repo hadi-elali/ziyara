@@ -91,5 +91,17 @@ export const MediaBackdrop = {
   textSecondary: '#DDE8E1',
 } as const;
 
+export const OnboardingPalette = {
+  background: '#032D26',
+  border: 'rgba(244, 248, 255, 0.7)',
+  brandGreen: '#5F8F6B',
+  gold: '#F0CC82',
+  goldPressed: '#DDB769',
+  overlay: 'rgba(0, 0, 0, 0.28)',
+  text: '#FFF9ED',
+  textSecondary: '#F1E8D9',
+  videoBackground: '#000000',
+} as const;
+
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

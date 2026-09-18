@@ -930,8 +930,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.validation.passwordRequired": "Gib dein Passwort ein.",
     "onboarding.body":
       "Wähle deine Sprache. Danach kannst du ein Konto erstellen, dich anmelden oder die App ohne Konto nutzen.",
+    "onboarding.brandName": "Al Batoul",
+    "onboarding.brandSubtitle": "Ziyara Reise-App",
     "onboarding.languageHint":
       "Öffnet die Registrierung in dieser Sprache.",
+    "onboarding.tagline": "Gemeinsam reisen. Gemeinsam erleben.",
     "onboarding.title": "Sprache wählen",
     "onboarding.videoLabel": "Einführungsvideo zur Ziyara-App",
     "onboarding.videoUnavailable":
@@ -2067,8 +2070,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.validation.passwordRequired": "Enter your password.",
     "onboarding.body":
       "Choose your language. You can then create an account, sign in, or use the app without an account.",
+    "onboarding.brandName": "Al Batoul",
+    "onboarding.brandSubtitle": "Ziyara Travel App",
     "onboarding.languageHint":
       "Opens registration in this language.",
+    "onboarding.tagline": "Travel together. Experience together.",
     "onboarding.title": "Choose your language",
     "onboarding.videoLabel": "Introduction video for the Ziyara app",
     "onboarding.videoUnavailable":
@@ -3188,8 +3194,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.validation.passwordRequired": "أدخل كلمة المرور.",
     "onboarding.body":
       "اختر لغتك. بعد ذلك يمكنك إنشاء حساب أو تسجيل الدخول أو استخدام التطبيق بدون حساب.",
+    "onboarding.brandName": "Al Batoul",
+    "onboarding.brandSubtitle": "تطبيق سفر الزيارة",
     "onboarding.languageHint":
       "يفتح التسجيل بهذه اللغة.",
+    "onboarding.tagline": "نسافر معًا. نعيش التجربة معًا.",
     "onboarding.title": "اختر اللغة",
     "onboarding.videoLabel": "فيديو تعريفي بتطبيق Ziyara",
     "onboarding.videoUnavailable":

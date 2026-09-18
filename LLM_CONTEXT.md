@@ -1,6 +1,6 @@
 # Ziyarah – verbindlicher Projektkontext für LLMs
 
-Stand: 17. September 2026
+Stand: 18. September 2026
 
 ## Zweck und Pflege
 
@@ -51,7 +51,7 @@ Ziyarah ist eine produktionsorientierte Expo-App für eine schiitische Ziyarah-R
 - Ortsdetails mit Bildern, Quellen, Hinweisen, empfohlenen Handlungen und Merkliste.
 - Reader mit fest zusammengehörenden Absatzblöcken aus Arabisch, Transliteration und deutscher Übersetzung, RTL für Arabisch, getrennten persistenten Sichtbarkeits- und Schriftgrößeneinstellungen, Kopieren, Teilen und Merkliste.
 - Sprache Deutsch/Englisch/Arabisch und Theme `system`/`light`/`dark` werden lokal gespeichert. Eine explizite Theme-Auswahl synchronisiert zusätzlich das native App-Farbschema und den Native-Tabs-Container, damit native Zurück- und Navigationsbuttons beim Umschalten nicht zwischen zwei Darstellungen flackern.
-- Beim ersten Start zeigt die App ein lokal gebündeltes Einführungsvideo und eine Sprachauswahl. Die Auswahl wird separat gespeichert und öffnet unmittelbar die Registrierung; dort bleiben Anmeldung und die Nutzung des öffentlichen Guides ohne Konto als gleichwertige Wege erreichbar.
+- Beim ersten Start spielt die App nach dem nativen Splash Screen das lokal gebündelte Einführungsvideo genau einmal mit Ton ab. Danach erscheint eine eigene Sprachauswahl vor `background-intro.png`; ein Tipp auf eine Sprache speichert sie und öffnet direkt die Registrierung. Dort bleiben Anmeldung und die Nutzung des öffentlichen Guides ohne Konto als gleichwertige Wege erreichbar.
 - Eine vorhandene Anmeldung gilt zugleich als abgeschlossenes Onboarding und wird lokal entsprechend übernommen. Wenn eine verpflichtende Gruppenabfrage den normalen App-Bereich sperrt, ist `/check-in` die erste Navigator-Ausweichroute; die Sprachauswahl kann dadurch nicht versehentlich als Fallback erscheinen.
 
 ### Gruppenfunktionen
@@ -425,7 +425,7 @@ Für Push ist das EAS-Projekt `@hadi_ea/al-batoul` mit der Projekt-ID aus `app.j
 - Die administrative Treffpunktauswahl besitzt getrennte iOS-, Android- und `.web.tsx`-Varianten: iOS zeigt Apple Maps, Android Leaflet mit einem verschiebbaren Marker und Web eine klickbare Irak-Koordinatenfläche. Alle können nach ausdrücklicher Standortfreigabe einmalig den aktuellen Gerätestandort übernehmen.
 - Platform-spezifische Implementierungen bevorzugen, wenn ein natives Modul Web-Exporte brechen würde.
 - Gebündelte Katalogdaten und Bilder sind offline verfügbar. Supabase-Funktionen und Kartenkacheln sind nicht vollständig offlinefähig. Android begrenzt Leaflet auf den Irak, lädt Tiles erst bei sichtbarem Bedarf, aktualisiert sie erst nach beendeter Bewegung, behält einen kleinen Puffer im Speicher und nutzt den normalen persistenten HTTP-Cache der WebView. iOS nutzt den von MapKit verwalteten Systemcache; die App implementiert keinen separaten Tile-Downloader.
-- Das gebündelte Erststartvideo wird mit `expo-video` auf iOS, Android und Web bildschirmfüllend als Hintergrund abgespielt und läuft bewusst stumm in Schleife. Eine abgedunkelte Ebene hält die Sprachauswahl lesbar; ein Wiedergabefehler blockiert sie nicht.
+- Das gebündelte Erststartvideo wird mit `expo-video` auf iOS, Android und Web bildschirmfüllend genau einmal mit Ton abgespielt. Nach dem Wiedergabeende zeigt die App die Sprachauswahl mit dem gebündelten Bild `assets/images/background-intro.png`, Logo und Markenclaim; ein Sprachbutton speichert die Auswahl und öffnet direkt die Registrierung. Ein Wiedergabefehler überspringt ausschließlich das Video und blockiert die Auswahl nicht.
 - Generalalarm-Push und lokale Benachrichtigungen sind nativ; die Webversion zeigt den Statusfluss ohne Push. Angemeldete Nutzer können Push-Mitteilungen und lokale Generalalarm-Erinnerungen zentral in den Einstellungen ein- oder ausschalten; die Auswahl bleibt lokal erhalten, „Aus“ meldet das gespeicherte Gerät bestmöglich serverseitig ab und entfernt geplante Erinnerungen. In Expo Go lädt die App `expo-notifications` nicht, damit dessen Android-Fehler für nicht unterstützten Remote-Push den Router nicht mitreißt; die Benachrichtigungsintegration ist dort vollständig deaktiviert und der Zustand wird ausdrücklich angezeigt. Remote-Push und die Generalalarm-Erinnerungen der App erfordern einen nativen Development-/Produktionsbuild. Kein Plattformpfad behauptet, Lautlosmodus, Fokus, ausgeschaltete Geräte oder deaktivierte Benachrichtigungen zuverlässig umgehen zu können.
 - Notfall-Push nutzt dieselbe profilgebundene Expo-Geräteregistrierung und einen eigenen Android-Kanal mit maximaler Wichtigkeit. Web und Expo Go behalten das vollständige Postfach, bieten aber keinen Remote-Push. Auch Notfall-Push ist bestmöglich und kann Systemzustände oder Geräteeinstellungen nicht umgehen.
 

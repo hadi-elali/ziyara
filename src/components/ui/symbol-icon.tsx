@@ -14,6 +14,7 @@ export type SymbolIconName =
   | 'copy'
   | 'decline'
   | 'external-link'
+  | 'globe'
   | 'home'
   | 'info'
   | 'location'
@@ -46,6 +47,7 @@ const symbolNames: Record<SymbolIconName, React.ComponentProps<typeof SymbolView
   copy: { ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' },
   decline: { ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' },
   'external-link': { ios: 'arrow.up.forward.square', android: 'open_in_new', web: 'open_in_new' },
+  globe: { ios: 'globe', android: 'language', web: 'language' },
   home: { ios: 'house', android: 'home', web: 'home' },
   info: { ios: 'info.circle', android: 'info', web: 'info' },
   location: { ios: 'location.fill', android: 'navigation', web: 'navigation' },
