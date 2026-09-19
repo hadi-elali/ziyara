@@ -97,10 +97,8 @@ export const OnboardingPalette = {
   brandGreen: '#5F8F6B',
   gold: '#F0CC82',
   goldPressed: '#DDB769',
-  overlay: 'rgba(0, 0, 0, 0.28)',
   text: '#FFF9ED',
   textSecondary: '#F1E8D9',
-  videoBackground: '#000000',
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

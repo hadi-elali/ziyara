@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import {
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,33 +22,24 @@ import { useOnboarding } from '@/features/onboarding/onboarding-state';
 
 // Metro resolves bundled local media through a static require expression.
 const onboardingVideo = require('../../assets/videos/intro.mp4');
-const onboardingBackground = require('../../assets/images/background-intro.png');
 const onboardingLogo = require('../../assets/images/logo.png');
-
-type OnboardingPhase = 'language' | 'video';
 
 export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
   const { language, setLanguage, t } = useI18n();
   const { completeOnboarding } = useOnboarding();
-  const [phase, setPhase] = useState<OnboardingPhase>('video');
   const [videoUnavailable, setVideoUnavailable] = useState(false);
   const player = useVideoPlayer(onboardingVideo, (videoPlayer) => {
     videoPlayer.audioMixingMode = 'doNotMix';
-    videoPlayer.loop = false;
+    videoPlayer.loop = true;
     videoPlayer.muted = false;
     videoPlayer.volume = 1;
     videoPlayer.play();
   });
 
-  useEventListener(player, 'playToEnd', () => {
-    setPhase('language');
-  });
-
   useEventListener(player, 'statusChange', ({ status }) => {
     if (status === 'error') {
       setVideoUnavailable(true);
-      setPhase('language');
     }
   });
 
@@ -57,35 +49,24 @@ export default function OnboardingScreen() {
     router.replace(registerRoute());
   };
 
-  if (phase === 'video') {
-    return (
-      <View style={styles.videoRoot}>
-        <VideoView
-          accessibilityLabel={t('onboarding.videoLabel')}
-          contentFit="cover"
-          nativeControls={false}
-          player={player}
-          playsInline
-          style={styles.backgroundVideo}
-        />
-      </View>
-    );
-  }
-
   const logoSize = Math.min(172, Math.max(122, width * 0.38));
   const titleSize = Math.min(54, Math.max(42, width * 0.125));
 
   return (
     <View style={styles.root}>
-      <Image
-        accessible={false}
-        blurRadius={3}
-        contentFit="cover"
-        source={onboardingBackground}
-        style={StyleSheet.absoluteFill}
-      />
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.imageOverlay]} />
-
+      {videoUnavailable ? null : (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <VideoView
+            accessibilityLabel={t('onboarding.videoLabel')}
+            contentFit="cover"
+            nativeControls={false}
+            player={player}
+            playsInline
+            style={styles.backgroundVideo}
+            surfaceType={Platform.OS === 'android' ? 'textureView' : undefined}
+          />
+        </View>
+      )}
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -172,10 +153,6 @@ const styles = StyleSheet.create({
     backgroundColor: OnboardingPalette.background,
     flex: 1,
   },
-  videoRoot: {
-    backgroundColor: OnboardingPalette.videoBackground,
-    flex: 1,
-  },
   backgroundVideo: {
     flex: 1,
     height: '100%',
@@ -183,9 +160,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-  },
-  imageOverlay: {
-    backgroundColor: OnboardingPalette.overlay,
   },
   scrollContent: {
     alignItems: 'center',
