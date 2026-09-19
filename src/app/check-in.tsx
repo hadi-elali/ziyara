@@ -32,6 +32,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
   const theme = useTheme();
   const { t } = useI18n();
   const {
+    continueWithoutAccount,
     hasProfileError,
     isAdmin,
     refreshProfile,
@@ -45,8 +46,34 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     respond,
     syncErrorKind,
   } = useGroupCheck();
+  const [continueWithoutAccountError, setContinueWithoutAccountError] = useState(false);
+  const [isContinuingWithoutAccount, setIsContinuingWithoutAccount] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+
+  const handleContinueWithoutAccount = async () => {
+    if (isContinuingWithoutAccount) {
+      return;
+    }
+
+    setContinueWithoutAccountError(false);
+    setIsContinuingWithoutAccount(true);
+
+    try {
+      const { error } = await continueWithoutAccount();
+
+      if (error) {
+        setContinueWithoutAccountError(true);
+        return;
+      }
+
+      router.replace('/');
+    } catch {
+      setContinueWithoutAccountError(true);
+    } finally {
+      setIsContinuingWithoutAccount(false);
+    }
+  };
 
   const submitAnswer = async (answer: boolean) => {
     if (!activeCheck || isSubmitting) {
@@ -91,10 +118,31 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
                 )}
               </ThemedText>
               <Button
+                disabled={isContinuingWithoutAccount}
                 icon="refresh"
                 label={t(hasProfileError ? 'auth.profileRetry' : 'groupCheck.retry')}
                 onPress={() => void (hasProfileError ? refreshProfile() : refresh())}
               />
+              {hasProfileError ? (
+                <Button
+                  disabled={isContinuingWithoutAccount}
+                  icon="logout"
+                  label={t('auth.signOutAndContinueWithoutAccount')}
+                  onPress={() => void handleContinueWithoutAccount()}
+                  variant="secondary"
+                />
+              ) : null}
+              {isContinuingWithoutAccount ? (
+                <ActivityIndicator color={theme.accent} />
+              ) : null}
+              {continueWithoutAccountError ? (
+                <ThemedText
+                  accessibilityLiveRegion="polite"
+                  themeColor="danger"
+                  type="small">
+                  {t('auth.continueWithoutAccountError')}
+                </ThemedText>
+              ) : null}
             </Card>
           ) : (
             <ActivityIndicator color={theme.accent} size="large" />

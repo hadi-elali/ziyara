@@ -889,6 +889,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Dieses Konto vertritt ausschließlich mich.",
     "auth.accountCoverageTitle": "Für wen ist dieses Konto?",
     "auth.continueWithoutAccount": "Ohne Konto fortfahren",
+    "auth.continueWithoutAccountError":
+      "Die lokale Anmeldung konnte nicht entfernt werden. Versuche es erneut.",
+    "auth.signOutAndContinueWithoutAccount":
+      "Abmelden und ohne Konto fortfahren",
     "auth.loginBody":
       "Melde dich für Konto, Gruppenabfragen und geschützte Funktionen an. Der lokale Guide bleibt ohne Anmeldung verfügbar.",
     "auth.loginTitle": "Willkommen zurück",
@@ -2030,6 +2034,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.accountCoverage.individualBody": "This account represents only me.",
     "auth.accountCoverageTitle": "Who is this account for?",
     "auth.continueWithoutAccount": "Continue without an account",
+    "auth.continueWithoutAccountError":
+      "The local sign-in could not be removed. Try again.",
+    "auth.signOutAndContinueWithoutAccount":
+      "Sign out and continue without an account",
     "auth.loginBody":
       "Sign in for account, group, and protected features. The local guide remains available without signing in.",
     "auth.loginTitle": "Welcome back",
@@ -3157,6 +3165,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.accountCoverage.individualBody": "هذا الحساب يمثلني أنا فقط.",
     "auth.accountCoverageTitle": "من يمثل هذا الحساب؟",
     "auth.continueWithoutAccount": "المتابعة بدون حساب",
+    "auth.continueWithoutAccountError":
+      "تعذر حذف تسجيل الدخول المحلي. حاول مرة أخرى.",
+    "auth.signOutAndContinueWithoutAccount":
+      "تسجيل الخروج والمتابعة بدون حساب",
     "auth.loginBody":
       "سجل الدخول لاستخدام الحساب والميزات الجماعية والمحمية. يبقى الدليل المحلي متاحاً دون تسجيل الدخول.",
     "auth.loginTitle": "مرحبا بعودتك",

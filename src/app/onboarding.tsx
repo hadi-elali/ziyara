@@ -2,8 +2,9 @@ import { useEventListener } from 'expo';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  Animated,
   Platform,
   Pressable,
   ScrollView,
@@ -29,6 +30,8 @@ export default function OnboardingScreen() {
   const { language, setLanguage, t } = useI18n();
   const { completeOnboarding } = useOnboarding();
   const [videoUnavailable, setVideoUnavailable] = useState(false);
+  const [brandOpacity] = useState(() => new Animated.Value(0));
+  const [languageOpacity] = useState(() => new Animated.Value(0));
   const player = useVideoPlayer(onboardingVideo, (videoPlayer) => {
     videoPlayer.audioMixingMode = 'doNotMix';
     videoPlayer.loop = true;
@@ -42,6 +45,31 @@ export default function OnboardingScreen() {
       setVideoUnavailable(true);
     }
   });
+
+  useEffect(() => {
+    const entranceAnimation = Animated.parallel([
+      Animated.sequence([
+        Animated.delay(1650),
+        Animated.timing(brandOpacity, {
+          duration: 450,
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.delay(1650),
+        Animated.timing(languageOpacity, {
+          duration: 450,
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]);
+
+    entranceAnimation.start();
+
+    return () => entranceAnimation.stop();
+  }, [brandOpacity, languageOpacity]);
 
   const chooseLanguage = (nextLanguage: Language) => {
     setLanguage(nextLanguage);
@@ -72,7 +100,7 @@ export default function OnboardingScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           <View style={styles.container}>
-            <View style={styles.brand}>
+            <Animated.View style={[styles.brand, { opacity: brandOpacity }]}>
               <Image
                 accessible={false}
                 contentFit="contain"
@@ -94,9 +122,9 @@ export default function OnboardingScreen() {
               <ThemedText style={[styles.centeredText, styles.tagline]}>
                 {t('onboarding.tagline')}
               </ThemedText>
-            </View>
+            </Animated.View>
 
-            <View style={styles.languageSection}>
+            <Animated.View style={[styles.languageSection, { opacity: languageOpacity }]}>
               <ThemedText style={[styles.centeredText, styles.languageTitle]} type="heading">
                 {t('onboarding.title')}
               </ThemedText>
@@ -140,7 +168,7 @@ export default function OnboardingScreen() {
                   {t('onboarding.videoUnavailable')}
                 </ThemedText>
               ) : null}
-            </View>
+            </Animated.View>
           </View>
         </ScrollView>
       </SafeAreaView>

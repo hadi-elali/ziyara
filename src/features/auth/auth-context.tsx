@@ -58,6 +58,7 @@ type AuthContextValue = {
   changeEmail: (currentPassword: string, newEmail: string) => Promise<AuthResult>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<AuthResult>;
   completePasswordRecovery: (newPassword: string) => Promise<AuthResult>;
+  continueWithoutAccount: () => Promise<AuthResult>;
   deleteAccount: () => Promise<DeleteAccountResult>;
   handlePasswordRecoveryUrl: (url: string) => Promise<boolean>;
   hasCheckedPasswordRecoveryLink: boolean;
@@ -535,6 +536,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return { error };
   }, [applySession]);
 
+  const continueWithoutAccount = useCallback(async () => {
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+
+    if (!error) {
+      applySession(null);
+      setPasswordRecoveryState({
+        ...initialPasswordRecoveryState,
+        hasCheckedLink: true,
+      });
+    }
+
+    return { error };
+  }, [applySession]);
+
   const verifyCurrentPassword = useCallback(
     async (currentPassword: string) => {
       if (!session?.user.email) {
@@ -770,6 +785,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       changeEmail,
       changePassword,
       completePasswordRecovery,
+      continueWithoutAccount,
       deleteAccount,
       handlePasswordRecoveryUrl,
       hasProfileError,
@@ -797,6 +813,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       changeEmail,
       changePassword,
       completePasswordRecovery,
+      continueWithoutAccount,
       currentProfile,
       deleteAccount,
       handlePasswordRecoveryUrl,

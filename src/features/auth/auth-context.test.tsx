@@ -621,6 +621,29 @@ describe('AuthProvider profile synchronization', () => {
     });
   });
 
+  it('entfernt bei einem initialen Profilfehler nur die lokale Session für den öffentlichen Guide', async () => {
+    profileResponses.push(
+      Promise.resolve({ data: null, error: createPostgrestError('JWT abgelehnt') }),
+    );
+
+    await renderAuthProvider();
+    await emitAuthState(createSession('user-a'));
+    await waitForCondition(() => getAuthValue().hasProfileError);
+
+    await act(async () => {
+      await expect(getAuthValue().continueWithoutAccount()).resolves.toEqual({ error: null });
+      await flushAsyncWork();
+    });
+
+    expect(mockSupabase.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(getAuthValue()).toMatchObject({
+      hasProfileError: false,
+      isLoading: false,
+      profile: null,
+      session: null,
+    });
+  });
+
   it('fordert einen Recovery-Link mit der dedizierten Deep-Link-Route an', async () => {
     await renderAuthProvider();
 
