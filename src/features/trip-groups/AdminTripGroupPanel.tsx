@@ -15,20 +15,18 @@ import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Spacing } from '@/constants/theme';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { openNavigation } from '@/features/places/openNavigation';
 import { useTripGroups } from '@/features/trip-groups/trip-group-context';
 import {
-  getTripGroupMutationFailureKind,
   isCurrentLocationResponse,
-  type TripGroupMutationFailureKind,
   type TripGroupState,
 } from '@/features/trip-groups/trip-group-state';
 import { useTheme } from '@/hooks/use-theme';
 
 type ActionFeedback =
   | { kind: 'saved' | 'requested'; type: 'success' }
-  | { kind: TripGroupMutationFailureKind; type: 'error' };
+  | { message: string; type: 'error' };
 
 export function AdminTripGroupPanel() {
   const theme = useTheme();
@@ -42,7 +40,7 @@ export function AdminTripGroupPanel() {
     refresh,
     requestLeaderLocation,
     saveGroup,
-    syncErrorKind,
+    syncErrorMessage,
   } = useTripGroups();
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [groupName, setGroupName] = useState('');
@@ -107,13 +105,15 @@ export function AdminTripGroupPanel() {
     try {
       const result = await action();
       if (result.error) {
-        setFeedback({ kind: getTripGroupMutationFailureKind(result.error), type: 'error' });
+        const message = getOriginalErrorMessage(result.error);
+        if (message) setFeedback({ message, type: 'error' });
       } else {
         onSuccess?.();
         setFeedback({ kind: success, type: 'success' });
       }
     } catch (error) {
-      setFeedback({ kind: getTripGroupMutationFailureKind(error), type: 'error' });
+      const message = getOriginalErrorMessage(error);
+      if (message) setFeedback({ message, type: 'error' });
     } finally {
       setIsWorking(false);
     }
@@ -179,7 +179,7 @@ export function AdminTripGroupPanel() {
       {hasSyncError ? (
         <Card style={[styles.inlineState, { borderColor: theme.warning }]}>
           <ThemedText type="small" themeColor="warning">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -436,13 +436,13 @@ export function AdminTripGroupPanel() {
           accessibilityLiveRegion="polite"
           type="small"
           themeColor={feedback.type === 'success' ? 'success' : 'danger'}>
-          {t(
-            feedback.type === 'success'
-              ? feedback.kind === 'requested'
-                ? 'tripGroups.admin.requested'
-                : 'tripGroups.admin.saved'
-              : `tripGroups.error.${feedback.kind}`,
-          )}
+          {feedback.type === 'error'
+            ? feedback.message
+            : t(
+                feedback.kind === 'requested'
+                  ? 'tripGroups.admin.requested'
+                  : 'tripGroups.admin.saved',
+              )}
         </ThemedText>
       ) : null}
     </View>

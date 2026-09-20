@@ -22,6 +22,7 @@ import type {
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
@@ -58,6 +59,7 @@ type TripGuidanceContextValue = {
     participantId: number,
     status: TripGuidanceStatus,
   ) => Promise<TripGuidanceActionResult>;
+  syncErrorMessage: string | null;
   syncErrorKind: SupabaseReadFailureKind | null;
 };
 
@@ -98,6 +100,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
   const [snapshot, setSnapshot] = useState<Snapshot>(emptySnapshot);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [syncErrorKind, setSyncErrorKind] = useState<SupabaseReadFailureKind | null>(null);
   const stateVersion = useRef(0);
   const cachedNavigationDestinations =
@@ -132,6 +135,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
     syncedUserIdRef.current = null;
     setSnapshot(emptySnapshot);
     setSyncedUserId(null);
+    setSyncErrorMessage(null);
     setSyncErrorKind(null);
     setSyncState(userId ? 'loading' : 'ready');
   }, [userId]);
@@ -143,6 +147,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       setSnapshot(emptySnapshot);
       syncedUserIdRef.current = null;
       setSyncedUserId(null);
+      setSyncErrorMessage(null);
       setSyncErrorKind(null);
       setSyncState('ready');
       return;
@@ -169,6 +174,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
           setNavigationCache(null);
           syncedUserIdRef.current = userId;
           setSyncedUserId(userId);
+          setSyncErrorMessage(null);
           setSyncErrorKind(null);
           setSyncState('ready');
         }
@@ -254,6 +260,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
         });
         syncedUserIdRef.current = userId;
         setSyncedUserId(userId);
+        setSyncErrorMessage(null);
         setSyncErrorKind(null);
         setSyncState('ready');
       }
@@ -261,6 +268,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       if (requestVersion === stateVersion.current) {
         syncedUserIdRef.current = userId;
         setSyncedUserId(userId);
+        setSyncErrorMessage(getOriginalErrorMessage(error));
         setSyncErrorKind(getSupabaseReadFailureKind(error));
         setSyncState('error');
       }
@@ -460,6 +468,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
             result.data,
           ],
         }));
+        setSyncErrorMessage(null);
         setSyncErrorKind(null);
         setSyncState('ready');
       }
@@ -520,9 +529,10 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       refresh,
       retryPending,
       setStatus,
+      syncErrorMessage,
       syncErrorKind,
     }),
-    [acknowledgeProblem, applicableOutbox.length, participants, refresh, retryPending, setStatus, snapshot.activeGuidance, snapshot.activeTrip, syncErrorKind, syncState, syncedUserId, userId, visibleNavigationDestinations],
+    [acknowledgeProblem, applicableOutbox.length, participants, refresh, retryPending, setStatus, snapshot.activeGuidance, snapshot.activeTrip, syncErrorKind, syncErrorMessage, syncState, syncedUserId, userId, visibleNavigationDestinations],
   );
 
   return <TripGuidanceContext.Provider value={value}>{children}</TripGuidanceContext.Provider>;

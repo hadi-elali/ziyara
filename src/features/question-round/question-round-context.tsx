@@ -15,6 +15,7 @@ import type { QuestionRound } from '@/domain/database';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
@@ -30,6 +31,7 @@ type QuestionRoundContextValue = {
   isLoading: boolean;
   refresh: () => Promise<void>;
   submitQuestion: (roundId: number, question: string) => Promise<QuestionRoundActionResult>;
+  syncErrorMessage: string | null;
   syncErrorKind: SupabaseReadFailureKind | null;
 };
 
@@ -44,6 +46,7 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
   const [activeRound, setActiveRound] = useState<QuestionRound | null>(null);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [syncErrorKind, setSyncErrorKind] = useState<SupabaseReadFailureKind | null>(null);
   const refreshSequence = useRef(0);
   const userId = session?.user.id ?? null;
@@ -54,6 +57,7 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
     if (!userId) {
       setActiveRound(null);
       setSyncedUserId(null);
+      setSyncErrorMessage(null);
       setSyncErrorKind(null);
       setSyncState('ready');
       return;
@@ -76,12 +80,14 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
       if (requestSequence === refreshSequence.current) {
         setActiveRound(data);
         setSyncedUserId(userId);
+        setSyncErrorMessage(null);
         setSyncErrorKind(null);
         setSyncState('ready');
       }
     } catch (error) {
       if (requestSequence === refreshSequence.current) {
         setSyncedUserId(userId);
+        setSyncErrorMessage(getOriginalErrorMessage(error));
         setSyncErrorKind(getSupabaseReadFailureKind(error));
         setSyncState('error');
       }
@@ -157,6 +163,7 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
       isLoading: isAuthLoading || syncedUserId !== userId || syncState === 'loading',
       refresh,
       submitQuestion,
+      syncErrorMessage,
       syncErrorKind,
     }),
     [
@@ -164,6 +171,7 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
       isAuthLoading,
       refresh,
       submitQuestion,
+      syncErrorMessage,
       syncErrorKind,
       syncedUserId,
       syncState,

@@ -19,13 +19,11 @@ import {
   groupRoute,
   guideRoute,
 } from "@/features/navigation/routes";
-import { supabaseReadFailureTranslationKey } from "@/features/network/supabase-read";
 import { PlaceImageCard } from "@/features/places/PlaceImageCard";
 import { useQuestionRound } from "@/features/question-round/question-round-context";
 import { useTheme } from "@/hooks/use-theme";
 import { useTripGuidance } from "@/features/trip-guidance/trip-guidance-context";
 import { useTripGroups } from "@/features/trip-groups/trip-group-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const featuredSlugs = [
   "shrine-imam-hussain",
@@ -43,15 +41,13 @@ export default function HomeScreen() {
   const { language, t } = useI18n();
   const { profile, session } = useAuth();
   const { activeBoarding, participants: busParticipants } = useBusManagement();
-
-
   const { activeCheck, currentResponse } = useGroupCheck();
   const { groups: tripGroups } = useTripGroups();
   const {
     activeRound,
     hasSyncError: hasQuestionRoundSyncError,
     refresh: refreshQuestionRound,
-    syncErrorKind: questionRoundSyncErrorKind,
+    syncErrorMessage: questionRoundSyncErrorMessage,
   } = useQuestionRound();
   const { activeGuidance, participants: guidanceParticipants } =
     useTripGuidance();
@@ -68,9 +64,6 @@ export default function HomeScreen() {
     .filter(isPlace)
     .map((place) => localizePlace(place, language));
   const cities = ["Karbala", "Najaf", "Kufa", "Kadhimayn", "Samarra"];
-
-  AsyncStorage.clear()
-
 
 
   return (
@@ -222,11 +215,7 @@ export default function HomeScreen() {
             {t("questionRound.syncErrorTitle")}
           </ThemedText>
           <ThemedText themeColor="textSecondary">
-            {t(
-              supabaseReadFailureTranslationKey(
-                questionRoundSyncErrorKind ?? "server",
-              ),
-            )}
+            {questionRoundSyncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -273,6 +262,7 @@ export default function HomeScreen() {
           ))}
         </View>
       </Section>
+
     </Screen>
   );
 }

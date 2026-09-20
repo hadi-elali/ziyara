@@ -1,6 +1,6 @@
 # Ziyarah – verbindlicher Projektkontext für LLMs
 
-Stand: 19. September 2026
+Stand: 20. September 2026
 
 ## Zweck und Pflege
 
@@ -294,7 +294,7 @@ Verbindliche Inhaltsregeln:
 
 Der Reader speichert und restauriert Positionen beim erneuten Öffnen. Nichtkritische lokale Speicherfehler fallen auf den In-Memory-Zustand zurück; serverseitige Auth-, Profil- und Pflichtabfragefehler besitzen sichtbare beziehungsweise fail-closed Zustände.
 
-Alle Datenbank-/Read-RPC-Lesezugriffe laufen über `src/features/network/supabase-read.ts`. Der Wrapper setzt mit der vom installierten Supabase-SDK unterstützten `abortSignal`-Methode einen Timeout von 10 Sekunden und klassifiziert Fehlschläge als `offline`, `timeout` oder `server`. Die UI zeigt diese Zustände getrennt von laufendem Laden an. Schreib-RPCs bleiben davon getrennt, damit ein lokaler Timeout nicht fälschlich behauptet, eine möglicherweise serverseitig ausgeführte Mutation sei abgebrochen worden.
+Alle Datenbank-/Read-RPC-Lesezugriffe laufen über `src/features/network/supabase-read.ts`. Der Wrapper setzt mit der vom installierten Supabase-SDK unterstützten `abortSignal`-Methode einen Timeout von 10 Sekunden und klassifiziert Fehlschläge intern als `offline`, `timeout` oder `server`. Sobald Supabase ein Fehlerobjekt liefert, zeigt die betroffene UI dessen originale `message` statt eines übersetzten oder generischen Ersatztexts an. Schreib-RPCs bleiben vom Read-Timeout getrennt, damit ein lokaler Timeout nicht fälschlich behauptet, eine möglicherweise serverseitig ausgeführte Mutation sei abgebrochen worden.
 
 ## Supabase-Datenmodell und Sicherheit
 

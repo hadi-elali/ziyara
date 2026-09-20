@@ -13,6 +13,7 @@ export type GeneralAlarmNotificationAvailability =
 
 export type GeneralAlarmNotificationState = {
   availability: GeneralAlarmNotificationAvailability;
+  errorMessage?: string | null;
   permissionGranted: boolean;
 };
 

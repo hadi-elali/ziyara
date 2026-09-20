@@ -9,7 +9,7 @@ import { Screen } from '@/components/ui/screen';
 import { Spacing } from '@/constants/theme';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useQuestionRound } from '@/features/question-round/question-round-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -30,10 +30,11 @@ function QuestionRoundContent() {
     isLoading,
     refresh,
     submitQuestion,
-    syncErrorKind,
+    syncErrorMessage,
   } = useQuestionRound();
   const [question, setQuestion] = useState('');
   const [feedback, setFeedback] = useState<'error' | 'limit' | 'success' | null>(null);
+  const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const normalizedQuestion = question.trim();
 
@@ -49,7 +50,7 @@ function QuestionRoundContent() {
             <>
               <ThemedText type="heading">{t('questionRound.syncErrorTitle')}</ThemedText>
               <ThemedText themeColor="textSecondary">
-                {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+                {syncErrorMessage}
               </ThemedText>
               <Button
                 icon="refresh"
@@ -77,19 +78,26 @@ function QuestionRoundContent() {
 
     Keyboard.dismiss();
     setFeedback(null);
+    setSubmitErrorMessage(null);
     setIsSubmitting(true);
 
     try {
       const { error } = await submitQuestion(activeRound.id, normalizedQuestion);
 
       if (error) {
-        setFeedback(error.code === 'P0001' ? 'limit' : 'error');
+        setFeedback('error');
+        setSubmitErrorMessage(error.message);
       } else {
         setQuestion('');
         setFeedback('success');
       }
-    } catch {
-      setFeedback('error');
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) {
+        setFeedback('error');
+        setSubmitErrorMessage(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -126,6 +134,7 @@ function QuestionRoundContent() {
             onChangeText={(value) => {
               setQuestion(value);
               setFeedback(null);
+              setSubmitErrorMessage(null);
             }}
             placeholder={t('questionRound.questionPlaceholder')}
             placeholderTextColor={theme.textSecondary}
@@ -160,15 +169,14 @@ function QuestionRoundContent() {
             <ThemedText
               type="small"
               themeColor={feedback === 'success' ? 'success' : 'danger'}>
-              {t(
-                feedback === 'limit'
-                  ? 'questionRound.submitLimit'
-                  : feedback === 'error'
-                  ? normalizedQuestion.length < 3
-                    ? 'questionRound.validation'
-                    : 'questionRound.submitError'
-                  : 'questionRound.submitSuccess',
-              )}
+              {submitErrorMessage ??
+                t(
+                  feedback === 'limit'
+                    ? 'questionRound.submitLimit'
+                    : feedback === 'error'
+                      ? 'questionRound.validation'
+                      : 'questionRound.submitSuccess',
+                )}
             </ThemedText>
           </View>
         ) : null}

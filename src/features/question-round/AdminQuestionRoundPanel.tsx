@@ -10,9 +10,7 @@ import type { AnonymousQuestion, QuestionRound } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useI18n } from '@/features/i18n/i18n';
 import {
-  getSupabaseReadFailureKind,
-  supabaseReadFailureTranslationKey,
-  type SupabaseReadFailureKind,
+  getOriginalErrorMessage,
   withSupabaseReadTimeout,
 } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
@@ -28,10 +26,9 @@ export function AdminQuestionRoundPanel() {
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
   const [updatingQuestionId, setUpdatingQuestionId] = useState<number | null>(null);
-  const [roundErrorKind, setRoundErrorKind] = useState<SupabaseReadFailureKind | null>(null);
-  const [questionsErrorKind, setQuestionsErrorKind] =
-    useState<SupabaseReadFailureKind | null>(null);
-  const [hasActionError, setHasActionError] = useState(false);
+  const [roundErrorMessage, setRoundErrorMessage] = useState<string | null>(null);
+  const [questionsErrorMessage, setQuestionsErrorMessage] = useState<string | null>(null);
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
   const [questionsRoundId, setQuestionsRoundId] = useState<number | null>(null);
   const [questionDisplay, setQuestionDisplay] = useState({
     count: questionDisplayBatchSize,
@@ -45,12 +42,11 @@ export function AdminQuestionRoundPanel() {
   const visibleQuestionCount =
     questionDisplay.roundId === roundId ? questionDisplay.count : questionDisplayBatchSize;
   const visibleQuestions = displayedQuestions.slice(0, visibleQuestionCount);
-  const readErrorKind = roundErrorKind ?? questionsErrorKind;
-  const hasError = Boolean(readErrorKind || hasActionError);
+  const errorMessage = roundErrorMessage ?? questionsErrorMessage ?? actionErrorMessage;
 
   const loadLatestRound = useCallback(async () => {
     const requestSequence = ++latestRoundRequestSequence.current;
-    setRoundErrorKind(null);
+    setRoundErrorMessage(null);
 
     try {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
@@ -72,7 +68,7 @@ export function AdminQuestionRoundPanel() {
       }
     } catch (error) {
       if (requestSequence === latestRoundRequestSequence.current) {
-        setRoundErrorKind(getSupabaseReadFailureKind(error));
+        setRoundErrorMessage(getOriginalErrorMessage(error));
       }
     } finally {
       if (requestSequence === latestRoundRequestSequence.current) {
@@ -92,7 +88,7 @@ export function AdminQuestionRoundPanel() {
     const requestedRoundId = roundId;
     const requestSequence = ++questionsRequestSequence.current;
     setIsLoadingQuestions(true);
-    setQuestionsErrorKind(null);
+    setQuestionsErrorMessage(null);
 
     try {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
@@ -115,7 +111,7 @@ export function AdminQuestionRoundPanel() {
       }
     } catch (error) {
       if (requestSequence === questionsRequestSequence.current) {
-        setQuestionsErrorKind(getSupabaseReadFailureKind(error));
+        setQuestionsErrorMessage(getOriginalErrorMessage(error));
       }
     } finally {
       if (requestSequence === questionsRequestSequence.current) {
@@ -185,7 +181,7 @@ export function AdminQuestionRoundPanel() {
     }
 
     setIsWorking(true);
-    setHasActionError(false);
+    setActionErrorMessage(null);
 
     try {
       const { data, error } = await supabase.rpc('open_question_round');
@@ -196,9 +192,9 @@ export function AdminQuestionRoundPanel() {
 
       latestRoundRequestSequence.current += 1;
       setLatestRound(data);
-      setRoundErrorKind(null);
-    } catch {
-      setHasActionError(true);
+      setRoundErrorMessage(null);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -210,7 +206,7 @@ export function AdminQuestionRoundPanel() {
     }
 
     setIsWorking(true);
-    setHasActionError(false);
+    setActionErrorMessage(null);
 
     try {
       const { data, error } = await supabase.rpc('close_question_round', {
@@ -223,9 +219,9 @@ export function AdminQuestionRoundPanel() {
 
       latestRoundRequestSequence.current += 1;
       setLatestRound(data);
-      setRoundErrorKind(null);
-    } catch {
-      setHasActionError(true);
+      setRoundErrorMessage(null);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -237,7 +233,7 @@ export function AdminQuestionRoundPanel() {
     }
 
     setUpdatingQuestionId(question.id);
-    setHasActionError(false);
+    setActionErrorMessage(null);
 
     try {
       const { error } = await supabase.rpc('set_anonymous_question_checked', {
@@ -260,8 +256,8 @@ export function AdminQuestionRoundPanel() {
             : item,
         ),
       );
-    } catch {
-      setHasActionError(true);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setUpdatingQuestionId(null);
     }
@@ -354,13 +350,9 @@ export function AdminQuestionRoundPanel() {
       )}
 
       {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
-      {hasError ? (
+      {errorMessage ? (
         <ThemedText type="small" themeColor="danger" accessibilityLiveRegion="polite">
-          {t(
-            readErrorKind
-              ? supabaseReadFailureTranslationKey(readErrorKind)
-              : 'questionRound.adminError',
-          )}
+          {errorMessage}
         </ThemedText>
       ) : null}
     </Card>

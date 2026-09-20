@@ -20,6 +20,7 @@ import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
@@ -63,6 +64,7 @@ type TripGroupContextValue = {
     input: TripGroupLocationResponseInput,
   ) => Promise<TripGroupActionResult>;
   saveGroup: (input: SaveTripGroupInput) => Promise<TripGroupActionResult>;
+  syncErrorMessage: string | null;
   syncErrorKind: SupabaseReadFailureKind | null;
 };
 
@@ -94,6 +96,7 @@ export function TripGroupProvider({ children }: PropsWithChildren) {
   const [snapshot, setSnapshot] = useState<TripGroupSnapshot>(emptySnapshot);
   const [syncedScope, setSyncedScope] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [syncErrorKind, setSyncErrorKind] =
     useState<SupabaseReadFailureKind | null>(null);
   const stateVersion = useRef(0);
@@ -111,6 +114,7 @@ export function TripGroupProvider({ children }: PropsWithChildren) {
       setSnapshot(emptySnapshot);
       syncedScopeRef.current = scope;
       setSyncedScope(scope);
+      setSyncErrorMessage(null);
       setSyncErrorKind(null);
       setSyncState('ready');
       return;
@@ -158,6 +162,7 @@ export function TripGroupProvider({ children }: PropsWithChildren) {
         });
         syncedScopeRef.current = scope;
         setSyncedScope(scope);
+        setSyncErrorMessage(null);
         setSyncErrorKind(null);
         setSyncState('ready');
       }
@@ -166,6 +171,7 @@ export function TripGroupProvider({ children }: PropsWithChildren) {
         if (syncedScopeRef.current !== scope) setSnapshot(emptySnapshot);
         syncedScopeRef.current = scope;
         setSyncedScope(scope);
+        setSyncErrorMessage(getOriginalErrorMessage(error));
         setSyncErrorKind(getSupabaseReadFailureKind(error));
         setSyncState('error');
       }
@@ -330,13 +336,13 @@ export function TripGroupProvider({ children }: PropsWithChildren) {
       hasSyncError: syncedScope === scope && syncState === 'error',
       isLoading:
         isBusLoading ||
-        (scope !== null && syncedScope !== scope) ||
-        syncState === 'loading',
+        (scope !== null && (syncedScope !== scope || syncState === 'loading')),
       isRefreshing: syncState === 'refreshing',
       refresh,
       requestLeaderLocation,
       respondToLocationRequest,
       saveGroup,
+      syncErrorMessage,
       syncErrorKind,
     }),
     [
@@ -349,6 +355,7 @@ export function TripGroupProvider({ children }: PropsWithChildren) {
       saveGroup,
       scope,
       syncedScope,
+      syncErrorMessage,
       syncErrorKind,
       syncState,
     ],

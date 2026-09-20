@@ -18,7 +18,6 @@ import { ReaderPreferenceControls } from '@/features/reader/ReaderPreferenceCont
 import { SegmentedReligiousText } from '@/features/reader/SegmentedReligiousText';
 import { formatVisibleParagraphs } from '@/features/reader/religious-content-format';
 import { useReligiousContent } from '@/features/reader/religious-content-source';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
 import { useBookmarks } from '@/features/storage/useBookmarks';
 import { useReaderPreferences } from '@/features/storage/useReaderPreferences';
 import { useReadingPosition } from '@/features/storage/useReadingPosition';
@@ -28,7 +27,7 @@ import { useTheme } from '@/hooks/use-theme';
 export default function ReaderScreen() {
   const params = useLocalSearchParams<{ slug?: string | string[] }>();
   const slug = singleRouteParam(params.slug);
-  const { content: rawContent, errorKind, isLoading, refresh } = useReligiousContent(slug);
+  const { content: rawContent, errorKind, errorMessage, isLoading, refresh } = useReligiousContent(slug);
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { preferences } = useReaderPreferences();
   const { loaded: positionsLoaded, positions, saveReadingPosition } = useReadingPosition();
@@ -68,7 +67,7 @@ export default function ReaderScreen() {
       <Screen>
         <ThemedText type="heading">{t('reader.notFound')}</ThemedText>
         <ThemedText themeColor="textSecondary">
-          {t(supabaseReadFailureTranslationKey(errorKind))}
+          {errorMessage}
         </ThemedText>
         <Button icon="refresh" label={t('reader.retry')} onPress={refresh} />
       </Screen>

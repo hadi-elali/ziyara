@@ -13,14 +13,12 @@ import { useBusManagement } from '@/features/bus-management/bus-management-conte
 import {
   getGeneralAlarmUrgency,
   getNextGeneralAlarmStatus,
-  getBusStatusSubmitFailureKind,
   isGeneralAlarmReminderDue,
   type BusParticipantState,
-  type BusStatusSubmitFailureKind,
 } from '@/features/bus-management/bus-management-state';
 import { useGeneralAlarmNotifications } from '@/features/general-alarm/general-alarm-notifications-context';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function BusScreen() {
@@ -43,11 +41,11 @@ function BusContent() {
     participants,
     refresh,
     setStatus,
-    syncErrorKind,
+    syncErrorMessage,
   } = useBusManagement();
   const [submittingParticipantId, setSubmittingParticipantId] = useState<number | null>(null);
   const [submitError, setSubmitError] = useState<{
-    kind: BusStatusSubmitFailureKind;
+    message: string;
     participantId: number;
   } | null>(null);
   const [now, setNow] = useState(() => new Date());
@@ -72,10 +70,12 @@ function BusContent() {
     try {
       const { error } = await setStatus(activeBoarding.id, participantId, status);
       if (error) {
-        setSubmitError({ kind: getBusStatusSubmitFailureKind(error), participantId });
+        setSubmitError({ message: error.message, participantId });
       }
-    } catch {
-      setSubmitError({ kind: 'server', participantId });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setSubmitError({ message, participantId });
     } finally {
       setSubmittingParticipantId(null);
     }
@@ -99,7 +99,7 @@ function BusContent() {
           <Card style={styles.stateCard}>
             <ThemedText type="heading">{t('bus.syncErrorTitle')}</ThemedText>
             <ThemedText themeColor="textSecondary">
-              {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+              {syncErrorMessage}
             </ThemedText>
             <Button icon="refresh" label={t('bus.retry')} onPress={() => void refresh()} />
           </Card>
@@ -125,7 +125,7 @@ function BusContent() {
         {hasSyncError ? (
           <Card style={[styles.inlineError, { borderColor: theme.warning }]}>
             <ThemedText type="small" themeColor="warning">
-              {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+              {syncErrorMessage}
             </ThemedText>
             <Button
               icon="refresh"
@@ -197,8 +197,8 @@ function BusContent() {
                       ? isGeneralAlarmReminderDue(activeBoarding, participant, now)
                       : false
                   }
-                  submitErrorKind={
-                    submitError?.participantId === participant.id ? submitError.kind : null
+                  submitErrorMessage={
+                    submitError?.participantId === participant.id ? submitError.message : null
                   }
                 />
               ))}
@@ -218,7 +218,7 @@ function ParticipantCard({
   onStatus,
   participant,
   reminderDue,
-  submitErrorKind,
+  submitErrorMessage,
 }: {
   active: boolean;
   disabled: boolean;
@@ -226,7 +226,7 @@ function ParticipantCard({
   onStatus: (status: BusBoardingStatus) => void;
   participant: BusParticipantState;
   reminderDue: boolean;
-  submitErrorKind: BusStatusSubmitFailureKind | null;
+  submitErrorMessage: string | null;
 }) {
   const theme = useTheme();
   const { t } = useI18n();
@@ -297,9 +297,9 @@ function ParticipantCard({
       ) : null}
 
       {isSubmitting ? <ActivityIndicator color={theme.accent} /> : null}
-      {submitErrorKind ? (
+      {submitErrorMessage ? (
         <ThemedText accessibilityLiveRegion="polite" themeColor="danger" type="small">
-          {t(`bus.submitError.${submitErrorKind}`)}
+          {submitErrorMessage}
         </ThemedText>
       ) : participant.status ? (
         <ThemedText accessibilityLiveRegion="polite" themeColor="success" type="small">

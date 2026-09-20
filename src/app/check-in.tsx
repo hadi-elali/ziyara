@@ -13,7 +13,7 @@ import { RequireAuth } from '@/features/auth/RequireAuth';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
 import { useI18n } from '@/features/i18n/i18n';
 import { getProtectedReturnRoute } from '@/features/navigation/routes';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function CheckInScreen() {
@@ -35,6 +35,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     continueWithoutAccount,
     hasProfileError,
     isAdmin,
+    profileRefreshError,
     refreshProfile,
   } = useAuth();
   const {
@@ -44,32 +45,32 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     isLoading,
     refresh,
     respond,
-    syncErrorKind,
+    syncErrorMessage,
   } = useGroupCheck();
-  const [continueWithoutAccountError, setContinueWithoutAccountError] = useState(false);
+  const [continueWithoutAccountError, setContinueWithoutAccountError] = useState<string | null>(null);
   const [isContinuingWithoutAccount, setIsContinuingWithoutAccount] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleContinueWithoutAccount = async () => {
     if (isContinuingWithoutAccount) {
       return;
     }
 
-    setContinueWithoutAccountError(false);
+    setContinueWithoutAccountError(null);
     setIsContinuingWithoutAccount(true);
 
     try {
       const { error } = await continueWithoutAccount();
 
       if (error) {
-        setContinueWithoutAccountError(true);
+        setContinueWithoutAccountError(error.message);
         return;
       }
 
       router.replace('/');
-    } catch {
-      setContinueWithoutAccountError(true);
+    } catch (error) {
+      setContinueWithoutAccountError(getOriginalErrorMessage(error));
     } finally {
       setIsContinuingWithoutAccount(false);
     }
@@ -80,18 +81,18 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
       return;
     }
 
-    setSubmitError(false);
+    setSubmitError(null);
     setIsSubmitting(true);
 
     try {
       const { error } = await respond(activeCheck.id, answer);
-      setSubmitError(Boolean(error));
+      setSubmitError(error?.message ?? null);
 
       if (!error && !isAdmin) {
         router.replace(returnTo as Href);
       }
-    } catch {
-      setSubmitError(true);
+    } catch (error) {
+      setSubmitError(getOriginalErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -111,11 +112,9 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
                 {t(hasProfileError ? 'auth.profileErrorTitle' : 'groupCheck.syncErrorTitle')}
               </ThemedText>
               <ThemedText themeColor="textSecondary">
-                {t(
-                  hasProfileError
-                    ? 'auth.profileErrorBody'
-                    : supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'),
-                )}
+                {hasProfileError
+                  ? profileRefreshError?.message
+                  : syncErrorMessage}
               </ThemedText>
               <Button
                 disabled={isContinuingWithoutAccount}
@@ -140,7 +139,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
                   accessibilityLiveRegion="polite"
                   themeColor="danger"
                   type="small">
-                  {t('auth.continueWithoutAccountError')}
+                  {continueWithoutAccountError}
                 </ThemedText>
               ) : null}
             </Card>
@@ -189,7 +188,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
 
           {submitError ? (
             <ThemedText type="small" themeColor="danger" accessibilityLiveRegion="polite">
-              {t('groupCheck.submitError')}
+              {submitError}
             </ThemedText>
           ) : currentResponse !== null ? (
             <ThemedText type="smallBold" themeColor="success" accessibilityLiveRegion="polite">

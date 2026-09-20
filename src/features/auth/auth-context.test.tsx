@@ -10,7 +10,6 @@ import {
 } from '@jest/globals';
 import * as Linking from 'expo-linking';
 import {
-  type AuthError,
   FunctionsHttpError,
   PostgrestError,
   type AuthChangeEvent,
@@ -23,11 +22,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import type { Mock } from 'jest-mock';
 
 import type { UserProfile } from '@/domain/database';
-import {
-  AuthProvider,
-  getAuthErrorTranslationKey,
-  useAuth,
-} from '@/features/auth/auth-context';
+import { AuthProvider, useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 
 jest.mock('expo-linking', () => ({
@@ -630,6 +625,8 @@ describe('AuthProvider profile synchronization', () => {
     await emitAuthState(createSession('user-a'));
     await waitForCondition(() => getAuthValue().hasProfileError);
 
+    expect(getAuthValue().profileRefreshError?.message).toBe('JWT abgelehnt');
+
     await act(async () => {
       await expect(getAuthValue().continueWithoutAccount()).resolves.toEqual({ error: null });
       await flushAsyncWork();
@@ -918,21 +915,5 @@ describe('AuthProvider profile synchronization', () => {
     });
     expect(getAuthValue().session?.user.id).toBe('user-a');
     expect(mockSupabase.auth.signOut).not.toHaveBeenCalled();
-  });
-});
-
-describe('getAuthErrorTranslationKey', () => {
-  it.each([
-    ['email_not_confirmed', 'auth.error.emailNotConfirmed'],
-    ['invalid_credentials', 'auth.error.invalidCredentials'],
-    ['over_email_send_rate_limit', 'auth.error.rateLimit'],
-    ['over_request_rate_limit', 'auth.error.rateLimit'],
-    ['signup_disabled', 'auth.error.signupDisabled'],
-    ['user_already_exists', 'auth.error.userExists'],
-    ['email_exists', 'auth.error.userExists'],
-    ['weak_password', 'auth.error.weakPassword'],
-    ['unknown_error', 'auth.error.generic'],
-  ])('ordnet %s dem erwarteten UI-Text zu', (code, expectedKey) => {
-    expect(getAuthErrorTranslationKey({ code } as AuthError)).toBe(expectedKey);
   });
 });

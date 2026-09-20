@@ -277,7 +277,12 @@ describe('BusManagementProvider', () => {
 
     await act(async () => context().refresh());
 
-    expect(context()).toMatchObject({ activeBoarding, activeTrip, hasSyncError: true });
+    expect(context()).toMatchObject({
+      activeBoarding,
+      activeTrip,
+      hasSyncError: true,
+      syncErrorMessage: 'backend unavailable',
+    });
     expect(context().participants[0]).toMatchObject({ status: 'on_way' });
   });
 

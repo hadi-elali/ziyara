@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   SupabaseReadTimeoutError,
   withSupabaseReadTimeout,
@@ -40,5 +41,15 @@ describe('Supabase read timeouts', () => {
     expect(getSupabaseReadFailureKind(new TypeError('Network request failed'))).toBe('offline');
     expect(getSupabaseReadFailureKind(new SupabaseReadTimeoutError(100))).toBe('timeout');
     expect(getSupabaseReadFailureKind(new Error('permission denied'))).toBe('server');
+  });
+
+  it('gibt die originale Fehlermeldung ohne Ersatztext zurück', () => {
+    expect(getOriginalErrorMessage(new Error('original Supabase message'))).toBe(
+      'original Supabase message',
+    );
+    expect(getOriginalErrorMessage({ message: 'raw PostgREST message' })).toBe(
+      'raw PostgREST message',
+    );
+    expect(getOriginalErrorMessage(null)).toBeNull();
   });
 });

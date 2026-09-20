@@ -4,6 +4,7 @@ import { getReligiousContentBySlug } from '@/data/religiousContent';
 import type { ReligiousContent } from '@/domain/types';
 import { supabase } from '@/features/auth/supabase';
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
@@ -50,6 +51,7 @@ export async function loadPublishedReligiousContent(slug: string) {
 type RemoteContentState = {
   content?: ReligiousContent;
   errorKind: SupabaseReadFailureKind | null;
+  errorMessage: string | null;
   isLoading: boolean;
   slug?: string;
 };
@@ -59,6 +61,7 @@ export function useReligiousContent(slug?: string) {
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [remoteState, setRemoteState] = useState<RemoteContentState>({
     errorKind: null,
+    errorMessage: null,
     isLoading: Boolean(slug),
   });
 
@@ -68,7 +71,7 @@ export function useReligiousContent(slug?: string) {
     if (!slug) {
       void Promise.resolve().then(() => {
         if (isCurrent) {
-          setRemoteState({ errorKind: null, isLoading: false });
+          setRemoteState({ errorKind: null, errorMessage: null, isLoading: false });
         }
       });
       return () => {
@@ -78,19 +81,20 @@ export function useReligiousContent(slug?: string) {
 
     void Promise.resolve().then(() => {
       if (isCurrent) {
-        setRemoteState({ errorKind: null, isLoading: true, slug });
+        setRemoteState({ errorKind: null, errorMessage: null, isLoading: true, slug });
       }
     });
     void loadPublishedReligiousContent(slug)
       .then((content) => {
         if (isCurrent) {
-          setRemoteState({ content, errorKind: null, isLoading: false, slug });
+          setRemoteState({ content, errorKind: null, errorMessage: null, isLoading: false, slug });
         }
       })
       .catch((error: unknown) => {
         if (isCurrent) {
           setRemoteState({
             errorKind: getSupabaseReadFailureKind(error),
+            errorMessage: getOriginalErrorMessage(error),
             isLoading: false,
             slug,
           });
@@ -108,6 +112,7 @@ export function useReligiousContent(slug?: string) {
   return {
     content: stateMatchesSlug && remoteState.content ? remoteState.content : bundledContent,
     errorKind: stateMatchesSlug ? remoteState.errorKind : null,
+    errorMessage: stateMatchesSlug ? remoteState.errorMessage : null,
     isLoading: !bundledContent && (!stateMatchesSlug || remoteState.isLoading),
     refresh,
   };

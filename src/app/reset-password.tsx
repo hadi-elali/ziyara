@@ -13,9 +13,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Screen } from '@/components/ui/screen';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { getAuthErrorTranslationKey, useAuth } from '@/features/auth/auth-context';
+import { useAuth } from '@/features/auth/auth-context';
 import { useI18n } from '@/features/i18n/i18n';
 import { forgotPasswordRoute, loginRoute } from '@/features/navigation/routes';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function ResetPasswordScreen() {
@@ -24,6 +25,7 @@ export default function ResetPasswordScreen() {
   const {
     completePasswordRecovery,
     hasCheckedPasswordRecoveryLink,
+    passwordRecoveryError,
     passwordRecoveryStatus,
   } = useAuth();
   const [newPassword, setNewPassword] = useState('');
@@ -57,14 +59,14 @@ export default function ResetPasswordScreen() {
       const { error } = await completePasswordRecovery(newPassword);
 
       if (error) {
-        setFeedback(t(getAuthErrorTranslationKey(error)));
+        setFeedback(error.message);
       } else {
         setNewPassword('');
         setPasswordConfirmation('');
         setIsComplete(true);
       }
-    } catch {
-      setFeedback(t('recovery.invalidBody'));
+    } catch (error) {
+      setFeedback(getOriginalErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -94,7 +96,7 @@ export default function ResetPasswordScreen() {
         ) : passwordRecoveryStatus !== 'ready' ? (
           <RecoveryMessage
             actionLabel={t('recovery.requestNew')}
-            body={t('recovery.invalidBody')}
+            body={passwordRecoveryError?.message ?? ''}
             onAction={() => router.replace(forgotPasswordRoute())}
             secondaryActionLabel={t('recovery.backToLogin')}
             onSecondaryAction={() => router.replace(loginRoute())}

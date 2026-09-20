@@ -15,6 +15,7 @@ import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import { useDailyProgramCache } from '@/features/daily-program/daily-program-cache';
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
@@ -29,6 +30,7 @@ type DailyProgramContextValue = {
   isRefreshing: boolean;
   programs: TripDailyProgram[];
   refresh: () => Promise<void>;
+  syncErrorMessage: string | null;
   syncErrorKind: SupabaseReadFailureKind | null;
 };
 
@@ -46,6 +48,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
   const [programs, setPrograms] = useState<TripDailyProgram[]>([]);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [syncErrorKind, setSyncErrorKind] = useState<SupabaseReadFailureKind | null>(null);
 
   useEffect(() => {
@@ -55,6 +58,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
     syncedUserIdRef.current = null;
     setPrograms([]);
     setSyncedUserId(null);
+    setSyncErrorMessage(null);
     setSyncErrorKind(null);
     setSyncState(userId ? 'loading' : 'ready');
   }, [userId]);
@@ -66,6 +70,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
       setPrograms([]);
       syncedUserIdRef.current = null;
       setSyncedUserId(null);
+      setSyncErrorMessage(null);
       setSyncErrorKind(null);
       setSyncState('ready');
       return;
@@ -93,11 +98,13 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
         setProgramCache({ programs: nextPrograms, userId });
         syncedUserIdRef.current = userId;
         setSyncedUserId(userId);
+        setSyncErrorMessage(null);
         setSyncErrorKind(null);
         setSyncState('ready');
       }
     } catch (error) {
       if (requestVersion === stateVersionRef.current) {
+        setSyncErrorMessage(getOriginalErrorMessage(error));
         setSyncErrorKind(getSupabaseReadFailureKind(error));
         setSyncState('error');
       }
@@ -169,6 +176,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
           (syncState === 'loading' && hasProgramSnapshot),
         programs: visiblePrograms,
         refresh,
+        syncErrorMessage,
         syncErrorKind,
       };
     },
@@ -178,6 +186,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
       programs,
       refresh,
       syncedUserId,
+      syncErrorMessage,
       syncErrorKind,
       syncState,
       userId,

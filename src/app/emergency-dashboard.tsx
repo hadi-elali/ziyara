@@ -18,9 +18,7 @@ import { supabase } from '@/features/auth/supabase';
 import { useGeneralAlarmNotifications } from '@/features/general-alarm/general-alarm-notifications-context';
 import { useI18n } from '@/features/i18n/i18n';
 import {
-  getSupabaseReadFailureKind,
-  supabaseReadFailureTranslationKey,
-  type SupabaseReadFailureKind,
+  getOriginalErrorMessage,
   withSupabaseReadTimeout,
 } from '@/features/network/supabase-read';
 import { openNavigation } from '@/features/places/openNavigation';
@@ -43,9 +41,12 @@ function EmergencyDashboardContent() {
   const [dutyMessages, setDutyMessages] = useState<EmergencyDutyNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [readErrorKind, setReadErrorKind] = useState<SupabaseReadFailureKind | null>(null);
+  const [readErrorMessage, setReadErrorMessage] = useState<string | null>(null);
   const [markingDutyId, setMarkingDutyId] = useState<number | null>(null);
-  const [markDutyErrorId, setMarkDutyErrorId] = useState<number | null>(null);
+  const [markDutyError, setMarkDutyError] = useState<{
+    message: string;
+    notificationId: number;
+  } | null>(null);
   const refreshSequence = useRef(0);
   const role = profile?.role;
   const userId = session?.user.id ?? null;
@@ -76,11 +77,11 @@ function EmergencyDashboardContent() {
       if (sequence === refreshSequence.current) {
         setRequests(dashboardResult.data ?? []);
         setDutyMessages(dutyResult.data ?? []);
-        setReadErrorKind(null);
+        setReadErrorMessage(null);
       }
     } catch (error) {
       if (sequence === refreshSequence.current) {
-        setReadErrorKind(getSupabaseReadFailureKind(error));
+        setReadErrorMessage(getOriginalErrorMessage(error));
       }
     } finally {
       if (sequence === refreshSequence.current) {
@@ -131,7 +132,7 @@ function EmergencyDashboardContent() {
   const markDutyRead = async (notificationId: number) => {
     if (markingDutyId !== null) return;
     setMarkingDutyId(notificationId);
-    setMarkDutyErrorId(null);
+    setMarkDutyError(null);
 
     try {
       const { error } = await supabase.rpc('mark_emergency_duty_notification_read', {
@@ -146,8 +147,9 @@ function EmergencyDashboardContent() {
             : item,
         ),
       );
-    } catch {
-      setMarkDutyErrorId(notificationId);
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+      if (message) setMarkDutyError({ message, notificationId });
     } finally {
       setMarkingDutyId(null);
     }
@@ -288,12 +290,12 @@ function EmergencyDashboardContent() {
                         {t('emergency.read')}
                       </ThemedText>
                     )}
-                    {markDutyErrorId === item.notification_id ? (
+                    {markDutyError?.notificationId === item.notification_id ? (
                       <ThemedText
                         accessibilityLiveRegion="polite"
                         type="small"
                         themeColor="danger">
-                        {t('emergency.markReadError')}
+                        {markDutyError.message}
                       </ThemedText>
                     ) : null}
                   </Card>
@@ -304,7 +306,7 @@ function EmergencyDashboardContent() {
         </Section>
       ) : null}
 
-      {readErrorKind ? (
+      {readErrorMessage ? (
         <Card
           style={[
             styles.card,
@@ -312,7 +314,7 @@ function EmergencyDashboardContent() {
           ]}>
           <ThemedText type="heading">{t('emergency.syncErrorTitle')}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {t(supabaseReadFailureTranslationKey(readErrorKind))}
+            {readErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"

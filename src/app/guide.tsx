@@ -19,14 +19,12 @@ import type { TripGuidanceStatus } from '@/domain/database';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { useI18n } from '@/features/i18n/i18n';
 import { placeRoute } from '@/features/navigation/routes';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { openNavigation, openNavigationQuery } from '@/features/places/openNavigation';
 import { useTripGuidance } from '@/features/trip-guidance/trip-guidance-context';
 import {
   distanceInMeters,
-  getTripGuidanceSubmitFailureKind,
   type TripGuidanceParticipantState,
-  type TripGuidanceSubmitFailureKind,
 } from '@/features/trip-guidance/trip-guidance-state';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -65,11 +63,11 @@ function GuideContent() {
     refresh,
     retryPending,
     setStatus,
-    syncErrorKind,
+    syncErrorMessage,
   } = useTripGuidance();
   const [submittingParticipantId, setSubmittingParticipantId] = useState<number | null>(null);
   const [submitError, setSubmitError] = useState<{
-    kind: TripGuidanceSubmitFailureKind;
+    message: string;
     participantId: number;
   } | null>(null);
   const [distanceState, setDistanceState] = useState<DistanceState>({ kind: 'idle' });
@@ -164,12 +162,14 @@ function GuideContent() {
       const result = await setStatus(activeGuidance.id, participantId, status);
       if (result.error) {
         setSubmitError({
-          kind: getTripGuidanceSubmitFailureKind(result.error),
+          message: result.error.message,
           participantId,
         });
       }
-    } catch {
-      setSubmitError({ kind: 'server', participantId });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setSubmitError({ message, participantId });
     } finally {
       setSubmittingParticipantId(null);
     }
@@ -193,7 +193,7 @@ function GuideContent() {
           <Card style={styles.stateCard}>
             <ThemedText type="heading">{t('guide.syncErrorTitle')}</ThemedText>
             <ThemedText themeColor="textSecondary">
-              {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+              {syncErrorMessage}
             </ThemedText>
             <Button icon="refresh" label={t('guide.retry')} onPress={() => void refresh()} />
           </Card>
@@ -219,7 +219,7 @@ function GuideContent() {
           {hasSyncError ? (
             <Card style={[styles.inlineState, { borderColor: theme.warning }]}>
               <ThemedText type="small" themeColor="warning">
-                {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+                {syncErrorMessage}
               </ThemedText>
               <Button
                 icon="refresh"
@@ -364,8 +364,8 @@ function GuideContent() {
                     key={participant.id}
                     onStatus={(status) => void submitStatus(participant.id, status)}
                     participant={participant}
-                    submitErrorKind={
-                      submitError?.participantId === participant.id ? submitError.kind : null
+                    submitErrorMessage={
+                      submitError?.participantId === participant.id ? submitError.message : null
                     }
                   />
                 ))}
@@ -394,13 +394,13 @@ function ParticipantStatusCard({
   isSubmitting,
   onStatus,
   participant,
-  submitErrorKind,
+  submitErrorMessage,
 }: {
   disabled: boolean;
   isSubmitting: boolean;
   onStatus: (status: TripGuidanceStatus) => void;
   participant: TripGuidanceParticipantState;
-  submitErrorKind: TripGuidanceSubmitFailureKind | null;
+  submitErrorMessage: string | null;
 }) {
   const theme = useTheme();
   const { t } = useI18n();
@@ -457,9 +457,9 @@ function ParticipantStatusCard({
       </View>
 
       {isSubmitting ? <ActivityIndicator color={theme.accent} /> : null}
-      {submitErrorKind ? (
+      {submitErrorMessage ? (
         <ThemedText accessibilityLiveRegion="polite" themeColor="danger" type="small">
-          {t(`guide.submitError.${submitErrorKind}`)}
+          {submitErrorMessage}
         </ThemedText>
       ) : participant.isPending ? (
         <View

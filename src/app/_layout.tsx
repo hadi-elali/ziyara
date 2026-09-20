@@ -22,7 +22,6 @@ import { AppErrorBoundary } from '@/features/errors/AppErrorBoundary';
 import { GroupCheckProvider, useGroupCheck } from '@/features/group-check/group-check-context';
 import { GeneralAlarmNotificationsProvider } from '@/features/general-alarm/general-alarm-notifications-context';
 import { AppI18nProvider, useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
 import { emergencyRoute } from '@/features/navigation/routes';
 import { useOnboarding } from '@/features/onboarding/onboarding-state';
 import { QuestionRoundProvider } from '@/features/question-round/question-round-context';
@@ -67,7 +66,7 @@ function RootNavigation() {
   const colors = Colors[scheme];
   const { loaded: isLanguageLoaded, t } = useI18n();
   const { loaded: isOnboardingLoaded } = useOnboarding();
-  const { profileSyncErrorKind, refreshProfile, session } = useAuth();
+  const { profileRefreshError, refreshProfile, session } = useAuth();
   const { isBlocking } = useGroupCheck();
 
   useEffect(() => {
@@ -159,7 +158,7 @@ function RootNavigation() {
           <SymbolIcon color={colors.surface} name="alarm" size={25} />
         </Pressable>
       ) : null}
-      {profileSyncErrorKind && !isBlocking ? (
+      {profileRefreshError && !isBlocking ? (
         <View
           accessibilityLiveRegion="polite"
           accessibilityRole="alert"
@@ -168,7 +167,7 @@ function RootNavigation() {
             { backgroundColor: colors.warningSoft, borderColor: colors.warning },
           ]}>
           <ThemedText style={styles.profileRefreshErrorText} themeColor="warning" type="small">
-            {t(supabaseReadFailureTranslationKey(profileSyncErrorKind))}
+            {profileRefreshError.message}
           </ThemedText>
           <Button
             icon="refresh"

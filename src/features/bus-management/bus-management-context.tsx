@@ -28,6 +28,7 @@ import {
   type BusParticipantState,
 } from '@/features/bus-management/bus-management-state';
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
@@ -53,6 +54,7 @@ type BusManagementContextValue = {
     participantId: number,
     status: BusBoardingStatus,
   ) => Promise<BusManagementActionResult>;
+  syncErrorMessage: string | null;
   syncErrorKind: SupabaseReadFailureKind | null;
   trips: Trip[];
 };
@@ -90,6 +92,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
   const [snapshot, setSnapshot] = useState<BusManagementSnapshot>(emptySnapshot);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [syncErrorKind, setSyncErrorKind] = useState<SupabaseReadFailureKind | null>(null);
   const stateVersion = useRef(0);
   const latestMutationVersion = useRef(0);
@@ -107,6 +110,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
     syncedUserIdRef.current = null;
     setSyncedUserId(null);
     setSnapshot(emptySnapshot);
+    setSyncErrorMessage(null);
     setSyncErrorKind(null);
     setSyncState(userId ? 'loading' : 'ready');
   }, [userId]);
@@ -118,6 +122,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
       setSnapshot(emptySnapshot);
       syncedUserIdRef.current = null;
       setSyncedUserId(null);
+      setSyncErrorMessage(null);
       setSyncErrorKind(null);
       setSyncState('ready');
       return;
@@ -148,6 +153,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
           setSnapshot({ ...emptySnapshot, trips: visibleTrips });
           syncedUserIdRef.current = userId;
           setSyncedUserId(userId);
+          setSyncErrorMessage(null);
           setSyncErrorKind(null);
           setSyncState('ready');
         }
@@ -234,6 +240,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
         });
         syncedUserIdRef.current = userId;
         setSyncedUserId(userId);
+        setSyncErrorMessage(null);
         setSyncErrorKind(null);
         setSyncState('ready');
       }
@@ -241,6 +248,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
       if (requestVersion === stateVersion.current) {
         syncedUserIdRef.current = userId;
         setSyncedUserId(userId);
+        setSyncErrorMessage(getOriginalErrorMessage(error));
         setSyncErrorKind(getSupabaseReadFailureKind(error));
         setSyncState('error');
       }
@@ -351,6 +359,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
               data,
             ],
           }));
+          setSyncErrorMessage(null);
           setSyncErrorKind(null);
           setSyncState('ready');
         }
@@ -384,10 +393,11 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
       participants,
       refresh,
       setStatus,
+      syncErrorMessage,
       syncErrorKind,
       trips: snapshot.trips,
     }),
-    [participants, refresh, setStatus, snapshot.activeBoarding, snapshot.activeTrip, snapshot.buses, snapshot.trips, syncErrorKind, syncState, syncedUserId, userId],
+    [participants, refresh, setStatus, snapshot.activeBoarding, snapshot.activeTrip, snapshot.buses, snapshot.trips, syncErrorKind, syncErrorMessage, syncState, syncedUserId, userId],
   );
 
   return <BusManagementContext.Provider value={value}>{children}</BusManagementContext.Provider>;

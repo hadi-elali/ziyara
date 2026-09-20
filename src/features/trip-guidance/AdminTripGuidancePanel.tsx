@@ -10,7 +10,7 @@ import type { TripGuidanceStatus, TripGuidanceUpdate } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useI18n } from '@/features/i18n/i18n';
 import { localizePlace } from '@/features/i18n/localizedData';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import type { MeetingPointCoordinate } from '@/features/trip-guidance/meeting-point-picker-types';
 import { useTripGuidance } from '@/features/trip-guidance/trip-guidance-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -105,12 +105,12 @@ export function AdminTripGuidancePanel() {
     isLoading,
     participants,
     refresh,
-    syncErrorKind,
+    syncErrorMessage,
   } = useTripGuidance();
   const [form, setForm] = useState<FormState>(emptyForm);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
-  const [hasActionError, setHasActionError] = useState(false);
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [acknowledgingResponseId, setAcknowledgingResponseId] = useState<number | null>(null);
   const syncedFormVersionRef = useRef<string | null>(null);
@@ -188,7 +188,7 @@ export function AdminTripGuidancePanel() {
   const saveGuidance = async () => {
     if (!activeTrip || !formValid || isWorking) return;
     setIsWorking(true);
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setSaved(false);
     try {
       const result =
@@ -202,14 +202,14 @@ export function AdminTripGuidancePanel() {
               p_trip_id: activeTrip.id,
             });
       if (result.error) {
-        setHasActionError(true);
+        setActionErrorMessage(result.error.message);
       } else {
         setIsCreatingNew(false);
         setSaved(true);
       }
       await refresh();
-    } catch {
-      setHasActionError(true);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -218,12 +218,12 @@ export function AdminTripGuidancePanel() {
   const takeProblem = async (responseId: number) => {
     if (acknowledgingResponseId !== null) return;
     setAcknowledgingResponseId(responseId);
-    setHasActionError(false);
+    setActionErrorMessage(null);
     try {
       const { error } = await acknowledgeProblem(responseId);
-      if (error) setHasActionError(true);
-    } catch {
-      setHasActionError(true);
+      if (error) setActionErrorMessage(error.message);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setAcknowledgingResponseId(null);
     }
@@ -243,7 +243,7 @@ export function AdminTripGuidancePanel() {
       <Card style={styles.stateCard}>
         <ThemedText type="heading">{t('guide.syncErrorTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary">
-          {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+          {syncErrorMessage}
         </ThemedText>
         <Button icon="refresh" label={t('guide.retry')} onPress={() => void refresh()} />
       </Card>
@@ -264,7 +264,7 @@ export function AdminTripGuidancePanel() {
       {hasSyncError ? (
         <Card style={[styles.inlineState, { borderColor: theme.warning }]}>
           <ThemedText type="small" themeColor="warning">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -468,9 +468,9 @@ export function AdminTripGuidancePanel() {
             {t('guide.admin.saved')}
           </ThemedText>
         ) : null}
-        {hasActionError ? (
+        {actionErrorMessage ? (
           <ThemedText accessibilityLiveRegion="polite" themeColor="danger" type="small">
-            {t('guide.admin.actionError')}
+            {actionErrorMessage}
           </ThemedText>
         ) : null}
       </Card>

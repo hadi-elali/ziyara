@@ -9,9 +9,13 @@ import { Spacing } from '@/constants/theme';
 import type { AccountFamily, AdminUserSummary } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useI18n } from '@/features/i18n/i18n';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
-type FamilyFeedback = 'deleted' | 'duplicate' | 'error' | 'saved' | null;
+type FamilyFeedback =
+  | { kind: 'deleted' | 'saved'; type: 'success' }
+  | { message: string; type: 'error' }
+  | null;
 
 type AdminAccountFamilyPanelProps = {
   families: AccountFamily[];
@@ -84,15 +88,16 @@ export function AdminAccountFamilyPanel({
       });
 
       if (error) {
-        setFeedback(error.code === '23505' ? 'duplicate' : 'error');
+        setFeedback({ message: error.message, type: 'error' });
         return;
       }
 
       resetEditor();
-      setFeedback('saved');
+      setFeedback({ kind: 'saved', type: 'success' });
       await onChanged();
-    } catch {
-      setFeedback('error');
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+      if (message) setFeedback({ message, type: 'error' });
     } finally {
       setIsWorking(false);
     }
@@ -109,15 +114,16 @@ export function AdminAccountFamilyPanel({
       });
 
       if (error) {
-        setFeedback('error');
+        setFeedback({ message: error.message, type: 'error' });
         return;
       }
 
       if (editingFamilyId === familyId) resetEditor();
-      setFeedback('deleted');
+      setFeedback({ kind: 'deleted', type: 'success' });
       await onChanged();
-    } catch {
-      setFeedback('error');
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+      if (message) setFeedback({ message, type: 'error' });
     } finally {
       setIsWorking(false);
     }
@@ -236,21 +242,21 @@ export function AdminAccountFamilyPanel({
             styles.feedback,
             {
               backgroundColor:
-                feedback === 'error' || feedback === 'duplicate'
+                feedback.type === 'error'
                   ? theme.dangerSoft
                   : theme.successSoft,
               borderColor:
-                feedback === 'error' || feedback === 'duplicate'
+                feedback.type === 'error'
                   ? theme.danger
                   : theme.success,
             },
           ]}>
           <ThemedText
             type="small"
-            themeColor={
-              feedback === 'error' || feedback === 'duplicate' ? 'danger' : 'success'
-            }>
-            {t(`accountFamilies.feedback.${feedback}`)}
+            themeColor={feedback.type === 'error' ? 'danger' : 'success'}>
+            {feedback.type === 'error'
+              ? feedback.message
+              : t(`accountFamilies.feedback.${feedback.kind}`)}
           </ThemedText>
         </Card>
       ) : null}

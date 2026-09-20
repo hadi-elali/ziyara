@@ -28,9 +28,7 @@ import { supabase } from "@/features/auth/supabase";
 import { useGeneralAlarmNotifications } from "@/features/general-alarm/general-alarm-notifications-context";
 import { useI18n } from "@/features/i18n/i18n";
 import {
-  getSupabaseReadFailureKind,
-  supabaseReadFailureTranslationKey,
-  type SupabaseReadFailureKind,
+  getOriginalErrorMessage,
   withSupabaseReadTimeout,
 } from "@/features/network/supabase-read";
 import { openNavigation } from "@/features/places/openNavigation";
@@ -46,11 +44,11 @@ type LocationFeedback = "denied" | "error" | "ready" | null;
 type SubmitFeedback =
   | {
       kind:
-        | "error"
         | "validation_location"
         | "validation_message"
         | "validation_team";
     }
+  | { kind: "error"; message: string }
   | { kind: "no_recipients" }
   | { count: number; kind: "success" | "success_no_push" }
   | null;
@@ -104,10 +102,12 @@ function EmergencyContent() {
   const [sent, setSent] = useState<EmergencyRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [syncErrorKind, setSyncErrorKind] =
-    useState<SupabaseReadFailureKind | null>(null);
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [markingReadId, setMarkingReadId] = useState<number | null>(null);
-  const [markReadErrorId, setMarkReadErrorId] = useState<number | null>(null);
+  const [markReadError, setMarkReadError] = useState<{
+    message: string;
+    requestId: number;
+  } | null>(null);
   const refreshVersion = useRef(0);
   const loadedUserId = useRef<string | null>(null);
   const userId = session?.user.id ?? null;
@@ -122,7 +122,7 @@ function EmergencyContent() {
       setSent([]);
       loadedUserId.current = null;
       setIsLoading(false);
-      setSyncErrorKind(null);
+      setSyncErrorMessage(null);
       return;
     }
 
@@ -155,11 +155,11 @@ function EmergencyContent() {
         setInbox(inboxResult.data ?? []);
         setSent(sentResult.data ?? []);
         loadedUserId.current = userId;
-        setSyncErrorKind(null);
+        setSyncErrorMessage(null);
       }
     } catch (error) {
       if (version === refreshVersion.current) {
-        setSyncErrorKind(getSupabaseReadFailureKind(error));
+        setSyncErrorMessage(getOriginalErrorMessage(error));
       }
     } finally {
       if (version === refreshVersion.current) {
@@ -265,14 +265,17 @@ function EmergencyContent() {
 
       const result = data[0];
       let pushAccepted = false;
+      let pushErrorMessage: string | null = null;
       if (result.recipient_count > 0) {
         try {
           const dispatch = await dispatchEmergencyPush(result.request_id);
+          pushErrorMessage = dispatch?.error?.message ?? null;
           pushAccepted = Boolean(
             dispatch && !dispatch.error && (dispatch.data?.accepted ?? 0) > 0,
           );
-        } catch {
+        } catch (error) {
           // The durable inbox message is already stored. Push remains best effort.
+          pushErrorMessage = getOriginalErrorMessage(error);
           pushAccepted = false;
         }
       }
@@ -283,7 +286,9 @@ function EmergencyContent() {
       setLocationFeedback(null);
       setTeam(null);
       setSubmitFeedback(
-        result.recipient_count === 0
+        pushErrorMessage
+          ? { kind: "error", message: pushErrorMessage }
+          : result.recipient_count === 0
           ? { kind: "no_recipients" }
           : {
               count: result.recipient_count,
@@ -291,8 +296,9 @@ function EmergencyContent() {
             },
       );
       await refresh();
-    } catch {
-      setSubmitFeedback({ kind: "error" });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+      if (message) setSubmitFeedback({ kind: "error", message });
     } finally {
       setIsSubmitting(false);
     }
@@ -301,7 +307,7 @@ function EmergencyContent() {
   const markRead = async (requestId: number) => {
     if (markingReadId !== null) return;
     setMarkingReadId(requestId);
-    setMarkReadErrorId(null);
+    setMarkReadError(null);
     try {
       const { error } = await supabase.rpc("mark_emergency_request_read", {
         p_request_id: requestId,
@@ -315,8 +321,9 @@ function EmergencyContent() {
             : item,
         ),
       );
-    } catch {
-      setMarkReadErrorId(requestId);
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+      if (message) setMarkReadError({ message, requestId });
     } finally {
       setMarkingReadId(null);
     }
@@ -539,12 +546,14 @@ function EmergencyContent() {
                       : "warning"
                 }
               >
-                {t(
-                  `emergency.feedback.${submitFeedback.kind}`,
-                  "count" in submitFeedback
-                    ? { count: submitFeedback.count }
-                    : undefined,
-                )}
+                {submitFeedback.kind === "error"
+                  ? submitFeedback.message
+                  : t(
+                      `emergency.feedback.${submitFeedback.kind}`,
+                      "count" in submitFeedback
+                        ? { count: submitFeedback.count }
+                        : undefined,
+                    )}
               </ThemedText>
             </View>
           ) : null}
@@ -566,7 +575,8 @@ function EmergencyContent() {
         <Section title={t("emergency.notificationsTitle")}>
           <Card style={styles.notificationCard}>
             <ThemedText type="small" themeColor="textSecondary">
-              {t(`emergency.notifications.${notifications.availability}`)}
+              {notifications.errorMessage ??
+                t(`emergency.notifications.${notifications.availability}`)}
             </ThemedText>
             {notifications.availability === "checking" ||
             notifications.isWorking ? (
@@ -592,7 +602,7 @@ function EmergencyContent() {
         </Section>
       ) : null}
 
-      {syncErrorKind ? (
+      {syncErrorMessage ? (
         <Card
           style={[
             styles.feedback,
@@ -603,7 +613,7 @@ function EmergencyContent() {
             {t("emergency.syncErrorTitle")}
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -634,7 +644,11 @@ function EmergencyContent() {
                   date={formatDate(item.created_at)}
                   item={item}
                   key={item.request_id}
-                  markReadError={markReadErrorId === item.request_id}
+                  markReadError={
+                    markReadError?.requestId === item.request_id
+                      ? markReadError.message
+                      : null
+                  }
                   markingRead={markingReadId === item.request_id}
                   onMarkRead={() => void markRead(item.request_id)}
                   onOpenCoordinates={() => openCoordinates(item)}
@@ -677,7 +691,7 @@ function EmergencyContent() {
 function EmergencyMessageCard({
   date,
   item,
-  markReadError = false,
+  markReadError = null,
   markingRead = false,
   onMarkRead,
   onOpenCoordinates,
@@ -685,7 +699,7 @@ function EmergencyMessageCard({
 }: {
   date: string;
   item: EmergencyInboxMessage;
-  markReadError?: boolean;
+  markReadError?: string | null;
   markingRead?: boolean;
   onMarkRead?: () => void;
   onOpenCoordinates: () => void;
@@ -777,7 +791,7 @@ function EmergencyMessageCard({
           themeColor="danger"
           accessibilityLiveRegion="polite"
         >
-          {t("emergency.markReadError")}
+          {markReadError}
         </ThemedText>
       ) : null}
     </Card>

@@ -244,6 +244,7 @@ describe('QuestionRoundProvider', () => {
       hasSyncError: true,
       isLoading: false,
       syncErrorKind: 'server',
+      syncErrorMessage: 'backend unavailable',
     });
   });
 

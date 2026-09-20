@@ -8,6 +8,7 @@ import type { NotificationResponse } from 'expo-notifications';
 
 import type { Language } from '@/features/i18n/i18n';
 import { supabase } from '@/features/auth/supabase';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import type {
   GeneralAlarmNotificationState,
   NotificationResponseSubscription,
@@ -100,8 +101,12 @@ export async function inspectGeneralAlarmNotificationState(): Promise<GeneralAla
     }
 
     return { availability: 'registered', permissionGranted: true };
-  } catch {
-    return { availability: 'error', permissionGranted: false };
+  } catch (error) {
+    return {
+      availability: 'error',
+      errorMessage: getOriginalErrorMessage(error),
+      permissionGranted: false,
+    };
   }
 }
 
@@ -148,8 +153,12 @@ export async function registerGeneralAlarmNotifications(
     if (error) throw error;
     await AsyncStorage.setItem(pushTokenStorageKey, token);
     return { availability: 'registered', permissionGranted: true };
-  } catch {
-    return { availability: 'error', permissionGranted };
+  } catch (error) {
+    return {
+      availability: 'error',
+      errorMessage: getOriginalErrorMessage(error),
+      permissionGranted,
+    };
   }
 }
 

@@ -218,6 +218,7 @@ describe('DailyProgramProvider', () => {
       isLoading: false,
       programs: [savedProgram],
       syncErrorKind: 'server',
+      syncErrorMessage: 'backend unavailable',
     });
   });
 

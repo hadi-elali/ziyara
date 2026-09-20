@@ -15,6 +15,7 @@ import type { GroupCheck } from '@/domain/database';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import {
+  getOriginalErrorMessage,
   getSupabaseReadFailureKind,
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
@@ -36,6 +37,7 @@ type GroupCheckContextValue = {
   refresh: () => Promise<void>;
   respond: (checkId: number, answer: boolean) => Promise<GroupCheckActionResult>;
   startCheck: (question: string) => Promise<GroupCheckActionResult>;
+  syncErrorMessage: string | null;
   syncErrorKind: SupabaseReadFailureKind | null;
 };
 
@@ -55,6 +57,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
   const [currentResponse, setCurrentResponse] = useState<boolean | null>(null);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [syncErrorKind, setSyncErrorKind] = useState<SupabaseReadFailureKind | null>(null);
   const latestMutationVersion = useRef(0);
   const stateVersion = useRef(0);
@@ -73,6 +76,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
       setActiveCheck(null);
       setCurrentResponse(null);
       setSyncedUserId(null);
+      setSyncErrorMessage(null);
       setSyncErrorKind(null);
       setSyncState('ready');
       return;
@@ -117,12 +121,14 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
         setActiveCheck(check);
         setCurrentResponse(response);
         setSyncedUserId(userId);
+        setSyncErrorMessage(null);
         setSyncErrorKind(null);
         setSyncState('ready');
       }
     } catch (error) {
       if (requestVersion === stateVersion.current) {
         setSyncedUserId(userId);
+        setSyncErrorMessage(getOriginalErrorMessage(error));
         setSyncErrorKind(getSupabaseReadFailureKind(error));
         setSyncState('error');
       }
@@ -198,6 +204,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
           setActiveCheck(data);
           setCurrentResponse(null);
           setSyncedUserId(userId);
+          setSyncErrorMessage(null);
           setSyncErrorKind(null);
           setSyncState('ready');
         }
@@ -222,6 +229,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
           setActiveCheck((current) => (current?.id === checkId ? null : current));
           setCurrentResponse(null);
           setSyncedUserId(userId);
+          setSyncErrorMessage(null);
           setSyncErrorKind(null);
           setSyncState('ready');
         }
@@ -248,6 +256,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
           stateVersion.current += 1;
           setCurrentResponse(data?.answer ?? answer);
           setSyncedUserId(userId);
+          setSyncErrorMessage(null);
           setSyncErrorKind(null);
           setSyncState('ready');
         }
@@ -279,6 +288,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
       refresh,
       respond,
       startCheck,
+      syncErrorMessage,
       syncErrorKind,
     }),
     [
@@ -291,6 +301,7 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
       refresh,
       respond,
       startCheck,
+      syncErrorMessage,
       syncErrorKind,
     ],
   );

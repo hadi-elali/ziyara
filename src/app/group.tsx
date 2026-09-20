@@ -9,18 +9,14 @@ import { Screen } from '@/components/ui/screen';
 import { Spacing } from '@/constants/theme';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTripGroups } from '@/features/trip-groups/trip-group-context';
-import {
-  getTripGroupMutationFailureKind,
-  isCurrentLocationResponse,
-  type TripGroupMutationFailureKind,
-} from '@/features/trip-groups/trip-group-state';
+import { isCurrentLocationResponse } from '@/features/trip-groups/trip-group-state';
 import { useTheme } from '@/hooks/use-theme';
 
 type LocationFeedback =
   | { kind: 'denied' | 'location_error' | 'shared'; requestId: number }
-  | { kind: TripGroupMutationFailureKind; requestId: number };
+  | { kind: 'supabase_error'; message: string; requestId: number };
 
 export default function GroupScreen() {
   return (
@@ -40,7 +36,7 @@ function GroupContent() {
     isRefreshing,
     refresh,
     respondToLocationRequest,
-    syncErrorKind,
+    syncErrorMessage,
   } = useTripGroups();
   const [submittingRequestId, setSubmittingRequestId] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<LocationFeedback | null>(null);
@@ -60,12 +56,15 @@ function GroupContent() {
       });
       if (result.error) {
         setFeedback({
-          kind: getTripGroupMutationFailureKind(result.error),
+          kind: 'supabase_error',
+          message: result.error.message,
           requestId,
         });
       }
     } catch (error) {
-      setFeedback({ kind: getTripGroupMutationFailureKind(error), requestId });
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setFeedback({ kind: 'supabase_error', message, requestId });
     } finally {
       setSubmittingRequestId(null);
     }
@@ -94,7 +93,8 @@ function GroupContent() {
       });
       if (result.error) {
         setFeedback({
-          kind: getTripGroupMutationFailureKind(result.error),
+          kind: 'supabase_error',
+          message: result.error.message,
           requestId,
         });
       } else {
@@ -129,7 +129,7 @@ function GroupContent() {
       {hasSyncError ? (
         <Card style={[styles.inlineState, { borderColor: theme.warning }]}>
           <ThemedText type="small" themeColor="warning">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -248,15 +248,15 @@ function GroupContent() {
                   accessibilityLiveRegion="polite"
                   type="small"
                   themeColor={feedback.kind === 'shared' ? 'success' : 'danger'}>
-                  {t(
-                    feedback.kind === 'shared'
-                      ? 'tripGroups.request.shared'
-                      : feedback.kind === 'denied'
-                        ? 'tripGroups.request.permissionDenied'
-                        : feedback.kind === 'location_error'
-                          ? 'tripGroups.request.locationError'
-                          : `tripGroups.error.${feedback.kind}`,
-                  )}
+                  {feedback.kind === 'supabase_error'
+                    ? feedback.message
+                    : t(
+                        feedback.kind === 'shared'
+                          ? 'tripGroups.request.shared'
+                          : feedback.kind === 'denied'
+                            ? 'tripGroups.request.permissionDenied'
+                            : 'tripGroups.request.locationError',
+                      )}
                 </ThemedText>
               ) : null}
             </Card>

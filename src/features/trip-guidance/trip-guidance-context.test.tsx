@@ -393,6 +393,7 @@ describe('TripGuidanceProvider', () => {
     await waitFor(() => context().hasSyncError);
 
     expect(context().navigationDestinations).toEqual([navigationDestination]);
+    expect(context().syncErrorMessage).toBe('Failed to fetch');
   });
 
   it('ersetzt den Cache mit einer erfolgreichen leeren Serverantwort', async () => {

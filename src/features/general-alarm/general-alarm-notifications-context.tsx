@@ -27,6 +27,7 @@ import { buildGeneralAlarmReminderPlans } from '@/features/general-alarm/general
 import { useNotificationsDisabled } from '@/features/general-alarm/useNotificationPreference';
 import { useI18n } from '@/features/i18n/i18n';
 import { emergencyDashboardRoute, emergencyRoute } from '@/features/navigation/routes';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 
 type GeneralAlarmNotificationsContextValue = GeneralAlarmNotificationState & {
   disable: () => Promise<void>;
@@ -135,9 +136,10 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
       })),
     );
 
-    void syncGeneralAlarmReminders(reminders).catch(() => {
+    void syncGeneralAlarmReminders(reminders).catch((error) => {
       setNotificationState((current) => ({
         availability: 'error',
+        errorMessage: getOriginalErrorMessage(error),
         permissionGranted: current.permissionGranted,
       }));
     });
@@ -170,9 +172,10 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
       await unregisterGeneralAlarmNotifications();
       setNotificationsDisabled(true);
       setNotificationState(disabledState);
-    } catch {
+    } catch (error) {
       setNotificationState((current) => ({
         availability: 'error',
+        errorMessage: getOriginalErrorMessage(error),
         permissionGranted: current.permissionGranted,
       }));
     } finally {

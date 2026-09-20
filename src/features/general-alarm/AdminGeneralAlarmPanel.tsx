@@ -19,7 +19,7 @@ import {
 } from '@/features/bus-management/bus-management-state';
 import { parseGeneralAlarmDepartureMinutes } from '@/features/general-alarm/general-alarm-time';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 const departureMinuteOptions = [15, 30, 60] as const;
@@ -36,12 +36,13 @@ export function AdminGeneralAlarmPanel() {
     isLoading,
     participants,
     refresh,
-    syncErrorKind,
+    syncErrorMessage,
   } = useBusManagement();
   const [alarmTitle, setAlarmTitle] = useState('');
   const [departureMinutesInput, setDepartureMinutesInput] = useState('15');
   const [isWorking, setIsWorking] = useState(false);
-  const [hasActionError, setHasActionError] = useState(false);
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
+  const [pushDispatchErrorMessage, setPushDispatchErrorMessage] = useState<string | null>(null);
   const [pushDispatchState, setPushDispatchState] = useState<
     'error' | 'idle' | 'running' | 'success'
   >('idle');
@@ -66,13 +67,16 @@ export function AdminGeneralAlarmPanel() {
   const dispatchPushNotifications = useCallback(async () => {
     if (!activeBoarding?.id) return;
     setPushDispatchState('running');
+    setPushDispatchErrorMessage(null);
 
     try {
       const { error } = await supabase.functions.invoke('dispatch-general-alarm', {
         body: {},
       });
+      setPushDispatchErrorMessage(error?.message ?? null);
       setPushDispatchState(error ? 'error' : 'success');
-    } catch {
+    } catch (error) {
+      setPushDispatchErrorMessage(getOriginalErrorMessage(error));
       setPushDispatchState('error');
     }
   }, [activeBoarding?.id]);
@@ -93,7 +97,7 @@ export function AdminGeneralAlarmPanel() {
     onSuccess?: () => void,
   ) => {
     if (isWorking) return;
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setIsWorking(true);
 
     try {
@@ -111,13 +115,13 @@ export function AdminGeneralAlarmPanel() {
       }
 
       if (result.error) {
-        setHasActionError(true);
+        setActionErrorMessage(getOriginalErrorMessage(result.error));
       } else {
         onSuccess?.();
       }
       await refresh();
-    } catch {
-      setHasActionError(true);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -179,7 +183,7 @@ export function AdminGeneralAlarmPanel() {
       <Card style={styles.stateCard}>
         <ThemedText type="heading">{t('generalAlarm.admin.unavailableTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary">
-          {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+          {syncErrorMessage}
         </ThemedText>
         <Button icon="refresh" label={t('bus.retry')} onPress={() => void refresh()} />
       </Card>
@@ -202,7 +206,7 @@ export function AdminGeneralAlarmPanel() {
       {hasSyncError ? (
         <Card style={[styles.inlineError, { borderColor: theme.warning }]}>
           <ThemedText type="small" themeColor="warning">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -313,7 +317,7 @@ export function AdminGeneralAlarmPanel() {
                 style={styles.pushDispatchText}
                 themeColor={pushDispatchState === 'error' ? 'danger' : 'textSecondary'}
                 type="small">
-                {t(`generalAlarm.admin.push.${pushDispatchState}`)}
+                {pushDispatchErrorMessage ?? t(`generalAlarm.admin.push.${pushDispatchState}`)}
               </ThemedText>
               <Button
                 disabled={pushDispatchState === 'running'}
@@ -416,7 +420,7 @@ export function AdminGeneralAlarmPanel() {
       ) : null}
 
       {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
-      {hasActionError ? <ActionError /> : null}
+      {actionErrorMessage ? <ActionError message={actionErrorMessage} /> : null}
     </View>
   );
 }
@@ -601,11 +605,10 @@ function AlarmParticipantRow({
   );
 }
 
-function ActionError() {
-  const { t } = useI18n();
+function ActionError({ message }: { message: string }) {
   return (
     <ThemedText accessibilityLiveRegion="polite" themeColor="danger" type="small">
-      {t('generalAlarm.admin.actionError')}
+      {message}
     </ThemedText>
   );
 }

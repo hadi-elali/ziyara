@@ -7,10 +7,7 @@ import { Screen } from "@/components/ui/screen";
 import { Section } from "@/components/ui/section";
 import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
-import {
-  getAuthErrorTranslationKey,
-  useAuth,
-} from "@/features/auth/auth-context";
+import { useAuth } from "@/features/auth/auth-context";
 import { useGeneralAlarmNotifications } from "@/features/general-alarm/general-alarm-notifications-context";
 import { languageOptions, useI18n } from "@/features/i18n/i18n";
 import { ReaderPreferenceControls } from "@/features/reader/ReaderPreferenceControls";
@@ -36,7 +33,7 @@ export default function SettingsScreen() {
     const { error } = await signOut();
 
     if (error) {
-      Alert.alert(t("auth.errorTitle"), t(getAuthErrorTranslationKey(error)));
+      Alert.alert(t("auth.errorTitle"), error.message);
     }
   };
 
@@ -186,7 +183,8 @@ export default function SettingsScreen() {
           </View>
           {user ? (
             <ThemedText type="small" themeColor="textSecondary">
-              {t(`generalAlarm.notifications.${notifications.availability}`)}
+              {notifications.errorMessage ??
+                t(`generalAlarm.notifications.${notifications.availability}`)}
             </ThemedText>
           ) : null}
           {user && notifications.availability === "denied" ? (

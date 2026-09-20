@@ -16,7 +16,7 @@ import {
   visibleDailyPrograms,
 } from '@/features/daily-program/daily-program-state';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 const dayCountOptions = [1, 2, 3, 5, 7] as const;
@@ -40,13 +40,14 @@ export function AdminDailyProgramPanel() {
   const theme = useTheme();
   const { language, t } = useI18n();
   const { activeTrip } = useBusManagement();
-  const { hasSyncError, isLoading, programs, refresh, syncErrorKind } = useDailyProgram();
+  const { hasSyncError, isLoading, programs, refresh, syncErrorMessage } = useDailyProgram();
   const [startDate, setStartDate] = useState(localISODate);
   const [dayCount, setDayCount] = useState<number>(1);
   const [drafts, setDrafts] = useState<TripDailyProgramInput[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveState, setSaveState] = useState<'error' | 'idle' | 'saved'>('idle');
+  const [saveState, setSaveState] = useState<'idle' | 'saved'>('idle');
+  const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isDirty) return;
@@ -78,6 +79,7 @@ export function AdminDailyProgramPanel() {
     setDayCount(nextDayCount);
     setIsDirty(false);
     setSaveState('idle');
+    setSaveErrorMessage(null);
   };
 
   const updateDraft = (
@@ -92,12 +94,14 @@ export function AdminDailyProgramPanel() {
     );
     setIsDirty(true);
     setSaveState('idle');
+    setSaveErrorMessage(null);
   };
 
   const savePrograms = async () => {
     if (!activeTrip || !formValid || isSaving) return;
     setIsSaving(true);
     setSaveState('idle');
+    setSaveErrorMessage(null);
 
     try {
       const { error } = await supabase.rpc('admin_upsert_trip_daily_programs', {
@@ -110,14 +114,14 @@ export function AdminDailyProgramPanel() {
       });
 
       if (error) {
-        setSaveState('error');
+        setSaveErrorMessage(error.message);
       } else {
         await refresh();
         setIsDirty(false);
         setSaveState('saved');
       }
-    } catch {
-      setSaveState('error');
+    } catch (error) {
+      setSaveErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -137,7 +141,7 @@ export function AdminDailyProgramPanel() {
       <Card style={styles.stateCard}>
         <ThemedText type="heading">{t('dailyProgram.syncErrorTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary">
-          {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+          {syncErrorMessage}
         </ThemedText>
         <Button
           icon="refresh"
@@ -164,7 +168,7 @@ export function AdminDailyProgramPanel() {
       {hasSyncError ? (
         <Card style={[styles.inlineState, { borderColor: theme.warning }]}>
           <ThemedText type="small" themeColor="warning">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -270,9 +274,9 @@ export function AdminDailyProgramPanel() {
             {t('dailyProgram.admin.saved')}
           </ThemedText>
         ) : null}
-        {saveState === 'error' ? (
+        {saveErrorMessage ? (
           <ThemedText accessibilityLiveRegion="polite" type="small" themeColor="danger">
-            {t('dailyProgram.admin.actionError')}
+            {saveErrorMessage}
           </ThemedText>
         ) : null}
       </Card>

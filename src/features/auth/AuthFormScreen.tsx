@@ -19,7 +19,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import type { MemberType } from '@/domain/database';
-import { getAuthErrorTranslationKey, useAuth } from '@/features/auth/auth-context';
+import { useAuth } from '@/features/auth/auth-context';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { LuggageCountField } from '@/features/auth/LuggageCountField';
 import { getLuggageCount } from '@/features/auth/luggage-count';
 import { getPartySize, PartySizeField } from '@/features/auth/PartySizeField';
@@ -154,7 +155,7 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
         );
 
         if (result.error) {
-          showFeedback(t(getAuthErrorTranslationKey(result.error)), true);
+          showFeedback(result.error.message, true);
         } else {
           completeOnboarding();
 
@@ -168,13 +169,17 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
         const result = await signIn(normalizedEmail, password);
 
         if (result.error) {
-          showFeedback(t(getAuthErrorTranslationKey(result.error)), true);
+          showFeedback(result.error.message, true);
         } else {
           completeOnboarding();
         }
       }
-    } catch {
-      showFeedback(t('auth.error.generic'), true);
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) {
+        showFeedback(message, true);
+      }
     } finally {
       setIsSubmitting(false);
     }

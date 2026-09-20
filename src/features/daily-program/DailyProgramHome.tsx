@@ -12,7 +12,6 @@ import {
 } from '@/features/daily-program/daily-program-state';
 import { useI18n } from '@/features/i18n/i18n';
 import { dailyProgramRoute } from '@/features/navigation/routes';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
 
 const heroText = '#FFFFFF';
 const heroTextMuted = '#E4EEE6';
@@ -26,7 +25,7 @@ export function DailyProgramHome() {
     isRefreshing,
     programs,
     refresh,
-    syncErrorKind,
+    syncErrorMessage,
   } = useDailyProgram();
   const today = localISODate();
   const todaysProgram = programs.find((program) => program.program_date === today);
@@ -50,7 +49,7 @@ export function DailyProgramHome() {
           {t('dailyProgram.syncErrorTitle')}
         </ThemedText>
         <ThemedText style={styles.mutedText}>
-          {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+          {syncErrorMessage}
         </ThemedText>
         <Button
           icon="refresh"
@@ -112,7 +111,7 @@ export function DailyProgramHome() {
           accessibilityLiveRegion="polite"
           style={styles.syncNotice}
           type="small">
-          {t('dailyProgram.cachedNotice')}
+          {syncErrorMessage}
         </ThemedText>
       ) : null}
 

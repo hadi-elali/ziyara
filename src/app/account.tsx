@@ -1,4 +1,3 @@
-import type { AuthError } from "@supabase/supabase-js";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -19,10 +18,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Section } from "@/components/ui/section";
 import { Spacing } from "@/constants/theme";
-import {
-  getAuthErrorTranslationKey,
-  useAuth,
-} from "@/features/auth/auth-context";
+import { useAuth } from "@/features/auth/auth-context";
 import { LuggageCountField } from "@/features/auth/LuggageCountField";
 import { getLuggageCount } from "@/features/auth/luggage-count";
 import { RequireAuth } from "@/features/auth/RequireAuth";
@@ -33,25 +29,13 @@ import {
 import { useI18n } from "@/features/i18n/i18n";
 import { SimCardCountField } from "@/features/auth/SimCardCountField";
 import { getSimCardCount } from "@/features/auth/sim-card-count";
+import { getOriginalErrorMessage } from "@/features/network/supabase-read";
 import { useTheme } from "@/hooks/use-theme";
 
 type FeedbackState = {
   isError: boolean;
   message: string;
 } | null;
-
-function getAccountErrorTranslationKey(error: AuthError) {
-  switch (error.code) {
-    case "invalid_credentials":
-      return "account.error.currentPassword";
-    case "reauthentication_needed":
-      return "account.error.reauthentication";
-    case "same_password":
-      return "account.error.samePassword";
-    default:
-      return getAuthErrorTranslationKey(error);
-  }
-}
 
 export default function AccountScreen() {
   return (
@@ -131,7 +115,7 @@ function AccountContent() {
       if (error) {
         setPartyFeedback({
           isError: true,
-          message: t("account.partySizeError"),
+          message: error.message,
         });
       } else {
         setPartySize(String(normalizedPartySize));
@@ -140,11 +124,10 @@ function AccountContent() {
           message: t("account.partySizeSuccess"),
         });
       }
-    } catch {
-      setPartyFeedback({
-        isError: true,
-        message: t("account.partySizeError"),
-      });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setPartyFeedback({ isError: true, message });
     } finally {
       setIsChangingPartySize(false);
     }
@@ -170,7 +153,7 @@ function AccountContent() {
       if (error) {
         setLuggageFeedback({
           isError: true,
-          message: t("account.luggageError"),
+          message: error.message,
         });
       } else {
         setLuggageCount(String(normalizedLuggageCount));
@@ -179,11 +162,10 @@ function AccountContent() {
           message: t("account.luggageSuccess"),
         });
       }
-    } catch {
-      setLuggageFeedback({
-        isError: true,
-        message: t("account.luggageError"),
-      });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setLuggageFeedback({ isError: true, message });
     } finally {
       setIsChangingLuggageCount(false);
     }
@@ -209,7 +191,7 @@ function AccountContent() {
       if (error) {
         setSimCardFeedback({
           isError: true,
-          message: t("account.simCardError"),
+          message: error.message,
         });
       } else {
         setSimCardCount(String(normalizedSimCardCount));
@@ -218,11 +200,10 @@ function AccountContent() {
           message: t("account.simCardSuccess"),
         });
       }
-    } catch {
-      setSimCardFeedback({
-        isError: true,
-        message: t("account.simCardError"),
-      });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setSimCardFeedback({ isError: true, message });
     } finally {
       setIsChangingSimCardCount(false);
     }
@@ -263,7 +244,7 @@ function AccountContent() {
       if (error) {
         setEmailFeedback({
           isError: true,
-          message: t(getAccountErrorTranslationKey(error)),
+          message: error.message,
         });
       } else {
         setNewEmail("");
@@ -273,8 +254,10 @@ function AccountContent() {
           message: t("account.emailSuccess"),
         });
       }
-    } catch {
-      setEmailFeedback({ isError: true, message: t("auth.error.generic") });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setEmailFeedback({ isError: true, message });
     } finally {
       setIsChangingEmail(false);
     }
@@ -332,7 +315,7 @@ function AccountContent() {
       if (error) {
         setPasswordFeedback({
           isError: true,
-          message: t(getAccountErrorTranslationKey(error)),
+          message: error.message,
         });
       } else {
         setCurrentPassword("");
@@ -343,8 +326,10 @@ function AccountContent() {
           message: t("account.passwordSuccess"),
         });
       }
-    } catch {
-      setPasswordFeedback({ isError: true, message: t("auth.error.generic") });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setPasswordFeedback({ isError: true, message });
     } finally {
       setIsChangingPassword(false);
     }
@@ -360,11 +345,7 @@ function AccountContent() {
       if (result.error) {
         setDeleteFeedback({
           isError: true,
-          message: t(
-            result.code === "last_admin"
-              ? "account.deleteLastAdmin"
-              : "account.deleteError",
-          ),
+          message: result.error.message,
         });
         setIsDeleteDialogVisible(false);
         return;
@@ -372,8 +353,10 @@ function AccountContent() {
 
       setIsDeleteDialogVisible(false);
       router.replace("/");
-    } catch {
-      setDeleteFeedback({ isError: true, message: t("account.deleteError") });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) setDeleteFeedback({ isError: true, message });
       setIsDeleteDialogVisible(false);
     } finally {
       setIsDeleting(false);

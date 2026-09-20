@@ -393,6 +393,7 @@ describe('GroupCheckProvider request versioning', () => {
       isBlocking: false,
       isLoading: false,
       syncErrorKind: 'server',
+      syncErrorMessage: 'backend unavailable',
     });
   });
 
@@ -414,6 +415,7 @@ describe('GroupCheckProvider request versioning', () => {
       currentResponse: false,
       hasSyncError: true,
       syncErrorKind: 'server',
+      syncErrorMessage: 'response unavailable',
     });
   });
 

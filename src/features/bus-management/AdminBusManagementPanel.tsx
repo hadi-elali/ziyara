@@ -12,7 +12,7 @@ import { supabase } from '@/features/auth/supabase';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import { shouldRetryBusStatusAfterSessionRefresh } from '@/features/bus-management/bus-management-state';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 type AssignmentChoice =
@@ -39,7 +39,7 @@ export function AdminBusManagementPanel({
     isLoading,
     participants,
     refresh,
-    syncErrorKind,
+    syncErrorMessage,
     trips,
   } = useBusManagement();
   const [tripName, setTripName] = useState('');
@@ -56,7 +56,7 @@ export function AdminBusManagementPanel({
   const [assignmentChoice, setAssignmentChoice] = useState<AssignmentChoice | null>(null);
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null);
   const [isWorking, setIsWorking] = useState(false);
-  const [hasActionError, setHasActionError] = useState(false);
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
 
   const archivedTrips = useMemo(
     () => trips.filter((trip) => trip.archived_at !== null),
@@ -125,7 +125,7 @@ export function AdminBusManagementPanel({
     onSuccess?: () => void,
   ) => {
     if (isWorking) return;
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setIsWorking(true);
 
     try {
@@ -143,14 +143,14 @@ export function AdminBusManagementPanel({
       }
 
       if (result.error) {
-        setHasActionError(true);
+        setActionErrorMessage(getOriginalErrorMessage(result.error));
         await refresh();
       } else {
         onSuccess?.();
         await refresh();
       }
-    } catch {
-      setHasActionError(true);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -260,7 +260,7 @@ export function AdminBusManagementPanel({
       <Card style={styles.stateCard}>
         <ThemedText type="heading">{t('bus.syncErrorTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary">
-          {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+          {syncErrorMessage}
         </ThemedText>
         <Button icon="refresh" label={t('bus.retry')} onPress={() => void refresh()} />
       </Card>
@@ -317,7 +317,7 @@ export function AdminBusManagementPanel({
             onPress={createTrip}
           />
           {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
-          {hasActionError ? <ActionError /> : null}
+          {actionErrorMessage ? <ActionError message={actionErrorMessage} /> : null}
         </Card>
       </View>
     );
@@ -356,7 +356,7 @@ export function AdminBusManagementPanel({
       {hasSyncError ? (
         <Card style={[styles.inlineError, { borderColor: theme.warning }]}>
           <ThemedText type="small" themeColor="warning">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -612,7 +612,7 @@ export function AdminBusManagementPanel({
       ) : null}
 
       {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
-      {hasActionError ? <ActionError /> : null}
+      {actionErrorMessage ? <ActionError message={actionErrorMessage} /> : null}
     </View>
   );
 }
@@ -836,11 +836,10 @@ function SelectionChip({
   );
 }
 
-function ActionError() {
-  const { t } = useI18n();
+function ActionError({ message }: { message: string }) {
   return (
     <ThemedText accessibilityLiveRegion="polite" themeColor="danger" type="small">
-      {t('bus.admin.actionError')}
+      {message}
     </ThemedText>
   );
 }

@@ -8,7 +8,7 @@ import { Spacing } from '@/constants/theme';
 import type { TripNavigationDestination } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { openNavigation } from '@/features/places/openNavigation';
 import { MeetingPointPicker } from '@/features/trip-guidance/MeetingPointPicker';
 import type { MeetingPointCoordinate } from '@/features/trip-guidance/meeting-point-picker-types';
@@ -72,13 +72,13 @@ export function AdminMeetingPointPanel() {
     isLoading,
     navigationDestinations,
     refresh,
-    syncErrorKind,
+    syncErrorMessage,
   } = useTripGuidance();
   const [form, setForm] = useState<DestinationForm>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [confirmingArchiveId, setConfirmingArchiveId] = useState<number | null>(null);
   const [isWorking, setIsWorking] = useState(false);
-  const [hasActionError, setHasActionError] = useState(false);
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   const coordinate = coordinatePair(form.latitude, form.longitude);
@@ -108,7 +108,7 @@ export function AdminMeetingPointPanel() {
   const startNew = () => {
     setEditingId(null);
     setForm(emptyForm);
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setSavedMessage(null);
   };
 
@@ -116,14 +116,14 @@ export function AdminMeetingPointPanel() {
     setEditingId(destination.id);
     setForm(formFromDestination(destination));
     setConfirmingArchiveId(null);
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setSavedMessage(null);
   };
 
   const save = async () => {
     if (!activeTrip || !coordinate || !formValid || isWorking) return;
     setIsWorking(true);
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setSavedMessage(null);
     const savedName = form.name.trim();
     try {
@@ -136,15 +136,15 @@ export function AdminMeetingPointPanel() {
         p_trip_id: activeTrip.id,
       });
       if (error) {
-        setHasActionError(true);
+        setActionErrorMessage(error.message);
       } else {
         setEditingId(null);
         setForm(emptyForm);
         setSavedMessage(t('navigation.admin.saved', { name: savedName }));
       }
       await refresh();
-    } catch {
-      setHasActionError(true);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -153,22 +153,22 @@ export function AdminMeetingPointPanel() {
   const archive = async (destination: TripNavigationDestination) => {
     if (isWorking) return;
     setIsWorking(true);
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setSavedMessage(null);
     try {
       const { error } = await supabase.rpc('admin_archive_trip_navigation_destination', {
         p_destination_id: destination.id,
       });
       if (error) {
-        setHasActionError(true);
+        setActionErrorMessage(error.message);
       } else {
         if (editingId === destination.id) startNew();
         setConfirmingArchiveId(null);
         setSavedMessage(t('navigation.admin.removed', { name: destination.name }));
       }
       await refresh();
-    } catch {
-      setHasActionError(true);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -188,7 +188,7 @@ export function AdminMeetingPointPanel() {
       <Card style={styles.stateCard}>
         <ThemedText type="heading">{t('navigation.admin.unavailableTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary">
-          {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+          {syncErrorMessage}
         </ThemedText>
         <Button icon="refresh" label={t('guide.retry')} onPress={() => void refresh()} />
       </Card>
@@ -211,7 +211,7 @@ export function AdminMeetingPointPanel() {
       {hasSyncError ? (
         <Card style={[styles.inlineState, { borderColor: theme.warning }]}>
           <ThemedText type="small" themeColor="warning">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -383,9 +383,9 @@ export function AdminMeetingPointPanel() {
             {savedMessage}
           </ThemedText>
         ) : null}
-        {hasActionError ? (
+        {actionErrorMessage ? (
           <ThemedText accessibilityLiveRegion="polite" type="small" themeColor="danger">
-            {t('navigation.admin.actionError')}
+            {actionErrorMessage}
           </ThemedText>
         ) : null}
       </Card>

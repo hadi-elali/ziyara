@@ -15,9 +15,7 @@ import {
 } from '@/features/group-check/group-check-results';
 import { useI18n } from '@/features/i18n/i18n';
 import {
-  getSupabaseReadFailureKind,
-  supabaseReadFailureTranslationKey,
-  type SupabaseReadFailureKind,
+  getOriginalErrorMessage,
   withSupabaseReadTimeout,
 } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
@@ -31,14 +29,13 @@ export function AdminGroupCheckPanel() {
     hasSyncError,
     refresh,
     startCheck,
-    syncErrorKind,
+    syncErrorMessage,
   } = useGroupCheck();
   const [results, setResults] = useState<AdminGroupCheckResult[]>([]);
   const [isLoadingResults, setIsLoadingResults] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
-  const [hasActionError, setHasActionError] = useState(false);
-  const [resultsErrorKind, setResultsErrorKind] =
-    useState<SupabaseReadFailureKind | null>(null);
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
+  const [resultsErrorMessage, setResultsErrorMessage] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
   const [hasQuestionError, setHasQuestionError] = useState(false);
   const [resultsCheckId, setResultsCheckId] = useState<number | null>(null);
@@ -52,7 +49,7 @@ export function AdminGroupCheckPanel() {
     if (checkId === null) {
       setResults([]);
       setResultsCheckId(null);
-      setResultsErrorKind(null);
+      setResultsErrorMessage(null);
       setIsLoadingResults(false);
       return;
     }
@@ -60,7 +57,7 @@ export function AdminGroupCheckPanel() {
     const requestedCheckId = checkId;
     const requestSequence = ++resultsRequestSequence.current;
     setIsLoadingResults(true);
-    setResultsErrorKind(null);
+    setResultsErrorMessage(null);
 
     try {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
@@ -87,7 +84,7 @@ export function AdminGroupCheckPanel() {
       }
     } catch (error) {
       if (requestSequence === resultsRequestSequence.current) {
-        setResultsErrorKind(getSupabaseReadFailureKind(error));
+        setResultsErrorMessage(getOriginalErrorMessage(error));
       }
     } finally {
       if (requestSequence === resultsRequestSequence.current) {
@@ -147,18 +144,18 @@ export function AdminGroupCheckPanel() {
     }
 
     setHasQuestionError(false);
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setIsWorking(true);
 
     try {
       const { error } = await startCheck(normalizedQuestion);
-      setHasActionError(Boolean(error));
+      setActionErrorMessage(error?.message ?? null);
 
       if (!error) {
         setQuestion('');
       }
-    } catch {
-      setHasActionError(true);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -169,14 +166,14 @@ export function AdminGroupCheckPanel() {
       return;
     }
 
-    setHasActionError(false);
+    setActionErrorMessage(null);
     setIsWorking(true);
 
     try {
       const { error } = await closeCheck(activeCheck.id);
-      setHasActionError(Boolean(error));
-    } catch {
-      setHasActionError(true);
+      setActionErrorMessage(error?.message ?? null);
+    } catch (error) {
+      setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
       setIsWorking(false);
     }
@@ -193,7 +190,7 @@ export function AdminGroupCheckPanel() {
       {hasSyncError && !activeCheck ? (
         <View style={styles.errorBlock}>
           <ThemedText type="small" themeColor="danger">
-            {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+            {syncErrorMessage}
           </ThemedText>
           <Button
             icon="refresh"
@@ -217,10 +214,10 @@ export function AdminGroupCheckPanel() {
 
           {isInitialResultsLoading ? (
             <ActivityIndicator color={theme.accent} />
-          ) : resultsErrorKind ? (
+          ) : resultsErrorMessage ? (
             <View style={styles.errorBlock}>
               <ThemedText type="small" themeColor="danger">
-                {t(supabaseReadFailureTranslationKey(resultsErrorKind))}
+                {resultsErrorMessage}
               </ThemedText>
               <Button
                 icon="refresh"
@@ -327,9 +324,9 @@ export function AdminGroupCheckPanel() {
       )}
 
       {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
-      {hasActionError ? (
+      {actionErrorMessage ? (
         <ThemedText type="small" themeColor="danger" accessibilityLiveRegion="polite">
-          {t('groupCheck.actionError')}
+          {actionErrorMessage}
         </ThemedText>
       ) : null}
     </Card>

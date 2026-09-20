@@ -67,6 +67,15 @@ export function getSupabaseReadFailureKind(error: unknown): SupabaseReadFailureK
     : 'server';
 }
 
-export function supabaseReadFailureTranslationKey(kind: SupabaseReadFailureKind) {
-  return `network.${kind}` as const;
+export function getOriginalErrorMessage(error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message;
+  }
+
+  return typeof error === 'string' ? error : null;
 }

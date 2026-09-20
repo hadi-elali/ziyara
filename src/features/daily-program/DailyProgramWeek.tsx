@@ -14,7 +14,6 @@ import {
   splitProgramDetails,
 } from '@/features/daily-program/daily-program-state';
 import { useI18n } from '@/features/i18n/i18n';
-import { supabaseReadFailureTranslationKey } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 const timePrefixPattern = /^(\d{1,2}[:.]\d{2}(?:\s*Uhr)?)\s*(?:[-–—:]\s*)?(.+)$/iu;
@@ -29,7 +28,7 @@ export function DailyProgramWeek() {
     isRefreshing,
     programs,
     refresh,
-    syncErrorKind,
+    syncErrorMessage,
   } = useDailyProgram();
   const today = localISODate();
   const weekDates = dailyProgramDateRange(today, 7);
@@ -75,7 +74,7 @@ export function DailyProgramWeek() {
                   {t('dailyProgram.syncErrorTitle')}
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {t(supabaseReadFailureTranslationKey(syncErrorKind ?? 'server'))}
+                  {syncErrorMessage}
                 </ThemedText>
               </View>
               <Button

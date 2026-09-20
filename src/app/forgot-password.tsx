@@ -13,9 +13,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Screen } from '@/components/ui/screen';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { getAuthErrorTranslationKey, useAuth } from '@/features/auth/auth-context';
+import { useAuth } from '@/features/auth/auth-context';
 import { useI18n } from '@/features/i18n/i18n';
 import { loginRoute } from '@/features/navigation/routes';
+import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function ForgotPasswordScreen() {
@@ -44,7 +45,7 @@ export default function ForgotPasswordScreen() {
       const { error } = await requestPasswordReset(normalizedEmail);
 
       if (error) {
-        setFeedback(t(getAuthErrorTranslationKey(error)));
+        setFeedback(error.message);
         setIsError(true);
       } else {
         // The same neutral response is shown for existing and unknown accounts.
@@ -52,9 +53,13 @@ export default function ForgotPasswordScreen() {
         setFeedback(t('recovery.requestSuccess'));
         setIsError(false);
       }
-    } catch {
-      setFeedback(t('auth.error.generic'));
-      setIsError(true);
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+
+      if (message) {
+        setFeedback(message);
+        setIsError(true);
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -24,11 +24,7 @@ import {
   passwordRecoveryRedirectUrl,
 } from '@/features/auth/password-recovery-link';
 import { supabase } from '@/features/auth/supabase';
-import {
-  getSupabaseReadFailureKind,
-  type SupabaseReadFailureKind,
-  withSupabaseReadTimeout,
-} from '@/features/network/supabase-read';
+import { withSupabaseReadTimeout } from '@/features/network/supabase-read';
 
 type AuthResult = {
   error: AuthError | null;
@@ -68,7 +64,6 @@ type AuthContextValue = {
   hasProfileError: boolean;
   profile: UserProfile | null;
   profileRefreshError: Error | null;
-  profileSyncErrorKind: SupabaseReadFailureKind | null;
   passwordRecoveryError: Error | null;
   passwordRecoveryStatus: PasswordRecoveryStatus;
   refreshProfile: () => Promise<void>;
@@ -774,10 +769,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     );
   const isRefreshing = Boolean(currentProfile && profileSyncState.status === 'refreshing');
   const hasProfileError = Boolean(session && !isLoading && currentProfile === null);
-  const profileRefreshError = currentProfile ? profileSyncState.error : null;
-  const profileSyncErrorKind =
-    session && profileSyncState.error
-      ? getSupabaseReadFailureKind(profileSyncState.error)
+  const profileRefreshError =
+    session && profileSyncState.userId === session.user.id
+      ? profileSyncState.error
       : null;
 
   const value = useMemo<AuthContextValue>(
@@ -795,7 +789,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isRefreshing,
       profile: currentProfile,
       profileRefreshError,
-      profileSyncErrorKind,
       passwordRecoveryError: passwordRecoveryState.error,
       passwordRecoveryStatus: passwordRecoveryState.status,
       refreshProfile,
@@ -821,7 +814,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isLoading,
       isRefreshing,
       profileRefreshError,
-      profileSyncErrorKind,
       passwordRecoveryState,
       refreshProfile,
       requestPasswordReset,
@@ -846,25 +838,4 @@ export function useAuth() {
   }
 
   return value;
-}
-
-export function getAuthErrorTranslationKey(error: AuthError) {
-  switch (error.code) {
-    case 'email_not_confirmed':
-      return 'auth.error.emailNotConfirmed';
-    case 'invalid_credentials':
-      return 'auth.error.invalidCredentials';
-    case 'over_email_send_rate_limit':
-    case 'over_request_rate_limit':
-      return 'auth.error.rateLimit';
-    case 'signup_disabled':
-      return 'auth.error.signupDisabled';
-    case 'user_already_exists':
-    case 'email_exists':
-      return 'auth.error.userExists';
-    case 'weak_password':
-      return 'auth.error.weakPassword';
-    default:
-      return 'auth.error.generic';
-  }
 }

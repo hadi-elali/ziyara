@@ -53,7 +53,7 @@ export default function OnboardingScreen() {
         Animated.timing(brandOpacity, {
           duration: 450,
           toValue: 1,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]),
       Animated.sequence([
@@ -61,7 +61,7 @@ export default function OnboardingScreen() {
         Animated.timing(languageOpacity, {
           duration: 450,
           toValue: 1,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]),
     ]);

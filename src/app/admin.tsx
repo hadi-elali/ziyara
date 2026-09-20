@@ -41,9 +41,7 @@ import { AdminQuestionRoundPanel } from '@/features/question-round/AdminQuestion
 import { useQuestionRound } from '@/features/question-round/question-round-context';
 import { useI18n } from '@/features/i18n/i18n';
 import {
-  getSupabaseReadFailureKind,
-  supabaseReadFailureTranslationKey,
-  type SupabaseReadFailureKind,
+  getOriginalErrorMessage,
   withSupabaseReadTimeout,
 } from '@/features/network/supabase-read';
 import { AdminMeetingPointPanel } from '@/features/trip-guidance/AdminMeetingPointPanel';
@@ -68,10 +66,12 @@ type AdminSection =
   | 'status'
   | 'users';
 type RoleFeedback = {
-  type: 'error' | 'last-admin' | 'success';
+  message?: string;
+  type: 'error' | 'success';
   userId: string;
 };
 type DutyFeedback = {
+  message?: string;
   type: 'error' | 'push-error' | 'success';
   userId: string;
 };
@@ -170,7 +170,7 @@ function AdminContent() {
   const [families, setFamilies] = useState<AccountFamily[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [readErrorKind, setReadErrorKind] = useState<SupabaseReadFailureKind | null>(null);
+  const [readErrorMessage, setReadErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [expandedRoleUserId, setExpandedRoleUserId] = useState<string | null>(null);
@@ -179,7 +179,7 @@ function AdminContent() {
   const [dutyFeedback, setDutyFeedback] = useState<DutyFeedback | null>(null);
   const [updatingDutyUserId, setUpdatingDutyUserId] = useState<string | null>(null);
   const usersRequestSequence = useRef(0);
-  const hasError = readErrorKind !== null;
+  const hasError = readErrorMessage !== null;
   const [expandedSections, setExpandedSections] = useState<Record<AdminSection, boolean>>({
     alarm: false,
     bus: false,
@@ -201,7 +201,7 @@ function AdminContent() {
 
   const loadUsers = useCallback(async () => {
     const requestSequence = ++usersRequestSequence.current;
-    setReadErrorKind(null);
+    setReadErrorMessage(null);
     setIsLoading(true);
 
     try {
@@ -216,7 +216,7 @@ function AdminContent() {
       }
     } catch (error) {
       if (requestSequence === usersRequestSequence.current) {
-        setReadErrorKind(getSupabaseReadFailureKind(error));
+        setReadErrorMessage(getOriginalErrorMessage(error));
       }
     } finally {
       if (requestSequence === usersRequestSequence.current) {
@@ -240,11 +240,8 @@ function AdminContent() {
 
         if (error) {
           setRoleFeedback({
-            type:
-              error.code === 'P0001' &&
-              error.message === 'At least one administrator must remain.'
-                ? 'last-admin'
-                : 'error',
+            message: error.message,
+            type: 'error',
             userId,
           });
           return;
@@ -263,8 +260,9 @@ function AdminContent() {
         if (profile?.user_id === userId) {
           await refreshProfile();
         }
-      } catch {
-        setRoleFeedback({ type: 'error', userId });
+      } catch (error) {
+        const message = getOriginalErrorMessage(error);
+        if (message) setRoleFeedback({ message, type: 'error', userId });
       } finally {
         setUpdatingRoleUserId(null);
       }
@@ -299,15 +297,21 @@ function AdminContent() {
 
       try {
         const dispatch = await dispatchDutyPush(result.notification_id);
+        if (dispatch?.error) {
+          setDutyFeedback({ message: dispatch.error.message, type: 'error', userId });
+          return;
+        }
         const pushAccepted = Boolean(
-          dispatch && !dispatch.error && (dispatch.data?.accepted ?? 0) > 0,
+          dispatch && (dispatch.data?.accepted ?? 0) > 0,
         );
         setDutyFeedback({ type: pushAccepted ? 'success' : 'push-error', userId });
-      } catch {
-        setDutyFeedback({ type: 'push-error', userId });
+      } catch (error) {
+        const message = getOriginalErrorMessage(error);
+        if (message) setDutyFeedback({ message, type: 'error', userId });
       }
-    } catch {
-      setDutyFeedback({ type: 'error', userId });
+    } catch (error) {
+      const message = getOriginalErrorMessage(error);
+      if (message) setDutyFeedback({ message, type: 'error', userId });
     } finally {
       setUpdatingDutyUserId(null);
     }
@@ -585,7 +589,7 @@ function AdminContent() {
                     <Card style={styles.state}>
                       <ThemedText type="heading">{t('admin.errorTitle')}</ThemedText>
                       <ThemedText themeColor="textSecondary">
-                        {t(supabaseReadFailureTranslationKey(readErrorKind ?? 'server'))}
+                        {readErrorMessage}
                       </ThemedText>
                       <Button
                         icon="refresh"
@@ -630,7 +634,7 @@ function AdminContent() {
                     <Card style={styles.state}>
                       <ThemedText type="heading">{t('admin.errorTitle')}</ThemedText>
                       <ThemedText themeColor="textSecondary">
-                        {t(supabaseReadFailureTranslationKey(readErrorKind ?? 'server'))}
+                        {readErrorMessage}
                       </ThemedText>
                       <Button
                         icon="refresh"
@@ -739,13 +743,13 @@ function AdminContent() {
               }}
               roleAssignmentExpanded={expandedRoleUserId === user.user_id}
               roleFeedback={
-                roleFeedback?.userId === user.user_id ? roleFeedback.type : null
+                roleFeedback?.userId === user.user_id ? roleFeedback : null
               }
               roleChoicesDisabled={
                 updatingRoleUserId !== null || updatingDutyUserId !== null
               }
               dutyFeedback={
-                dutyFeedback?.userId === user.user_id ? dutyFeedback.type : null
+                dutyFeedback?.userId === user.user_id ? dutyFeedback : null
               }
               dutyUpdateDisabled={
                 updatingDutyUserId !== null || updatingRoleUserId !== null
@@ -800,7 +804,7 @@ function AdminUserDisclosure({
   updatingDuty,
   user,
 }: {
-  dutyFeedback: DutyFeedback['type'] | null;
+  dutyFeedback: DutyFeedback | null;
   dutyUpdateDisabled: boolean;
   expanded: boolean;
   onAssignDuty: (onDuty: boolean) => void;
@@ -809,7 +813,7 @@ function AdminUserDisclosure({
   onToggleRoleAssignment: () => void;
   roleAssignmentExpanded: boolean;
   roleChoicesDisabled: boolean;
-  roleFeedback: RoleFeedback['type'] | null;
+  roleFeedback: RoleFeedback | null;
   updatingRole: boolean;
   updatingDuty: boolean;
   user: AdminUserSummary;
@@ -926,14 +930,10 @@ function AdminUserDisclosure({
             <ThemedText
               accessibilityLiveRegion="polite"
               type="small"
-              themeColor={roleFeedback === 'success' ? 'success' : 'danger'}>
-              {t(
-                roleFeedback === 'success'
-                  ? 'admin.roleAssignment.saved'
-                  : roleFeedback === 'last-admin'
-                    ? 'admin.roleAssignment.lastAdmin'
-                    : 'admin.roleAssignment.error',
-              )}
+              themeColor={roleFeedback.type === 'success' ? 'success' : 'danger'}>
+              {roleFeedback.type === 'success'
+                ? t('admin.roleAssignment.saved')
+                : roleFeedback.message}
             </ThemedText>
           ) : null}
 
@@ -986,8 +986,10 @@ function AdminUserDisclosure({
                 <ThemedText
                   accessibilityLiveRegion="polite"
                   type="small"
-                  themeColor={dutyFeedback === 'success' ? 'success' : 'danger'}>
-                  {t(`admin.duty.${dutyFeedback}`)}
+                  themeColor={dutyFeedback.type === 'success' ? 'success' : 'danger'}>
+                  {dutyFeedback.type === 'error'
+                    ? dutyFeedback.message
+                    : t(`admin.duty.${dutyFeedback.type}`)}
                 </ThemedText>
               ) : null}
             </View>
