@@ -26,15 +26,14 @@ import {
   getAdminUserStats,
 } from '@/features/admin/admin-user-list';
 import { AdminSectionHeader } from '@/features/admin/AdminSectionHeader';
+import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrganizationPanel';
 import { useAuth } from '@/features/auth/auth-context';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { supabase } from '@/features/auth/supabase';
-import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import { AdminDailyProgramPanel } from '@/features/daily-program/AdminDailyProgramPanel';
 import { useDailyProgram } from '@/features/daily-program/daily-program-context';
 import { localISODate, visibleDailyPrograms } from '@/features/daily-program/daily-program-state';
-import { AdminGeneralAlarmPanel } from '@/features/general-alarm/AdminGeneralAlarmPanel';
 import { AdminGroupCheckPanel } from '@/features/group-check/AdminGroupCheckPanel';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
 import { AdminQuestionRoundPanel } from '@/features/question-round/AdminQuestionRoundPanel';
@@ -45,22 +44,17 @@ import {
   withSupabaseReadTimeout,
 } from '@/features/network/supabase-read';
 import { AdminMeetingPointPanel } from '@/features/trip-guidance/AdminMeetingPointPanel';
-import { AdminTripGuidancePanel } from '@/features/trip-guidance/AdminTripGuidancePanel';
 import { useTripGuidance } from '@/features/trip-guidance/trip-guidance-context';
 import { useTheme } from '@/hooks/use-theme';
-import { AdminTripGroupPanel } from '@/features/trip-groups/AdminTripGroupPanel';
 import { useTripGroups } from '@/features/trip-groups/trip-group-context';
 
 const adminPageSize = 200;
 const assignableRoles: AppRole[] = ['user', 'medical_staff', 'organization_team', 'admin'];
 
 type AdminSection =
-  | 'alarm'
-  | 'bus'
   | 'families'
-  | 'guidance'
-  | 'groups'
   | 'navigation'
+  | 'organization'
   | 'program'
   | 'questions'
   | 'status'
@@ -145,7 +139,7 @@ function AdminContent() {
   const theme = useTheme();
   const { isRTL, language, t } = useI18n();
   const { profile, refreshProfile } = useAuth();
-  const { activeBoarding, hasSyncError: hasBusSyncError } = useBusManagement();
+  const { activeTrip, hasSyncError: hasBusSyncError } = useBusManagement();
   const {
     hasSyncError: hasDailyProgramSyncError,
     programs: dailyPrograms,
@@ -155,13 +149,9 @@ function AdminContent() {
     localISODate(),
   ).length;
   const { activeCheck, hasSyncError: hasGroupCheckSyncError } = useGroupCheck();
-  const {
-    groups: tripGroups,
-    hasSyncError: hasTripGroupSyncError,
-  } = useTripGroups();
+  const { hasSyncError: hasTripGroupSyncError } = useTripGroups();
   const { activeRound, hasSyncError: hasQuestionRoundSyncError } = useQuestionRound();
   const {
-    activeGuidance,
     hasSyncError: hasTripGuidanceSyncError,
     navigationDestinations,
   } = useTripGuidance();
@@ -181,12 +171,9 @@ function AdminContent() {
   const usersRequestSequence = useRef(0);
   const hasError = readErrorMessage !== null;
   const [expandedSections, setExpandedSections] = useState<Record<AdminSection, boolean>>({
-    alarm: false,
-    bus: false,
     families: false,
-    guidance: false,
-    groups: false,
     navigation: false,
+    organization: false,
     program: false,
     questions: false,
     status: false,
@@ -376,64 +363,29 @@ function AdminContent() {
             <View style={styles.sections}>
               <View style={styles.section}>
                 <AdminSectionHeader
-                  description={t('admin.section.bus.description')}
-                  expanded={expandedSections.bus}
+                  description={t('admin.section.organization.description')}
+                  expanded={expandedSections.organization}
                   icon="bus"
-                  onToggle={() => toggleSection('bus')}
-                  status={t('admin.section.bus.status')}
-                  statusColor="accent"
-                  title={t('admin.section.bus.title')}
-                />
-                {expandedSections.bus ? (
-                  <AdminBusManagementPanel families={families} users={users} />
-                ) : null}
-              </View>
-
-              <View style={styles.section}>
-                <AdminSectionHeader
-                  description={t('admin.section.groups.description')}
-                  expanded={expandedSections.groups}
-                  icon="people"
-                  onToggle={() => toggleSection('groups')}
+                  onToggle={() => toggleSection('organization')}
                   status={t(
-                    hasTripGroupSyncError
-                      ? 'admin.section.groups.error'
-                      : tripGroups.length > 0
-                        ? 'admin.section.groups.active'
-                        : 'admin.section.groups.inactive',
-                    { count: tripGroups.length },
+                    hasBusSyncError || hasTripGroupSyncError || hasTripGuidanceSyncError
+                      ? 'admin.section.organization.error'
+                      : activeTrip
+                        ? 'admin.section.organization.active'
+                        : 'admin.section.organization.inactive',
                   )}
                   statusColor={
-                    hasTripGroupSyncError
+                    hasBusSyncError || hasTripGroupSyncError || hasTripGuidanceSyncError
                       ? 'danger'
-                      : tripGroups.length > 0
+                      : activeTrip
                         ? 'success'
                         : 'textSecondary'
                   }
-                  title={t('admin.section.groups.title')}
+                  title={t('admin.section.organization.title')}
                 />
-                {expandedSections.groups ? <AdminTripGroupPanel /> : null}
-              </View>
-
-              <View style={styles.section}>
-                <AdminSectionHeader
-                  description={t('admin.section.alarm.description')}
-                  expanded={expandedSections.alarm}
-                  icon="warning"
-                  onToggle={() => toggleSection('alarm')}
-                  status={t(
-                    hasBusSyncError
-                      ? 'admin.section.alarm.error'
-                      : activeBoarding
-                        ? 'admin.section.alarm.active'
-                        : 'admin.section.alarm.inactive',
-                  )}
-                  statusColor={
-                    hasBusSyncError ? 'danger' : activeBoarding ? 'warning' : 'textSecondary'
-                  }
-                  title={t('admin.section.alarm.title')}
-                />
-                {expandedSections.alarm ? <AdminGeneralAlarmPanel /> : null}
+                {expandedSections.organization ? (
+                  <AdminTravelOrganizationPanel families={families} users={users} />
+                ) : null}
               </View>
 
               <View style={styles.section}>
@@ -460,31 +412,6 @@ function AdminContent() {
                   title={t('admin.section.program.title')}
                 />
                 {expandedSections.program ? <AdminDailyProgramPanel /> : null}
-              </View>
-
-              <View style={styles.section}>
-                <AdminSectionHeader
-                  description={t('admin.section.guidance.description')}
-                  expanded={expandedSections.guidance}
-                  icon="map"
-                  onToggle={() => toggleSection('guidance')}
-                  status={t(
-                    hasTripGuidanceSyncError
-                      ? 'admin.section.guidance.error'
-                      : activeGuidance
-                        ? 'admin.section.guidance.active'
-                        : 'admin.section.guidance.inactive',
-                  )}
-                  statusColor={
-                    hasTripGuidanceSyncError
-                      ? 'danger'
-                      : activeGuidance
-                        ? 'success'
-                        : 'textSecondary'
-                  }
-                  title={t('admin.section.guidance.title')}
-                />
-                {expandedSections.guidance ? <AdminTripGuidancePanel /> : null}
               </View>
 
               <View style={styles.section}>

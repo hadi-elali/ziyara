@@ -169,7 +169,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
     await admin.page.goto('/admin');
-    await admin.page.getByRole('button', { name: /Busmanagement/u }).click();
+    await admin.page.getByRole('button', { name: /Reiseorganisation/u }).click();
     await admin.page.getByLabel('Reisename').fill('E2E Ziyara Reise');
     await admin.page.getByRole('button', { name: 'Reise anlegen' }).click();
     await expect(admin.page.getByText('E2E Ziyara Reise')).toBeVisible();
@@ -185,7 +185,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await admin.page.getByRole('button', { name: 'Teilnehmer speichern' }).click();
     await expect(admin.page.getByText('E2E01')).toBeVisible();
 
-    await admin.page.getByRole('button', { name: /Generalalarm/u }).click();
+    await admin.page.getByRole('radio', { name: /Live-Begleitung/u }).click();
     await admin.page.getByLabel('Alarmmeldung').fill('Abfahrt vom E2E Hotel');
     await admin.page
       .getByRole('button', { name: /Generalalarm einschalten$/u })
@@ -255,7 +255,8 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
     await admin.page.goto('/admin');
-    await admin.page.getByRole('button', { name: /Reiseführung/u }).click();
+    await admin.page.getByRole('button', { name: /Reiseorganisation/u }).click();
+    await admin.page.getByRole('radio', { name: /Live-Begleitung/u }).click();
     await admin.page.getByLabel('Aktueller Besuchsort').fill('E2E Besuchsort');
     await admin.page.getByLabel('Nächster Programmpunkt').fill('E2E Weiterfahrt');
     await admin.page.getByLabel('Treffpunkt', { exact: true }).fill('E2E Tor 3');

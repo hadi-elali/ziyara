@@ -449,7 +449,7 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- The admin area exposes Generalalarm as its own section, separate from bus setup. An admin explicitly configures and enables it there, sees its active/inactive state and can end it there.
+- The admin area exposes Generalalarm inside the shared `Trip organization` area under the distinct `Live support` step, separate from bus setup. An admin explicitly configures and enables it there, sees its active/inactive state and can end it there.
 - Participants confirm `read`, `on_way` and `boarded` in sequence for their account-backed assignment; `problem` remains available as an exception path.
 - A missing next stage becomes due after five minutes. Native clients reconcile bounded local reminders, while an idempotent server dispatcher claims at most one Expo push attempt per device, participant, stage and reminder window.
 - Push tokens are never client-readable. Registration is profile-bound, dispatch requires a verified admin or scheduler secret, and privileged claims/completions are limited to `service_role`.
@@ -514,7 +514,7 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- Admins create, edit and delete named subgroups from people assigned to the active trip. One person belongs to at most one subgroup.
+- In the shared admin `Trip organization` area, admins create, edit and delete named subgroups from people assigned to the active trip. One person belongs to at most one subgroup.
 - Every subgroup has exactly one registered leader who is also a member.
 - Any app role, including an admin, can be a member or leader through its account-backed trip assignment. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.
 - Admins can issue one current location request to the group leader. Re-requesting clears previously shared coordinates.
