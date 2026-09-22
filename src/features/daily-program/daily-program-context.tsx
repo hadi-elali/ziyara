@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { AppState, Platform } from 'react-native';
 
-import type { TripDailyProgram } from '@/domain/database';
+import type { DailyProgram } from '@/domain/database';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import { useDailyProgramCache } from '@/features/daily-program/daily-program-cache';
@@ -28,7 +28,7 @@ type DailyProgramContextValue = {
   hasSyncError: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
-  programs: TripDailyProgram[];
+  programs: DailyProgram[];
   refresh: () => Promise<void>;
   syncErrorMessage: string | null;
   syncErrorKind: SupabaseReadFailureKind | null;
@@ -45,7 +45,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
   const syncedUserIdRef = useRef<string | null>(null);
   const stateVersionRef = useRef(0);
   const [programCache, setProgramCache] = useDailyProgramCache();
-  const [programs, setPrograms] = useState<TripDailyProgram[]>([]);
+  const [programs, setPrograms] = useState<DailyProgram[]>([]);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
   const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
@@ -83,9 +83,9 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
     try {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
         supabase
-          .from('trip_daily_programs')
+          .from('daily_programs')
           .select(
-            'id, trip_id, program_date, title, details, published_by_profile_id, created_at, updated_at',
+            'id, program_date, title, details, published_by_profile_id, created_at, updated_at',
           )
           .order('program_date')
           .abortSignal(signal),
@@ -126,7 +126,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
       .channel(`daily-program-state:${userId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'trip_daily_programs' },
+        { event: '*', schema: 'public', table: 'daily_programs' },
         () => void refresh(),
       )
       .subscribe();

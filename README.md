@@ -1,6 +1,6 @@
 # Shia Ziyarah Iraq
 
-Produktionsorientierte Expo-SDK-57-App für eine schiitische Ziyarah-Reise im Irak. Stand dieser Dokumentation: 21. September 2026.
+Produktionsorientierte Expo-SDK-57-App für eine schiitische Ziyarah-Reise im Irak. Stand dieser Dokumentation: 22. September 2026.
 
 Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, Einstellungs-, About-, Disclaimer- und Quelleninhalten lokal gebündelt und startet ohne Anmeldung sowie ohne Supabase-Verbindung. Konto-, Tagesprogramm-, Bus-, Reisegruppen-, Generalalarm-, Reiseführungs-, Gruppencheck-, Fragerunden- und Administrationsfunktionen bleiben durch Supabase Auth, Row Level Security und serverseitig geprüfte RPCs geschützt.
 
@@ -10,6 +10,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - [`AGENTS.md`](./AGENTS.md): Arbeits-, Sicherheits-, Qualitäts- und Inhaltsregeln
 - [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md): ursprüngliche Roadmap; nicht ungeprüft als Ist-Zustand verwenden
 - [`docs/GENERAL_ALARM.md`](./docs/GENERAL_ALARM.md): Push-/Scheduler-Aktivierung und verbindliche Plattformgrenzen
+- [`docs/EMERGENCY_ALERTS.md`](./docs/EMERGENCY_ALERTS.md): Notfall-Empfänger, Push und produktive Bereitstellung
 
 ## Aktuell umgesetzt
 
@@ -24,7 +25,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 
 - Der AuthContext trennt initiales Session-/Profil-Laden von Hintergrundrefreshes. App-Resume und Realtime-Rollenänderungen erhalten bestehendes Profil, Navigation und Screen-State; Logout oder ein echter Benutzerwechsel entfernt alte Profildaten sofort.
 - Registrierung, Login und Kontoverwaltung unterstützen Anzeigename, `member_type`, `party_size`, Kofferanzahl, E-Mail und Passwort. Die Kofferanzahl gilt für alle durch das Konto vertretenen Personen, kann bei der Registrierung `0` bis `50` betragen und später über die Kontoseite in den Einstellungen geändert werden. Profile können die Rollen `user`, `medical_staff`, `organization_team` und `admin` besitzen.
-- Admins können eigenständige Benutzerkonten im Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size` und Reisegruppen getrennt und können unter **Reiseorganisation → Reise & Busse** als Einheit ausgewählt werden.
+- Admins können eigenständige Benutzerkonten im Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size` und Reisegruppen getrennt und können unter **Reiseorganisation → Zwischenreise & Busse** als Einheit ausgewählt werden.
 - „Passwort vergessen“ und der vollständige Recovery-Deep-Link laufen ausschließlich über `/reset-password` beziehungsweise `ziyara:///reset-password`. Normale Login-/Signup-Links werden nicht als Recovery-Link behandelt; nach erfolgreicher Passwortänderung wird die lokale Session entfernt.
 - Nutzer können ausschließlich das eigene Konto über `supabase/functions/delete-account` löschen. Die Function nimmt keine Ziel-User-ID an, prüft den Bearer-Token selbst, schützt den letzten Admin und hält Service-Role-Zugangsdaten vollständig aus dem Client.
 
@@ -36,20 +37,28 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Rollenänderungen, Gruppencheck-Antwort gegen Schließen, das Fünf-Fragen-Limit und Account-Löschungen sind auch bei parallelen Transaktionen datenbankseitig abgesichert.
 - Anonyme Fragen speichern keine User-/Profil-ID am Fragetext. Temporäre, für Clients nicht lesbare Limit-Zähler werden beim Schließen der Runde gelöscht.
 
-### Reiseorganisation: Reise & Busse
+### Notfallmeldungen
 
-- Im gemeinsamen Admin-Punkt **Reiseorganisation** führt der erste Schritt **Reise & Busse** durch das Anlegen einer aktiven Reise und benannter Busse. Für jeden neuen Bus ist eine registrierte Person als Busführer erforderlich.
+- Jede angemeldete Person kann einen Notfall an das medizinische Team oder das Organisationsteam senden. Eine verständliche Ortsangabe ist Pflicht; genaue Gerätekoordinaten bleiben freiwillig und werden nur nach ausdrücklicher Vordergrundfreigabe einmalig ermittelt.
+- Alle Konten der passenden Teamrolle sowie alle Admins sind automatisch und dauerhaft im Dienst. Admins erhalten beide Notfallarten. Eine manuelle Diensteinteilung existiert im Adminbereich nicht, und historische Einteilungsdaten beeinflussen die Empfängerauswahl nicht.
+- Die Meldung wird zuerst für jedes passende Teamkonto dauerhaft im Postfach gespeichert und danach bestmöglich per Push versucht. Push-Tokens und Versandprotokolle bleiben für Clients unlesbar.
+
+### Reiseorganisation: Zwischenreise & Busse
+
+- Die **Reiseorganisation** plant nicht die gesamte Ziyara, sondern kleine Zwischenreisen innerhalb der Gesamtreise, zum Beispiel `Hotel → Karbala`.
+- Im ersten Schritt **Zwischenreise & Busse** wird eine aktive Zwischenreise mit benannten Bussen angelegt. Für jeden neuen Bus ist eine registrierte Person als Busführer erforderlich; Personen und Familien erscheinen in den Auswahlfeldern erst nach einer Suche.
 - Personen werden über ihr registriertes Konto oder gemeinsam als ganze Kontofamilie einem Bus zugeordnet. Sobald eine Familie zugeordnet ist, werden ihre Mitglieder nicht zusätzlich als Einzelpersonen angeboten.
-- Eine aktive Reise lässt sich einklappen und schließen. Danach kann eine leere Reise erstellt oder die komplette Busanordnung einschließlich Führung und Personen-/Familienzuordnung aus einer geschlossenen Reise übernommen werden; alte Boardingstände werden nicht kopiert.
-- Die **Live-Begleitung** übernimmt das Starten, Überwachen und Beenden des Bestätigungsablaufs. **Reise & Busse** bleibt auf Reise-, Bus- und Teilnehmerzuordnung konzentriert.
+- Eine aktive Zwischenreise lässt sich einklappen und beenden. Danach kann eine leere Zwischenreise erstellt oder die komplette Busanordnung einschließlich Führung und Personen-/Familienzuordnung aus einer beendeten Zwischenreise übernommen werden; alte Boardingstände werden nicht kopiert. Das Tagesprogramm bleibt davon unberührt.
+- Die **Live-Begleitung** übernimmt das Starten, Überwachen und Beenden des Bestätigungsablaufs. **Zwischenreise & Busse** bleibt auf Zwischenreise-, Bus- und Teilnehmerzuordnung konzentriert.
 - Realtime, App-Fokus und ein gestaffelter Fallback-Refresh halten die Übersicht aktuell. Monotone Request-Versionen verhindern, dass ältere Reads einen gespeicherten Status zurücksetzen. Antwort und Schließen sperren dieselbe Boarding-Zeile und bleiben dadurch transaktional geordnet.
 - Bei einer abgelaufenen oder fehlenden Auth-Session erneuert der Client die Sitzung und wiederholt eine Teilnehmer- oder Admin-Statusmutation genau einmal für dieselbe User-ID. Endgültige Fehler laden den autoritativen Stand und unterscheiden Auth-, geschlossenes Boarding-, geänderte Zuordnungs-, Offline- und Serverzustände.
 
 ### Reiseorganisation: Gruppen und Anführerstandort
 
-- Im zweiten Schritt **Gruppen** bilden Admins Untergruppen aus den der Reise zugeordneten Personen. Jede Person gehört höchstens einer Gruppe; eine registrierte Person wird als Anführer festgelegt und ist automatisch Mitglied.
+- Im zweiten Schritt **Gruppen** bilden Admins Untergruppen aus den der Reise zugeordneten Personen. Anführer und Mitglieder werden über eine Namenssuche ausgewählt, statt alle Konten ungefiltert anzuzeigen. Jede Person gehört höchstens einer Gruppe; eine registrierte Person wird als Anführer festgelegt und ist automatisch Mitglied.
 - Auch ein Admin kann Mitglied oder Anführer sein. Auf Home und unter `/group` sieht er nur seine eigenen Gruppenzuordnungen; die vollständige Gruppenverwaltung bleibt im Adminbereich.
 - Der Admin kann den Anführer in der App nach seinem Standort fragen. Der Anführer sieht die Anfrage auf Home und entscheidet ausdrücklich zwischen einer einmaligen Freigabe und Ablehnung; erst nach Zustimmung wird die Vordergrund-Standortberechtigung angefragt.
+- Ein freigegebener Anführerstandort erscheint im Adminbereich auf einer kleinen Karte. Der Admin kann seinen eigenen aktuellen Standort nach separater Zustimmung lokal als zweiten Marker einblenden; diese Adminposition wird weder gespeichert noch geteilt.
 - Es gibt kein Live- oder Hintergrundtracking. Geteilte Koordinaten sind per RLS nur für Anführer und Admins und höchstens 15 Minuten lesbar; erneute Anfragen sowie Gruppenänderung oder -löschung entfernen die zuvor gespeicherte Position.
 - Gruppen, Mitgliedschaften und Standortanfragen werden per Realtime, App-Fokus und gestaffeltem Fallback aktualisiert. Alle Mutationen laufen über serverseitig authentifizierte RPCs.
 
@@ -63,14 +72,15 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 
 ### Tagesprogramm
 
+- Das **Tagesprogramm** ist von der Reiseorganisation und ihren Zwischenreisen unabhängig und gilt für die gesamte Ziyara. Es kann auch ohne aktive Zwischenreise geplant und gelesen werden.
 - Admins wählen im eigenen Punkt **Tagesprogramm** einen Starttag und planen wahlweise einen, zwei, drei, fünf oder sieben aufeinanderfolgende Tage in einem Formular.
 - Jeder Tag erhält eine optionale Überschrift und einen freien organisatorischen Ablauf. Alle ausgewählten Tage werden atomar gespeichert; ein bereits veröffentlichter Tag kann später geändert werden.
 - Angemeldete Nutzer sehen das heutige Programm kompakt im grünen Home-Bereich. Ein Tipp öffnet das geschützte Wochenprogramm mit heute und den nächsten sechs Tagen, getrennten Tageskarten und gegliederten Ablaufpunkten. Der letzte erfolgreiche, benutzergebundene Stand wird lokal gespeichert und beim nächsten Start sofort angezeigt, während Realtime, App-Fokus und ein gestaffelter Fallback-Refresh ihn im Hintergrund aktualisieren.
-- RLS gibt das Programm der aktiven Reise allen angemeldeten Konten frei, auch wenn das Konto noch keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
+- RLS gibt das reiseweite Programm allen angemeldeten Konten frei, auch wenn keine aktive Zwischenreise besteht oder das Konto keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
 
 ### Reiseführung und „Wo sind wir?“
 
-- Admins veröffentlichen unter **Reiseorganisation → Live-Begleitung** den aktuellen Besuchsort, nächsten Programmpunkt, Abfahrt, Treffpunkt, relevante Tür, Entfernungshinweis, Beschreibung und Handlungen. Im davon getrennten Punkt **Reiseziele & Navigation** legen sie unabhängig davon mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
+- Admins veröffentlichen unter **Reiseorganisation → Live-Begleitung** den aktuellen Besuchsort, nächsten Programmpunkt, Abfahrt, Treffpunkt, relevante Tür, Entfernungshinweis, Beschreibung und Handlungen. Der optionale Offline-Katalogort wird gesucht statt vollständig aufgelistet; die gewählte Abfahrts-Schnellauswahl bleibt farblich markiert. Im davon getrennten Punkt **Reiseziele & Navigation** legen Admins unabhängig davon mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
 - Teilnehmer melden für ihr zugeordnetes Konto „Noch unterwegs“, „Bin gleich da“, „Beim Treffpunkt“, „Problem“, „Verloren“ oder „Medizinische Hilfe benötigt“. Problemfälle werden ausdrücklich von einem Admin übernommen; der meldende Teilnehmer sieht dessen Anzeigenamen.
 - Alle aktiven Reiseziele erscheinen angemeldeten Teilnehmern als rote Marker auf der nativen und der Webkarte und sind einzeln über externe Navigation erreichbar. Verknüpfte Katalogorte bleiben separat sichtbar. Ein validierter, benutzergebundener AsyncStorage-Cache hält den letzten erfolgreichen Reisezielstand über App-Neustarts hinweg sichtbar, falls der erste Serverabruf fehlschlägt; ein erfolgreicher Supabase-Abruf bleibt maßgeblich und entfernt überholte Ziele. Die Entfernung zum aktuellen Programmtreffpunkt wird nur nach einem Klick einmalig bestimmt; es gibt kein permanentes Tracking und keine Speicherung der Geräteposition im Backend.
 - Eindeutige Offlinefehler werden in einer validierten, benutzerspezifischen AsyncStorage-Warteschlange vorgemerkt. Die UI sagt ausdrücklich, dass diese Meldung noch nicht beim Reiseleiter angekommen ist.
@@ -157,9 +167,9 @@ npm run test:e2e
 
 ## Remote-Backend-Stand
 
-Am 21. September 2026 wurden lokale und verknüpfte Remote-Migrationsliste erneut gelesen. Alle 34 Migrationen stimmen bis einschließlich `20260914010000` überein. Keine bestehende Migration wurde verändert, gelöscht oder zusammengefasst.
+Am 22. September 2026 wurden lokale und verknüpfte Remote-Migrationsliste erneut gelesen. Alle 36 Migrationen stimmen bis einschließlich `20260922000000` überein; auch `20260921000000_make_emergency_teams_always_on_duty.sql` ist remote angewandt. Keine bestehende Migration wurde verändert, gelöscht oder zusammengefasst.
 
-Die Edge Functions `delete-account`, `dispatch-general-alarm`, `dispatch-emergency-alert` und `dispatch-emergency-duty` sind remote aktiv. `verify_jwt = false` schaltet nur die vorgeschaltete Legacy-JWT-Prüfung aus; die Functions prüfen ihre jeweilige Berechtigung weiterhin selbst.
+Die Edge Functions `delete-account`, `dispatch-general-alarm`, `dispatch-emergency-alert` und `dispatch-emergency-duty` sind remote aktiv. Der aktuelle Client verwendet `dispatch-emergency-duty` nicht mehr. `verify_jwt = false` schaltet nur die vorgeschaltete Legacy-JWT-Prüfung aus; die Functions prüfen ihre jeweilige Berechtigung weiterhin selbst.
 
 Für Push ist das EAS-Projekt `@hadi_ea/al-batoul` mit dem nativen Identifier `de.albatoul.ziyara` verbunden. APNs und FCM V1 sind hinterlegt. Das Generalalarm-Scheduler-Secret liegt als Function-Secret und geschützt im Supabase Vault; `dispatch-general-alarm-every-minute` läuft jede Minute und antwortete bei der Einrichtung mehrfach mit HTTP 200. Die vier Edge Functions sind am 21. September 2026 remote als `ACTIVE` bestätigt. iOS- und Android-Preview-Build vom 14. September 2026 sind erfolgreich abgeschlossen, enthalten aber nur Commit `2df176f`; der geprüfte Stand `aabf955` liegt acht Commits weiter und benötigt neue native Builds. Ein realer Push ist weiterhin nicht nachgewiesen. Die Remote-Auth-Redirect-Allowlist wurde im Rahmen dieser Prüfung nicht verändert.
 

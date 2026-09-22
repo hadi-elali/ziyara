@@ -1,3 +1,4 @@
+import * as Location from 'expo-location';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,8 +16,10 @@ import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Spacing } from '@/constants/theme';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import { useI18n } from '@/features/i18n/i18n';
+import type { MapCoordinate } from '@/features/map/map-types';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { openNavigation } from '@/features/places/openNavigation';
+import { GroupLocationMap } from '@/features/trip-groups/GroupLocationMap';
 import { useTripGroups } from '@/features/trip-groups/trip-group-context';
 import {
   isCurrentLocationResponse,
@@ -28,9 +31,11 @@ type ActionFeedback =
   | { kind: 'saved' | 'requested'; type: 'success' }
   | { message: string; type: 'error' };
 
+type AdminLocationStatus = 'denied' | 'error' | 'idle' | 'loading';
+
 export function AdminTripGroupPanel() {
   const theme = useTheme();
-  const { language, t } = useI18n();
+  const { isRTL, language, t } = useI18n();
   const { activeTrip, participants } = useBusManagement();
   const {
     deleteGroup,
@@ -44,12 +49,17 @@ export function AdminTripGroupPanel() {
   } = useTripGroups();
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [groupName, setGroupName] = useState('');
+  const [leaderSearch, setLeaderSearch] = useState('');
+  const [memberSearch, setMemberSearch] = useState('');
   const [leaderParticipantId, setLeaderParticipantId] = useState<number | null>(null);
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<Set<number>>(
     new Set(),
   );
   const [isWorking, setIsWorking] = useState(false);
   const [feedback, setFeedback] = useState<ActionFeedback | null>(null);
+  const [adminCoordinate, setAdminCoordinate] = useState<MapCoordinate | null>(null);
+  const [adminLocationStatus, setAdminLocationStatus] =
+    useState<AdminLocationStatus>('idle');
 
   const assignedGroupsByParticipant = useMemo(() => {
     const assignments = new Map<number, number>();
@@ -63,10 +73,38 @@ export function AdminTripGroupPanel() {
       participant.profile_id !== null &&
       (assignedGroupsByParticipant.get(participant.id) ?? editingGroupId) === editingGroupId,
   );
+  const normalizedLeaderSearch = leaderSearch.trim().toLocaleLowerCase(language);
+  const normalizedMemberSearch = memberSearch.trim().toLocaleLowerCase(language);
+  const matchingLeaderCandidates = normalizedLeaderSearch
+    ? linkedLeaderCandidates
+        .filter((participant) =>
+          participant.display_name
+            .toLocaleLowerCase(language)
+            .includes(normalizedLeaderSearch),
+        )
+        .slice(0, 8)
+    : [];
+  const matchingMemberCandidates = normalizedMemberSearch
+    ? participants
+        .filter((participant) =>
+          participant.display_name
+            .toLocaleLowerCase(language)
+            .includes(normalizedMemberSearch),
+        )
+        .slice(0, 8)
+    : [];
+  const selectedLeader = participants.find(
+    (participant) => participant.id === leaderParticipantId,
+  );
+  const selectedParticipants = participants.filter((participant) =>
+    selectedParticipantIds.has(participant.id),
+  );
 
   const resetEditor = () => {
     setEditingGroupId(null);
     setGroupName('');
+    setLeaderSearch('');
+    setMemberSearch('');
     setLeaderParticipantId(null);
     setSelectedParticipantIds(new Set());
   };
@@ -75,6 +113,8 @@ export function AdminTripGroupPanel() {
     setFeedback(null);
     setEditingGroupId(group.id);
     setGroupName(group.name);
+    setLeaderSearch('');
+    setMemberSearch('');
     setLeaderParticipantId(group.leader_participant_id);
     setSelectedParticipantIds(new Set(group.members.map((member) => member.participant_id)));
   };
@@ -82,6 +122,7 @@ export function AdminTripGroupPanel() {
   const selectLeader = (participantId: number) => {
     setLeaderParticipantId(participantId);
     setSelectedParticipantIds((current) => new Set(current).add(participantId));
+    setLeaderSearch('');
   };
 
   const toggleMember = (participantId: number) => {
@@ -132,6 +173,28 @@ export function AdminTripGroupPanel() {
       'saved',
       resetEditor,
     );
+  };
+
+  const locateAdmin = async () => {
+    if (adminLocationStatus === 'loading') return;
+    setAdminLocationStatus('loading');
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (!permission.granted) {
+        setAdminLocationStatus('denied');
+        return;
+      }
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      setAdminCoordinate({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+      setAdminLocationStatus('idle');
+    } catch {
+      setAdminLocationStatus('error');
+    }
   };
 
   const confirmDelete = (group: TripGroupState) => {
@@ -227,6 +290,8 @@ export function AdminTripGroupPanel() {
                 backgroundColor: theme.backgroundElement,
                 borderColor: theme.border,
                 color: theme.text,
+                textAlign: isRTL ? 'right' : 'left',
+                writingDirection: isRTL ? 'rtl' : 'ltr',
               },
             ]}
             value={groupName}
@@ -242,17 +307,46 @@ export function AdminTripGroupPanel() {
             <ThemedText type="small" themeColor="warning">
               {t('tripGroups.admin.noLeaderCandidates')}
             </ThemedText>
-          ) : (
-            linkedLeaderCandidates.map((participant) => (
-              <ChoiceRow
-                key={participant.id}
-                label={participant.display_name}
-                onPress={() => selectLeader(participant.id)}
-                selected={leaderParticipantId === participant.id}
-                type="radio"
-              />
-            ))
-          )}
+          ) : null}
+          {selectedLeader ? (
+            <SelectedPersonRow
+              label={selectedLeader.display_name}
+              note={t('tripGroups.admin.selectedLeader')}
+            />
+          ) : null}
+          {linkedLeaderCandidates.length > 0 ? (
+            <TextInput
+              accessibilityLabel={t('tripGroups.admin.leaderSearch')}
+              onChangeText={setLeaderSearch}
+              placeholder={t('tripGroups.admin.searchPlaceholder')}
+              placeholderTextColor={theme.textSecondary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.backgroundElement,
+                  borderColor: theme.border,
+                  color: theme.text,
+                  textAlign: isRTL ? 'right' : 'left',
+                  writingDirection: isRTL ? 'rtl' : 'ltr',
+                },
+              ]}
+              value={leaderSearch}
+            />
+          ) : null}
+          {matchingLeaderCandidates.map((participant) => (
+            <ChoiceRow
+              key={participant.id}
+              label={participant.display_name}
+              onPress={() => selectLeader(participant.id)}
+              selected={leaderParticipantId === participant.id}
+              type="radio"
+            />
+          ))}
+          {normalizedLeaderSearch && matchingLeaderCandidates.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('tripGroups.admin.noSearchResults')}
+            </ThemedText>
+          ) : null}
         </View>
 
         <View style={styles.choiceSection}>
@@ -262,29 +356,101 @@ export function AdminTripGroupPanel() {
               {t('tripGroups.admin.noParticipants')}
             </ThemedText>
           ) : (
-            participants.map((participant) => {
-              const assignedGroupId = assignedGroupsByParticipant.get(participant.id);
-              const disabled =
-                assignedGroupId !== undefined && assignedGroupId !== editingGroupId;
-              return (
-                <ChoiceRow
-                  disabled={disabled || participant.id === leaderParticipantId}
-                  key={participant.id}
-                  label={participant.display_name}
-                  note={
-                    disabled
-                      ? t('tripGroups.admin.alreadyAssigned')
-                      : participant.id === leaderParticipantId
-                        ? t('tripGroups.admin.leaderIsMember')
-                        : undefined
-                  }
-                  onPress={() => toggleMember(participant.id)}
-                  selected={selectedParticipantIds.has(participant.id)}
-                  type="checkbox"
-                />
-              );
-            })
+            <>
+              <TextInput
+                accessibilityLabel={t('tripGroups.admin.memberSearch')}
+                onChangeText={setMemberSearch}
+                placeholder={t('tripGroups.admin.searchPlaceholder')}
+                placeholderTextColor={theme.textSecondary}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.backgroundElement,
+                    borderColor: theme.border,
+                    color: theme.text,
+                    textAlign: isRTL ? 'right' : 'left',
+                    writingDirection: isRTL ? 'rtl' : 'ltr',
+                  },
+                ]}
+                value={memberSearch}
+              />
+              {selectedParticipants.length > 0 ? (
+                <View style={styles.selectedMembers}>
+                  <ThemedText type="tinyBold" themeColor="textSecondary">
+                    {t('tripGroups.admin.selectedMembers', {
+                      count: selectedParticipants.length,
+                    })}
+                  </ThemedText>
+                  <View style={styles.memberChips}>
+                    {selectedParticipants.map((participant) => {
+                      const isLeader = participant.id === leaderParticipantId;
+                      return (
+                        <Pressable
+                          accessibilityLabel={
+                            isLeader
+                              ? participant.display_name
+                              : t('tripGroups.admin.removeMember', {
+                                  name: participant.display_name,
+                                })
+                          }
+                          accessibilityRole={isLeader ? 'text' : 'button'}
+                          disabled={isLeader}
+                          key={participant.id}
+                          onPress={() => toggleMember(participant.id)}
+                          style={({ pressed }) => [
+                            styles.selectedMemberChip,
+                            {
+                              backgroundColor: theme.accentSoft,
+                              borderColor: theme.accent,
+                            },
+                            pressed && styles.pressed,
+                          ]}>
+                          <ThemedText type="tinyBold" themeColor="accent">
+                            {participant.display_name}
+                          </ThemedText>
+                          <SymbolIcon
+                            color={theme.accent}
+                            name={isLeader ? 'account' : 'close'}
+                            size={16}
+                          />
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
+            </>
           )}
+          {matchingMemberCandidates.map((participant) => {
+            const assignedGroupId = assignedGroupsByParticipant.get(participant.id);
+            const disabled =
+              assignedGroupId !== undefined && assignedGroupId !== editingGroupId;
+            return (
+              <ChoiceRow
+                disabled={disabled || participant.id === leaderParticipantId}
+                key={participant.id}
+                label={participant.display_name}
+                note={
+                  disabled
+                    ? t('tripGroups.admin.alreadyAssigned')
+                    : participant.id === leaderParticipantId
+                      ? t('tripGroups.admin.leaderIsMember')
+                      : undefined
+                }
+                onPress={() => {
+                  toggleMember(participant.id);
+                  setMemberSearch('');
+                }}
+                selected={selectedParticipantIds.has(participant.id)}
+                type="checkbox"
+              />
+            );
+          })}
+          {normalizedMemberSearch && matchingMemberCandidates.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('tripGroups.admin.noSearchResults')}
+            </ThemedText>
+          ) : null}
         </View>
 
         <Button
@@ -323,29 +489,31 @@ export function AdminTripGroupPanel() {
               request.longitude !== null;
             return (
               <Card key={group.id} style={styles.groupCard}>
-                <View style={styles.cardHeader}>
+                <View style={styles.groupHeading}>
                   <View style={styles.flexText}>
                     <ThemedText type="heading">{group.name}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
                       {t('tripGroups.admin.memberCount', { count: group.members.length })}
                     </ThemedText>
                   </View>
-                  <View style={styles.headerActions}>
-                    <Button
-                      disabled={isWorking}
-                      icon="settings"
-                      label={t('tripGroups.admin.edit')}
-                      onPress={() => editGroup(group)}
-                      variant="ghost"
-                    />
-                    <Button
-                      disabled={isWorking}
-                      icon="close"
-                      label={t('tripGroups.admin.delete')}
-                      onPress={() => confirmDelete(group)}
-                      variant="ghost"
-                    />
-                  </View>
+                </View>
+                <View style={styles.actionGrid}>
+                  <Button
+                    disabled={isWorking}
+                    icon="settings"
+                    label={t('tripGroups.admin.edit')}
+                    onPress={() => editGroup(group)}
+                    style={styles.groupActionButton}
+                    variant="secondary"
+                  />
+                  <Button
+                    disabled={isWorking}
+                    icon="close"
+                    label={t('tripGroups.admin.delete')}
+                    onPress={() => confirmDelete(group)}
+                    style={styles.groupActionButton}
+                    variant="danger"
+                  />
                 </View>
 
                 <View style={styles.leaderRow}>
@@ -392,7 +560,39 @@ export function AdminTripGroupPanel() {
                           ? t('tripGroups.admin.locationDeclined')
                           : t('tripGroups.admin.locationIdle')}
                   </ThemedText>
-                  <View style={styles.locationActions}>
+                  {canOpenLocation ? (
+                    <>
+                      <GroupLocationMap
+                        adminCoordinate={adminCoordinate}
+                        leaderCoordinate={{
+                          latitude: request.latitude as number,
+                          longitude: request.longitude as number,
+                        }}
+                      />
+                      <View style={styles.mapLegend}>
+                        <View style={styles.legendItem}>
+                          <View style={[styles.legendDot, { backgroundColor: theme.accent }]} />
+                          <ThemedText type="tinyBold">
+                            {t('tripGroups.admin.leaderMarker')}
+                          </ThemedText>
+                        </View>
+                        {adminCoordinate ? (
+                          <View style={styles.legendItem}>
+                            <View
+                              style={[styles.legendDot, { backgroundColor: theme.location }]}
+                            />
+                            <ThemedText type="tinyBold">
+                              {t('tripGroups.admin.adminMarker')}
+                            </ThemedText>
+                          </View>
+                        ) : null}
+                      </View>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {t('tripGroups.admin.adminLocationPrivacy')}
+                      </ThemedText>
+                    </>
+                  ) : null}
+                  <View style={styles.actionGrid}>
                     <Button
                       disabled={isWorking || group.leader === null}
                       icon="map"
@@ -407,22 +607,49 @@ export function AdminTripGroupPanel() {
                           'requested',
                         )
                       }
+                      style={styles.actionButton}
                       variant="secondary"
                     />
                     {canOpenLocation ? (
-                      <Button
-                        icon="external-link"
-                        label={t('tripGroups.admin.openLocation')}
-                        onPress={() =>
-                          void openNavigation({
-                            latitude: request.latitude as number,
-                            longitude: request.longitude as number,
-                            name: group.name,
-                          })
-                        }
-                      />
+                      <>
+                        <Button
+                          disabled={adminLocationStatus === 'loading'}
+                          icon="location"
+                          label={t(
+                            adminLocationStatus === 'loading'
+                              ? 'tripGroups.admin.locatingAdmin'
+                              : adminCoordinate
+                                ? 'tripGroups.admin.refreshAdminLocation'
+                                : 'tripGroups.admin.showAdminLocation',
+                          )}
+                          onPress={() => void locateAdmin()}
+                          style={styles.actionButton}
+                          variant="secondary"
+                        />
+                        <Button
+                          icon="external-link"
+                          label={t('tripGroups.admin.openLocation')}
+                          onPress={() =>
+                            void openNavigation({
+                              latitude: request.latitude as number,
+                              longitude: request.longitude as number,
+                              name: group.name,
+                            })
+                          }
+                          style={styles.actionButton}
+                        />
+                      </>
                     ) : null}
                   </View>
+                  {canOpenLocation && adminLocationStatus === 'denied' ? (
+                    <ThemedText type="small" themeColor="warning">
+                      {t('tripGroups.admin.adminLocationDenied')}
+                    </ThemedText>
+                  ) : canOpenLocation && adminLocationStatus === 'error' ? (
+                    <ThemedText type="small" themeColor="danger">
+                      {t('tripGroups.admin.adminLocationError')}
+                    </ThemedText>
+                  ) : null}
                 </View>
               </Card>
             );
@@ -497,6 +724,26 @@ function ChoiceRow({
   );
 }
 
+function SelectedPersonRow({ label, note }: { label: string; note: string }) {
+  const theme = useTheme();
+  return (
+    <View
+      accessibilityLabel={`${label}. ${note}`}
+      style={[
+        styles.choiceRow,
+        { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+      ]}>
+      <SymbolIcon color={theme.accent} name="confirm" size={20} />
+      <View style={styles.flexText}>
+        <ThemedText type="smallBold">{label}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {note}
+        </ThemedText>
+      </View>
+    </View>
+  );
+}
+
 function formatDate(value: string, language: string) {
   return new Intl.DateTimeFormat(language, {
     dateStyle: 'short',
@@ -505,6 +752,8 @@ function formatDate(value: string, language: string) {
 }
 
 const styles = StyleSheet.create({
+  actionButton: { flexBasis: 180, flexGrow: 1 },
+  actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   container: { gap: Spacing.three },
   stateCard: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.four },
   inlineState: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
@@ -538,8 +787,12 @@ const styles = StyleSheet.create({
   },
   groupList: { gap: Spacing.three },
   groupCard: { gap: Spacing.three },
-  headerActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.one },
+  groupActionButton: { flex: 1, minWidth: 120 },
+  groupHeading: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
   leaderRow: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
+  legendDot: { borderRadius: 999, height: 10, width: 10 },
+  legendItem: { alignItems: 'center', flexDirection: 'row', gap: Spacing.one },
+  mapLegend: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three },
   memberChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.one },
   memberChip: { borderRadius: 8, paddingHorizontal: Spacing.two, paddingVertical: Spacing.one },
   locationBox: {
@@ -548,7 +801,17 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.three,
   },
-  locationActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  selectedMemberChip: {
+    alignItems: 'center',
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: Spacing.one,
+    minHeight: 36,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+  },
+  selectedMembers: { gap: Spacing.one },
   pressed: { opacity: 0.72 },
   disabled: { opacity: 0.55 },
 });

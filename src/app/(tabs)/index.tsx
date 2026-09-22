@@ -4,18 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
 import { Section } from "@/components/ui/section";
 import { ThemedText } from "@/components/themed-text";
-import { Spacing } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 import { allPlaces } from "@/data/places";
 import type { Place } from "@/domain/types";
 import { useAuth } from "@/features/auth/auth-context";
 import { useBusManagement } from "@/features/bus-management/bus-management-context";
 import { DailyProgramHome } from "@/features/daily-program/DailyProgramHome";
+import { useEmergencyInboxAlert } from "@/features/emergency/use-emergency-inbox-alert";
 import { useI18n } from "@/features/i18n/i18n";
 import { useGroupCheck } from "@/features/group-check/group-check-context";
 import { localizeCityName, localizePlace } from "@/features/i18n/localizedData";
 import {
   busRoute,
   cityRoute,
+  emergencyRoute,
   groupRoute,
   guideRoute,
 } from "@/features/navigation/routes";
@@ -24,6 +26,8 @@ import { useQuestionRound } from "@/features/question-round/question-round-conte
 import { useTheme } from "@/hooks/use-theme";
 import { useTripGuidance } from "@/features/trip-guidance/trip-guidance-context";
 import { useTripGroups } from "@/features/trip-groups/trip-group-context";
+import { SymbolIcon } from "@/components/ui/symbol-icon";
+import { useThemeMode } from "@/features/theme/theme-mode";
 
 const featuredSlugs = [
   "shrine-imam-hussain",
@@ -43,6 +47,14 @@ export default function HomeScreen() {
   const { activeBoarding, participants: busParticipants } = useBusManagement();
   const { activeCheck, currentResponse } = useGroupCheck();
   const { groups: tripGroups } = useTripGroups();
+  const {
+    hasSyncError: hasEmergencyInboxSyncError,
+    hasUnreadMessages: hasUnreadEmergencyMessages,
+    refresh: refreshEmergencyInbox,
+    syncErrorMessage: emergencyInboxSyncErrorMessage,
+  } = useEmergencyInboxAlert();
+  const {  resolvedTheme: scheme } = useThemeMode();
+  const colors = Colors[scheme];
   const {
     activeRound,
     hasSyncError: hasQuestionRoundSyncError,
@@ -67,6 +79,7 @@ export default function HomeScreen() {
 
 
   return (
+    <>
     <Screen>
       {session ? (
         <View
@@ -79,6 +92,47 @@ export default function HomeScreen() {
           ]}
         >
           <DailyProgramHome />
+        </View>
+      ) : null}
+
+      {session && hasUnreadEmergencyMessages ? (
+        <View
+          accessibilityLiveRegion="polite"
+          style={[
+            styles.notice,
+            { backgroundColor: theme.dangerSoft, borderColor: theme.danger },
+          ]}
+        >
+          <ThemedText type="heading">{t("emergency.staffHomeTitle")}</ThemedText>
+          <ThemedText themeColor="textSecondary">
+            {t("emergency.staffHomeBody")}
+          </ThemedText>
+          <Button
+            icon="alarm"
+            label={t("emergency.staffOpen")}
+            onPress={() => router.push(emergencyRoute())}
+          />
+        </View>
+      ) : null}
+
+      {session && hasEmergencyInboxSyncError && !hasUnreadEmergencyMessages ? (
+        <View
+          accessibilityLiveRegion="polite"
+          style={[
+            styles.notice,
+            { backgroundColor: theme.warningSoft, borderColor: theme.warning },
+          ]}
+        >
+          <ThemedText type="heading">{t("emergency.syncErrorTitle")}</ThemedText>
+          <ThemedText themeColor="textSecondary">
+            {emergencyInboxSyncErrorMessage ?? t("emergency.feedback.error")}
+          </ThemedText>
+          <Button
+            icon="refresh"
+            label={t("emergency.retry")}
+            onPress={() => void refreshEmergencyInbox()}
+            variant="secondary"
+          />
         </View>
       ) : null}
 
@@ -264,6 +318,24 @@ export default function HomeScreen() {
       </Section>
 
     </Screen>
+    {session  ? (
+        <Pressable
+          accessibilityLabel={t('emergency.homeButton')}
+          accessibilityRole="button"
+          onPress={() => router.push(emergencyRoute())}
+          style={({ pressed }) => [
+            styles.emergencyButton,
+            {
+              backgroundColor: colors.danger,
+              borderColor: colors.surface,
+              shadowColor: colors.text,
+            },
+            pressed && styles.emergencyButtonPressed,
+          ]}>
+          <SymbolIcon color={colors.surface} name="alarm" size={25} />
+        </Pressable>
+      ) : null}
+      </>
   );
 }
 
@@ -306,5 +378,26 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+   emergencyButton: {
+    alignItems: 'center',
+    borderRadius: 26,
+    borderWidth: 2,
+    elevation: 6,
+    height: 52,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: Spacing.three,
+    shadowOffset: { height: 2, width: 0 },
+    shadowOpacity: 0.28,
+    shadowRadius: 5,
+    top: '50%',
+    transform: [{ translateY: -26 }],
+    width: 52,
+    zIndex: 20,
+  },
+  emergencyButtonPressed: {
+    opacity: 0.72,
+    transform: [{ translateY: -26 }, { scale: 0.96 }],
   },
 });

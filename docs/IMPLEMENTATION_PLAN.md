@@ -376,9 +376,9 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- Admins create one active trip and named buses; every newly created bus requires a registered leader.
+- Admins create one active intermediate trip within the overall pilgrimage and named buses; every newly created bus requires a registered leader.
 - Admins assign either one registered person or an entire account family to a bus. After a family assignment, its members are not offered as individual choices.
-- The active trip can be collapsed and closed. With no active trip, admins can start empty or copy buses, leaders and person/family assignments from a closed trip without copying boarding state.
+- The active intermediate trip can be collapsed and ended. With none active, admins can start empty or copy buses, leaders and person/family assignments from an ended intermediate trip without copying boarding state.
 - Participant records keep an internal legacy key for relational compatibility, but the current workflow neither asks for nor displays that key.
 - Participants report `on_way`, `boarded` or `problem` only for their account-backed assignment.
 - Admins see not-confirmed participants and may set any participant status manually.
@@ -412,7 +412,7 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- An admin publishes one current itinerary point for the active trip with current place, next item, departure, meeting point, relevant gate, distance hint, description and actions.
+- An admin publishes one current itinerary point for the active intermediate trip with current place, next item, departure, meeting point, relevant gate, distance hint, description and actions.
 - Meeting-point corrections update the current item in place; publishing a new item closes the old version and starts fresh participant reports.
 - Assigned participants report `on_way`, `almost_there`, `at_meeting_point`, `problem`, `lost` or `medical_help` for their account-backed assignment.
 - An admin explicitly accepts a problem report, and the participant sees the accepting leader’s captured display name.
@@ -422,7 +422,7 @@ Acceptance criteria:
 - The last successful destination list is cached locally with strict validation and a user ID. It remains visible after an app restart when the initial read fails, while a successful server response, including an empty list, replaces the cache authoritatively.
 - Realtime, app focus and staggered fallback refreshes keep guidance and reports current.
 - Clear network failures queue reports in a validated, user-scoped AsyncStorage outbox. Pending UI never claims the leader received the report, and retries remain idempotent.
-- RLS exposes only the active trip to members, only linked participant reports to normal accounts and the complete overview to admins. All writes use authenticated RPCs.
+- RLS exposes only the active intermediate trip to members, only linked participant reports to normal accounts and the complete overview to admins. All writes use authenticated RPCs.
 
 Tests/checks:
 
@@ -476,14 +476,16 @@ Files to create or modify:
 - `src/domain/database.ts`
 - `src/features/i18n/i18n.tsx`
 - `supabase/migrations/20260828130000_add_daily_program.sql`
+- `supabase/migrations/20260922000000_separate_daily_program_from_intermediate_trips.sql`
 - `supabase/tests/database/daily_program.test.sql`
 - `e2e/phase7-smoke.spec.ts`
 
 Acceptance criteria:
 
 - Admins can publish one day or prepare multiple consecutive days in one form, with an optional heading and a separate organizational program for each date.
-- One row per trip and calendar date is updated atomically through an authenticated admin RPC; direct client writes remain unavailable.
-- Every signed-in account can read the active trip's programs even before it is assigned to a bus.
+- The daily program covers the complete pilgrimage and stays independent of the smaller intermediate trips managed under Trip organization.
+- One row per calendar date is updated atomically through an authenticated admin RPC; direct client writes remain unavailable.
+- Every signed-in account can read the whole-journey program without an active intermediate trip or bus assignment.
 - Home shows a compact preview of today's program. Opening it shows today and the next six days in separate day sections with structured agenda lines.
 - The last validated per-user program snapshot is available immediately after restart while the server refresh continues in the background; an empty successful response remains authoritative.
 - Realtime, app focus and staggered fallback refreshes retain the last visible data during background read failures.
@@ -514,7 +516,7 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- In the shared admin `Trip organization` area, admins create, edit and delete named subgroups from people assigned to the active trip. One person belongs to at most one subgroup.
+- In the shared admin `Trip organization` area, admins create, edit and delete named subgroups from people assigned to the active intermediate trip. One person belongs to at most one subgroup.
 - Every subgroup has exactly one registered leader who is also a member.
 - Any app role, including an admin, can be a member or leader through its account-backed trip assignment. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.
 - Admins can issue one current location request to the group leader. Re-requesting clears previously shared coordinates.

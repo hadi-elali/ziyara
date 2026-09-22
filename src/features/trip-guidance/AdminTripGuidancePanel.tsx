@@ -16,6 +16,22 @@ import { useTripGuidance } from '@/features/trip-guidance/trip-guidance-context'
 import { useTheme } from '@/hooks/use-theme';
 
 const departureMinuteOptions = [15, 30, 60, 90] as const;
+type DepartureMinuteOption = (typeof departureMinuteOptions)[number];
+
+function inferDeparturePreset(
+  value: string,
+  referenceValue: string | number = Date.now(),
+): DepartureMinuteOption | null {
+  const departureTime = new Date(value).getTime();
+  const referenceTime = new Date(referenceValue).getTime();
+  if (!Number.isFinite(departureTime) || !Number.isFinite(referenceTime)) return null;
+  const minutesUntilDeparture = (departureTime - referenceTime) / 60_000;
+  return (
+    departureMinuteOptions.find(
+      (minutes) => Math.abs(minutesUntilDeparture - minutes) < 2,
+    ) ?? null
+  );
+}
 
 type FormState = {
   acts: string;
@@ -108,6 +124,8 @@ export function AdminTripGuidancePanel() {
     syncErrorMessage,
   } = useTripGuidance();
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [departurePreset, setDeparturePreset] = useState<DepartureMinuteOption | null>(30);
+  const [placeSearch, setPlaceSearch] = useState('');
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
   const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
@@ -126,9 +144,14 @@ export function AdminTripGuidancePanel() {
 
       if (activeGuidance) {
         setForm(formFromGuidance(activeGuidance));
+        setDeparturePreset(
+          inferDeparturePreset(activeGuidance.departure_at, activeGuidance.updated_at),
+        );
       } else {
         setForm(emptyForm());
+        setDeparturePreset(30);
       }
+      setPlaceSearch('');
     }, 0);
 
     return () => clearTimeout(syncTimeout);
@@ -138,6 +161,17 @@ export function AdminTripGuidancePanel() {
     () => allPlaces.map((place) => localizePlace(place, language)),
     [language],
   );
+  const matchingPlaces = useMemo(() => {
+    const normalized = placeSearch.trim().toLocaleLowerCase(language);
+    if (!normalized) return [];
+    return localizedPlaces
+      .filter((place) =>
+        [place.name, place.city, place.province, ...place.alternativeNames].some((value) =>
+          value.toLocaleLowerCase(language).includes(normalized),
+        ),
+      )
+      .slice(0, 6);
+  }, [language, localizedPlaces, placeSearch]);
   const coordinatePairsValid =
     Boolean(form.currentLatitude.trim()) === Boolean(form.currentLongitude.trim());
   const currentCoordinate = coordinatePair(form.currentLatitude, form.currentLongitude);
@@ -166,6 +200,7 @@ export function AdminTripGuidancePanel() {
       currentPlaceName: place.name,
       currentPlaceSlug: place.slug,
     }));
+    setPlaceSearch('');
     setSaved(false);
   };
 
@@ -292,6 +327,8 @@ export function AdminTripGuidancePanel() {
             label={t('guide.admin.prepareNew')}
             onPress={() => {
               setForm(emptyForm());
+              setDeparturePreset(30);
+              setPlaceSearch('');
               setIsCreatingNew(true);
               setSaved(false);
             }}
@@ -315,6 +352,13 @@ export function AdminTripGuidancePanel() {
             label={t('guide.admin.cancelNew')}
             onPress={() => {
               setForm(formFromGuidance(activeGuidance));
+              setDeparturePreset(
+                inferDeparturePreset(
+                  activeGuidance.departure_at,
+                  activeGuidance.updated_at,
+                ),
+              );
+              setPlaceSearch('');
               setIsCreatingNew(false);
             }}
             variant="ghost"
@@ -329,17 +373,44 @@ export function AdminTripGuidancePanel() {
             : t('guide.admin.publishTitle')}
         </ThemedText>
 
-        <ThemedText type="smallBold">{t('guide.admin.placeCatalog')}</ThemedText>
-        <View style={styles.chips}>
-          {localizedPlaces.map((place) => (
-            <SelectionChip
-              key={place.id}
-              label={place.name}
-              onPress={() => selectPlace(place.slug)}
-              selected={form.currentPlaceSlug === place.slug}
-            />
-          ))}
-        </View>
+        <LabeledInput
+          label={t('guide.admin.placeCatalog')}
+          onChangeText={setPlaceSearch}
+          placeholder={t('guide.admin.placeSearchPlaceholder')}
+          value={placeSearch}
+        />
+        {form.currentPlaceSlug ? (
+          <View style={styles.selectedPlace}>
+            <ThemedText type="tinyBold" themeColor="textSecondary">
+              {t('guide.admin.placeSelected')}
+            </ThemedText>
+            <View
+              style={[
+                styles.selectedPlaceChip,
+                { backgroundColor: theme.accent, borderColor: theme.accent },
+              ]}>
+              <ThemedText type="smallBold" style={{ color: theme.background }}>
+                {form.currentPlaceName}
+              </ThemedText>
+            </View>
+          </View>
+        ) : null}
+        {matchingPlaces.length > 0 ? (
+          <View style={styles.chips}>
+            {matchingPlaces.map((place) => (
+              <SelectionChip
+                key={place.id}
+                label={place.name}
+                onPress={() => selectPlace(place.slug)}
+                selected={form.currentPlaceSlug === place.slug}
+              />
+            ))}
+          </View>
+        ) : placeSearch.trim() ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('guide.admin.placeNoResults')}
+          </ThemedText>
+        ) : null}
 
         <LabeledInput
           label={t('guide.admin.currentPlace')}
@@ -388,13 +459,14 @@ export function AdminTripGuidancePanel() {
             <SelectionChip
               key={minutes}
               label={t('guide.admin.minutes', { count: minutes })}
-              onPress={() =>
+              onPress={() => {
+                setDeparturePreset(minutes);
                 updateForm(
                   'departureAt',
                   new Date(Date.now() + minutes * 60_000).toISOString(),
-                )
-              }
-              selected={false}
+                );
+              }}
+              selected={departurePreset === minutes}
             />
           ))}
         </View>
@@ -689,6 +761,17 @@ const styles = StyleSheet.create({
   },
   responses: {
     gap: Spacing.two,
+  },
+  selectedPlace: {
+    alignItems: 'flex-start',
+    gap: Spacing.one,
+  },
+  selectedPlaceChip: {
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 44,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   selectionChip: {
     borderRadius: 999,

@@ -5,7 +5,7 @@ import { AppState, type NativeEventSubscription } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import type { Mock } from 'jest-mock';
 
-import type { TripDailyProgram } from '@/domain/database';
+import type { DailyProgram } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import type { DailyProgramCache } from '@/features/daily-program/daily-program-cache';
 import {
@@ -45,7 +45,7 @@ jest.mock('@/features/daily-program/daily-program-cache', () => ({
   ],
 }));
 
-type QueryResult = { data: TripDailyProgram[] | null; error: PostgrestError | null };
+type QueryResult = { data: DailyProgram[] | null; error: PostgrestError | null };
 type MockFunction = Mock<(...args: never[]) => unknown>;
 type MockChannel = { on: MockFunction; subscribe: MockFunction };
 type MockSupabase = {
@@ -54,14 +54,13 @@ type MockSupabase = {
   removeChannel: MockFunction;
 };
 
-const savedProgram: TripDailyProgram = {
+const savedProgram: DailyProgram = {
   created_at: '2026-08-28T08:00:00.000Z',
   details: '08:00 Frühstück\n09:00 Abfahrt',
   id: 1,
   program_date: '2026-08-28',
   published_by_profile_id: 1,
   title: 'Karbala',
-  trip_id: 10,
   updated_at: '2026-08-28T08:00:00.000Z',
 };
 const syncError = new PostgrestError({
@@ -159,7 +158,7 @@ describe('DailyProgramProvider', () => {
       };
       query.abortSignal.mockImplementation(() => {
         const response = queryResponses.shift();
-        if (!response) throw new Error('Für trip_daily_programs fehlt eine Testantwort.');
+        if (!response) throw new Error('Für daily_programs fehlt eine Testantwort.');
         return response;
       });
       query.order.mockReturnValue(query);

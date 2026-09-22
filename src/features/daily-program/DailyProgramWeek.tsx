@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { Spacing } from '@/constants/theme';
-import type { TripDailyProgram } from '@/domain/database';
+import type { DailyProgram } from '@/domain/database';
 import { useDailyProgram } from '@/features/daily-program/daily-program-context';
 import {
   dailyProgramDateRange,
@@ -111,7 +111,7 @@ function ProgramDay({
 }: {
   date: string;
   isToday: boolean;
-  program?: TripDailyProgram;
+  program?: DailyProgram;
 }) {
   const theme = useTheme();
   const { language, t } = useI18n();

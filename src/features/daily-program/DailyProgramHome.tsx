@@ -35,7 +35,6 @@ export function DailyProgramHome() {
         <ActivityIndicator color={heroText} />
         <ThemedText style={styles.mutedText}>{t('dailyProgram.loading')}</ThemedText>
       </View>
-      
     );
   }
 
@@ -111,7 +110,7 @@ export function DailyProgramHome() {
           accessibilityLiveRegion="polite"
           style={styles.syncNotice}
           type="small">
-          {syncErrorMessage}
+          {t('dailyProgram.cachedNotice')}
         </ThemedText>
       ) : null}
 

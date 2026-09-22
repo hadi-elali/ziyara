@@ -26,6 +26,7 @@ import { RequireAuth } from "@/features/auth/RequireAuth";
 import { useAuth } from "@/features/auth/auth-context";
 import { supabase } from "@/features/auth/supabase";
 import { useGeneralAlarmNotifications } from "@/features/general-alarm/general-alarm-notifications-context";
+import { isEmergencyInboxRole } from "@/features/emergency/use-emergency-inbox-alert";
 import { useI18n } from "@/features/i18n/i18n";
 import {
   getOriginalErrorMessage,
@@ -112,8 +113,7 @@ function EmergencyContent() {
   const loadedUserId = useRef<string | null>(null);
   const userId = session?.user.id ?? null;
   const profileId = profile?.id ?? null;
-  const isStaff =
-    profile?.role === "medical_staff" || profile?.role === "organization_team";
+  const canReceiveEmergencyMessages = isEmergencyInboxRole(profile?.role);
 
   const refresh = useCallback(async () => {
     const version = ++refreshVersion.current;
@@ -571,7 +571,7 @@ function EmergencyContent() {
         </Card>
       </Section>
 
-      {isStaff ? (
+      {canReceiveEmergencyMessages ? (
         <Section title={t("emergency.notificationsTitle")}>
           <Card style={styles.notificationCard}>
             <ThemedText type="small" themeColor="textSecondary">
@@ -624,7 +624,7 @@ function EmergencyContent() {
         </Card>
       ) : null}
 
-      {isStaff ? (
+      {canReceiveEmergencyMessages ? (
         <Section title={t("emergency.inboxTitle")}>
           {isLoading ? (
             <ActivityIndicator color={theme.accent} size="large" />

@@ -5,9 +5,8 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spacing } from '@/constants/theme';
-import type { TripDailyProgramInput } from '@/domain/database';
+import type { DailyProgramInput } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
-import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import { useDailyProgram } from '@/features/daily-program/daily-program-context';
 import {
   dailyProgramDateRange,
@@ -32,18 +31,17 @@ function draftsForRange(
       details: existing?.details ?? '',
       program_date: programDate,
       title: existing?.title ?? '',
-    } satisfies TripDailyProgramInput;
+    } satisfies DailyProgramInput;
   });
 }
 
 export function AdminDailyProgramPanel() {
   const theme = useTheme();
   const { language, t } = useI18n();
-  const { activeTrip } = useBusManagement();
   const { hasSyncError, isLoading, programs, refresh, syncErrorMessage } = useDailyProgram();
   const [startDate, setStartDate] = useState(localISODate);
   const [dayCount, setDayCount] = useState<number>(1);
-  const [drafts, setDrafts] = useState<TripDailyProgramInput[]>([]);
+  const [drafts, setDrafts] = useState<DailyProgramInput[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'saved'>('idle');
@@ -98,19 +96,18 @@ export function AdminDailyProgramPanel() {
   };
 
   const savePrograms = async () => {
-    if (!activeTrip || !formValid || isSaving) return;
+    if (!formValid || isSaving) return;
     setIsSaving(true);
     setSaveState('idle');
     setSaveErrorMessage(null);
 
     try {
-      const { error } = await supabase.rpc('admin_upsert_trip_daily_programs', {
+      const { error } = await supabase.rpc('admin_upsert_daily_programs', {
         p_programs: drafts.map((draft) => ({
           details: draft.details.trim(),
           program_date: draft.program_date,
           title: draft.title.trim(),
         })),
-        p_trip_id: activeTrip.id,
       });
 
       if (error) {
@@ -132,33 +129,6 @@ export function AdminDailyProgramPanel() {
       <Card style={styles.stateCard}>
         <ActivityIndicator color={theme.accent} />
         <ThemedText themeColor="textSecondary">{t('dailyProgram.loading')}</ThemedText>
-      </Card>
-    );
-  }
-
-  if (hasSyncError && !activeTrip) {
-    return (
-      <Card style={styles.stateCard}>
-        <ThemedText type="heading">{t('dailyProgram.syncErrorTitle')}</ThemedText>
-        <ThemedText themeColor="textSecondary">
-          {syncErrorMessage}
-        </ThemedText>
-        <Button
-          icon="refresh"
-          label={t('dailyProgram.retry')}
-          onPress={() => void refresh()}
-        />
-      </Card>
-    );
-  }
-
-  if (!activeTrip) {
-    return (
-      <Card style={styles.stateCard}>
-        <ThemedText type="heading">{t('dailyProgram.admin.tripRequiredTitle')}</ThemedText>
-        <ThemedText themeColor="textSecondary">
-          {t('dailyProgram.admin.tripRequiredBody')}
-        </ThemedText>
       </Card>
     );
   }

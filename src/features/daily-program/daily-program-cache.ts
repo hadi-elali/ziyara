@@ -1,9 +1,9 @@
-import type { TripDailyProgram } from '@/domain/database';
+import type { DailyProgram } from '@/domain/database';
 import { parseLocalISODate } from '@/features/daily-program/daily-program-state';
 import { createPersistentState } from '@/features/storage/persistentState';
 
 export type DailyProgramCache = {
-  programs: TripDailyProgram[];
+  programs: DailyProgram[];
   userId: string;
 };
 
@@ -21,14 +21,12 @@ function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string';
 }
 
-function isTripDailyProgram(value: unknown): value is TripDailyProgram {
+function isDailyProgram(value: unknown): value is DailyProgram {
   if (!isRecord(value)) return false;
 
   return (
     typeof value.id === 'number' &&
     Number.isFinite(value.id) &&
-    typeof value.trip_id === 'number' &&
-    Number.isFinite(value.trip_id) &&
     typeof value.program_date === 'string' &&
     parseLocalISODate(value.program_date) !== null &&
     typeof value.details === 'string' &&
@@ -50,7 +48,7 @@ export function parseDailyProgramCache(
     typeof userId !== 'string' ||
     userId.length === 0 ||
     !Array.isArray(programs) ||
-    !programs.every(isTripDailyProgram)
+    !programs.every(isDailyProgram)
   ) {
     return undefined;
   }

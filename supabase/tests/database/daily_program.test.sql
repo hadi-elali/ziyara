@@ -2,33 +2,32 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(14);
+select plan(15);
 
 select has_table(
   'public',
-  'trip_daily_programs',
-  'the daily-program table exists'
+  'daily_programs',
+  'the journey-wide daily-program table exists'
+);
+
+select hasnt_column(
+  'public',
+  'daily_programs',
+  'trip_id',
+  'daily programs are not attached to intermediate trips'
 );
 
 select ok(
-  not has_table_privilege('anon', 'public.trip_daily_programs', 'select'),
+  not has_table_privilege('anon', 'public.daily_programs', 'select'),
   'anonymous users cannot read daily programs'
 );
 select ok(
   not has_function_privilege(
     'anon',
-    'public.admin_upsert_trip_daily_programs(bigint,jsonb)',
+    'public.admin_upsert_daily_programs(jsonb)',
     'execute'
   ),
   'anonymous users cannot publish daily programs'
-);
-select ok(
-  not has_function_privilege(
-    'anon',
-    'public.can_read_current_trip_daily_program(bigint)',
-    'execute'
-  ),
-  'anonymous users cannot call the daily-program read helper'
 );
 
 insert into auth.users (id, email, raw_user_meta_data)
@@ -53,8 +52,7 @@ set local role authenticated;
 
 select throws_ok(
   $$
-    select public.admin_upsert_trip_daily_programs(
-      1,
+    select public.admin_upsert_daily_programs(
       jsonb_build_array(
         jsonb_build_object(
           'program_date', current_date,
@@ -74,14 +72,8 @@ select set_config('request.jwt.claim.sub', '70000000-0000-0000-0000-000000000001
 set local role authenticated;
 
 select lives_ok(
-  $$ select public.admin_create_trip('Daily Program Trip') $$,
-  'an admin creates the active trip'
-);
-
-select lives_ok(
   $$
-    select public.admin_upsert_trip_daily_programs(
-      (select id from public.trips where name = 'Daily Program Trip'),
+    select public.admin_upsert_daily_programs(
       jsonb_build_array(
         jsonb_build_object(
           'program_date', current_date,
@@ -101,18 +93,18 @@ select lives_ok(
       )
     )
   $$,
-  'an admin publishes three daily programs in one transaction'
+  'an admin publishes the complete daily program without an intermediate trip'
 );
 
 select is(
-  (select count(*) from public.trip_daily_programs),
+  (select count(*) from public.daily_programs),
   3::bigint,
   'the batch creates one row per date'
 );
 select is(
   (
     select title
-    from public.trip_daily_programs
+    from public.daily_programs
     where program_date = current_date + 2
   ),
   null::text,
@@ -124,15 +116,9 @@ select set_config('request.jwt.claim.sub', '70000000-0000-0000-0000-000000000002
 set local role authenticated;
 
 select is(
-  (select count(*) from public.trip_daily_programs),
+  (select count(*) from public.daily_programs),
   3::bigint,
-  'every authenticated user can read the current trip program without a bus assignment'
-);
-select ok(
-  public.can_read_current_trip_daily_program(
-    (select trip_id from public.trip_daily_programs limit 1)
-  ),
-  'the read helper recognizes the current trip for an authenticated user'
+  'every authenticated user can read the complete program without an intermediate-trip assignment'
 );
 
 reset role;
@@ -140,9 +126,26 @@ select set_config('request.jwt.claim.sub', '70000000-0000-0000-0000-000000000001
 set local role authenticated;
 
 select lives_ok(
+  $$ select public.admin_create_trip('Hotel nach Karbala') $$,
+  'an admin creates an intermediate trip independently'
+);
+select lives_ok(
   $$
-    select public.admin_upsert_trip_daily_programs(
-      (select id from public.trips where name = 'Daily Program Trip'),
+    select public.admin_archive_trip(
+      (select id from public.trips where name = 'Hotel nach Karbala')
+    )
+  $$,
+  'an admin closes the intermediate trip independently'
+);
+select is(
+  (select count(*) from public.daily_programs),
+  3::bigint,
+  'closing an intermediate trip does not hide or delete the daily program'
+);
+
+select lives_ok(
+  $$
+    select public.admin_upsert_daily_programs(
       jsonb_build_array(
         jsonb_build_object(
           'program_date', current_date + 1,
@@ -152,17 +155,17 @@ select lives_ok(
       )
     )
   $$,
-  'an admin can update one already-published date'
+  'an admin can update one already-published date without an active intermediate trip'
 );
 select is(
-  (select count(*) from public.trip_daily_programs),
+  (select count(*) from public.daily_programs),
   3::bigint,
   'updating a date does not create a duplicate'
 );
 select is(
   (
     select details
-    from public.trip_daily_programs
+    from public.daily_programs
     where program_date = current_date + 1
   ),
   '11:00 Neue Abfahrt',

@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import type { TripDailyProgram } from '@/domain/database';
+import type { DailyProgram } from '@/domain/database';
 import {
   addDaysToISODate,
   dailyProgramDateRange,
@@ -10,7 +10,7 @@ import {
   visibleDailyPrograms,
 } from '@/features/daily-program/daily-program-state';
 
-function program(id: number, programDate: string): TripDailyProgram {
+function program(id: number, programDate: string): DailyProgram {
   return {
     created_at: '2026-08-28T00:00:00.000Z',
     details: `Programm ${id}`,
@@ -18,7 +18,6 @@ function program(id: number, programDate: string): TripDailyProgram {
     program_date: programDate,
     published_by_profile_id: 1,
     title: null,
-    trip_id: 10,
     updated_at: '2026-08-28T00:00:00.000Z',
   };
 }

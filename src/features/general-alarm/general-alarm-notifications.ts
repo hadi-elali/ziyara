@@ -69,16 +69,6 @@ async function ensureAndroidChannels() {
     sound: 'default',
     vibrationPattern: [0, 450, 180, 450],
   });
-  await Notifications.setNotificationChannelAsync('emergency-duty', {
-    description: 'Einteilungen zum medizinischen oder organisatorischen Notfalldienst',
-    enableVibrate: true,
-    importance: Notifications.AndroidImportance.MAX,
-    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-    name: 'Notfalldienst',
-    showBadge: true,
-    sound: 'default',
-    vibrationPattern: [0, 450, 180, 450],
-  });
 }
 
 export async function inspectGeneralAlarmNotificationState(): Promise<GeneralAlarmNotificationState> {

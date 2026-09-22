@@ -141,7 +141,10 @@ function RootNavigation() {
           <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
         </Stack>
       </NavigationThemeProvider>
-      {session && pathname === '/' ? (
+
+      {/* //!Geoutsourced to index in (tabs) to enhance UI/UX */}
+
+      {/* {session && pathname === '/' ? (
         <Pressable
           accessibilityLabel={t('emergency.homeButton')}
           accessibilityRole="button"
@@ -157,7 +160,9 @@ function RootNavigation() {
           ]}>
           <SymbolIcon color={colors.surface} name="alarm" size={25} />
         </Pressable>
-      ) : null}
+      ) : null} */}
+
+
       {profileRefreshError && !isBlocking ? (
         <View
           accessibilityLiveRegion="polite"

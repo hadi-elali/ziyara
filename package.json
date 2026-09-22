@@ -85,6 +85,7 @@
       "src/features/auth/{RequireAuth,auth-context,password-recovery-link,protected-route-policy}.{ts,tsx}",
       "src/features/bus-management/{bus-management-context,bus-management-state}.{ts,tsx}",
       "src/features/daily-program/{daily-program-context,daily-program-state}.{ts,tsx}",
+      "src/features/emergency/**/*.{ts,tsx}",
       "src/features/errors/AppErrorBoundary.tsx",
       "src/features/group-check/{group-check-context,group-check-results}.{ts,tsx}",
       "src/features/general-alarm/general-alarm-reminders.ts",

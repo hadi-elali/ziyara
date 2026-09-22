@@ -111,11 +111,12 @@ export function AdminBusManagementPanel({
   }, [assignedFamilyIds, assignmentSearch, language, users]);
   const matchingFamilies = useMemo(() => {
     const normalized = assignmentSearch.trim().toLocaleLowerCase(language);
+    if (!normalized) return [];
     return families
       .filter((family) => users.some((user) => user.family_id === family.id))
       .filter(
         (family) =>
-          !normalized || family.name.toLocaleLowerCase(language).includes(normalized),
+          family.name.toLocaleLowerCase(language).includes(normalized),
       )
       .slice(0, 8);
   }, [assignmentSearch, families, language, users]);
@@ -552,12 +553,16 @@ export function AdminBusManagementPanel({
                   })}
             </View>
 
-            {assignmentKind === 'person' && matchingPeople.length === 0 ? (
+            {assignmentSearch.trim() &&
+            assignmentKind === 'person' &&
+            matchingPeople.length === 0 ? (
               <ThemedText type="small" themeColor="textSecondary">
                 {t('bus.admin.noPeopleAvailable')}
               </ThemedText>
             ) : null}
-            {assignmentKind === 'family' && matchingFamilies.length === 0 ? (
+            {assignmentSearch.trim() &&
+            assignmentKind === 'family' &&
+            matchingFamilies.length === 0 ? (
               <ThemedText type="small" themeColor="textSecondary">
                 {t('bus.admin.noFamiliesAvailable')}
               </ThemedText>
@@ -619,10 +624,10 @@ export function AdminBusManagementPanel({
 
 function matchingUsers(users: AdminUserSummary[], search: string, language: string) {
   const normalized = search.trim().toLocaleLowerCase(language);
+  if (!normalized) return [];
   return users
     .filter(
-      (user) =>
-        !normalized || user.display_name.toLocaleLowerCase(language).includes(normalized),
+      (user) => user.display_name.toLocaleLowerCase(language).includes(normalized),
     )
     .sort((left, right) => left.display_name.localeCompare(right.display_name, language))
     .slice(0, 8);

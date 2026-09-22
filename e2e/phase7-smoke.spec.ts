@@ -236,7 +236,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await member.page.getByRole('button', { name: 'Wochenprogramm öffnen' }).click();
     await expect(member.page.getByText('E2E Morgen', { exact: true })).toBeVisible();
 
-    await member.page.route('**/rest/v1/trip_daily_programs*', (route) =>
+    await member.page.route('**/rest/v1/daily_programs*', (route) =>
       route.abort('internetdisconnected'),
     );
     await member.page.goto('/');

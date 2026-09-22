@@ -8,10 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { Section } from '@/components/ui/section';
 import { Spacing } from '@/constants/theme';
-import type {
-  EmergencyDashboardItem,
-  EmergencyDutyNotification,
-} from '@/domain/database';
+import type { EmergencyDashboardItem } from '@/domain/database';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
@@ -38,21 +35,14 @@ function EmergencyDashboardContent() {
   const { profile, session } = useAuth();
   const notifications = useGeneralAlarmNotifications();
   const [requests, setRequests] = useState<EmergencyDashboardItem[]>([]);
-  const [dutyMessages, setDutyMessages] = useState<EmergencyDutyNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [readErrorMessage, setReadErrorMessage] = useState<string | null>(null);
-  const [markingDutyId, setMarkingDutyId] = useState<number | null>(null);
-  const [markDutyError, setMarkDutyError] = useState<{
-    message: string;
-    notificationId: number;
-  } | null>(null);
   const refreshSequence = useRef(0);
   const role = profile?.role;
   const userId = session?.user.id ?? null;
   const isStaff = role === 'medical_staff' || role === 'organization_team';
   const hasAccess = role === 'admin' || isStaff;
-  const isOnDuty = dutyMessages[0]?.is_on_duty ?? false;
 
   const refresh = useCallback(async () => {
     const sequence = ++refreshSequence.current;
@@ -63,20 +53,13 @@ function EmergencyDashboardContent() {
 
     setIsRefreshing(true);
     try {
-      const [dashboardResult, dutyResult] = await Promise.all([
-        withSupabaseReadTimeout((signal) =>
-          supabase.rpc('list_emergency_dashboard').abortSignal(signal),
-        ),
-        withSupabaseReadTimeout((signal) =>
-          supabase.rpc('list_my_emergency_duty_notifications').abortSignal(signal),
-        ),
-      ]);
+      const dashboardResult = await withSupabaseReadTimeout((signal) =>
+        supabase.rpc('list_emergency_dashboard').abortSignal(signal),
+      );
       if (dashboardResult.error) throw dashboardResult.error;
-      if (dutyResult.error) throw dutyResult.error;
 
       if (sequence === refreshSequence.current) {
         setRequests(dashboardResult.data ?? []);
-        setDutyMessages(dutyResult.data ?? []);
         setReadErrorMessage(null);
       }
     } catch (error) {
@@ -102,16 +85,6 @@ function EmergencyDashboardContent() {
         { event: '*', schema: 'public', table: 'emergency_requests' },
         () => void refresh(),
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'emergency_team_duties' },
-        () => void refresh(),
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'emergency_duty_notifications' },
-        () => void refresh(),
-      )
       .subscribe();
 
     const appStateSubscription =
@@ -128,32 +101,6 @@ function EmergencyDashboardContent() {
       void supabase.removeChannel(channel);
     };
   }, [hasAccess, refresh, userId]);
-
-  const markDutyRead = async (notificationId: number) => {
-    if (markingDutyId !== null) return;
-    setMarkingDutyId(notificationId);
-    setMarkDutyError(null);
-
-    try {
-      const { error } = await supabase.rpc('mark_emergency_duty_notification_read', {
-        p_notification_id: notificationId,
-      });
-      if (error) throw error;
-
-      setDutyMessages((current) =>
-        current.map((item) =>
-          item.notification_id === notificationId
-            ? { ...item, read_at: new Date().toISOString() }
-            : item,
-        ),
-      );
-    } catch (error) {
-      const message = getOriginalErrorMessage(error);
-      if (message) setMarkDutyError({ message, notificationId });
-    } finally {
-      setMarkingDutyId(null);
-    }
-  };
 
   const formatDate = (value: string) =>
     new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'short' }).format(
@@ -201,18 +148,12 @@ function EmergencyDashboardContent() {
                 style={[
                   styles.statusBadge,
                   {
-                    backgroundColor: isOnDuty ? theme.successSoft : theme.backgroundElement,
-                    borderColor: isOnDuty ? theme.success : theme.border,
+                    backgroundColor: theme.successSoft,
+                    borderColor: theme.success,
                   },
                 ]}>
-                <ThemedText
-                  type="tinyBold"
-                  themeColor={isOnDuty ? 'success' : 'textSecondary'}>
-                  {t(
-                    isOnDuty
-                      ? 'emergencyDashboard.dutyOn'
-                      : 'emergencyDashboard.dutyOff',
-                  )}
+                <ThemedText type="tinyBold" themeColor="success">
+                  {t('emergencyDashboard.dutyOn')}
                 </ThemedText>
               </View>
             </View>
@@ -240,69 +181,6 @@ function EmergencyDashboardContent() {
               </View>
             ) : null}
           </Card>
-
-          {dutyMessages.length > 0 ? (
-            <View style={styles.list}>
-              {dutyMessages.map((item) => {
-                const unread = item.read_at === null;
-                return (
-                  <Card
-                    key={item.notification_id}
-                    style={[
-                      styles.card,
-                      unread
-                        ? { backgroundColor: theme.accentSoft, borderColor: theme.accent }
-                        : null,
-                    ]}>
-                    <View style={styles.headerRow}>
-                      <View style={styles.headingText}>
-                        <ThemedText type="heading">
-                          {t('emergencyDashboard.dutyMessageTitle')}
-                        </ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {formatDate(item.created_at)}
-                        </ThemedText>
-                      </View>
-                      {unread ? (
-                        <View style={[styles.newBadge, { backgroundColor: theme.accent }]}>
-                          <ThemedText style={{ color: theme.surface }} type="tinyBold">
-                            {t('emergency.new')}
-                          </ThemedText>
-                        </View>
-                      ) : null}
-                    </View>
-                    <ThemedText>
-                      {t('emergencyDashboard.dutyMessageBody', {
-                        admin: item.assigned_by_display_name,
-                        team: t(`emergency.team.${item.team}`),
-                      })}
-                    </ThemedText>
-                    {unread ? (
-                      <Button
-                        disabled={markingDutyId !== null}
-                        icon="confirm"
-                        label={t('emergency.markRead')}
-                        onPress={() => void markDutyRead(item.notification_id)}
-                        variant="secondary"
-                      />
-                    ) : (
-                      <ThemedText type="small" themeColor="success">
-                        {t('emergency.read')}
-                      </ThemedText>
-                    )}
-                    {markDutyError?.notificationId === item.notification_id ? (
-                      <ThemedText
-                        accessibilityLiveRegion="polite"
-                        type="small"
-                        themeColor="danger">
-                        {markDutyError.message}
-                      </ThemedText>
-                    ) : null}
-                  </Card>
-                );
-              })}
-            </View>
-          ) : null}
         </Section>
       ) : null}
 
@@ -421,12 +299,6 @@ const styles = StyleSheet.create({
   headingText: { flex: 1, gap: Spacing.one, minWidth: 180 },
   intro: { gap: Spacing.two },
   list: { gap: Spacing.three },
-  newBadge: {
-    borderRadius: 8,
-    justifyContent: 'center',
-    minHeight: 28,
-    paddingHorizontal: Spacing.two,
-  },
   statusBadge: {
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,

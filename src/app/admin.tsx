@@ -64,32 +64,6 @@ type RoleFeedback = {
   type: 'error' | 'success';
   userId: string;
 };
-type DutyFeedback = {
-  message?: string;
-  type: 'error' | 'push-error' | 'success';
-  userId: string;
-};
-
-const dutyPushTimeoutMs = 8_000;
-
-async function dispatchDutyPush(notificationId: number) {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  const timeoutResult = new Promise<null>((resolve) => {
-    timeout = setTimeout(() => resolve(null), dutyPushTimeoutMs);
-  });
-
-  try {
-    return await Promise.race([
-      supabase.functions.invoke<{ accepted?: number; claimed?: number }>(
-        'dispatch-emergency-duty',
-        { body: { notificationId } },
-      ),
-      timeoutResult,
-    ]);
-  } finally {
-    if (timeout) clearTimeout(timeout);
-  }
-}
 
 async function fetchAllAdminUsers() {
   const allUsers: AdminUserSummary[] = [];
@@ -166,8 +140,6 @@ function AdminContent() {
   const [expandedRoleUserId, setExpandedRoleUserId] = useState<string | null>(null);
   const [roleFeedback, setRoleFeedback] = useState<RoleFeedback | null>(null);
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
-  const [dutyFeedback, setDutyFeedback] = useState<DutyFeedback | null>(null);
-  const [updatingDutyUserId, setUpdatingDutyUserId] = useState<string | null>(null);
   const usersRequestSequence = useRef(0);
   const hasError = readErrorMessage !== null;
   const [expandedSections, setExpandedSections] = useState<Record<AdminSection, boolean>>({
@@ -216,7 +188,6 @@ function AdminContent() {
   const assignRole = useCallback(
     async (userId: string, role: AppRole) => {
       setRoleFeedback(null);
-      setDutyFeedback(null);
       setUpdatingRoleUserId(userId);
 
       try {
@@ -236,9 +207,7 @@ function AdminContent() {
 
         setUsers((current) =>
           current.map((user) =>
-            user.user_id === userId
-              ? { ...user, emergency_on_duty: false, role }
-              : user,
+            user.user_id === userId ? { ...user, role } : user,
           ),
         );
         setRoleFeedback({ type: 'success', userId });
@@ -257,53 +226,6 @@ function AdminContent() {
     [profile, refreshProfile],
   );
 
-  const assignDuty = useCallback(async (userId: string, onDuty: boolean) => {
-    setDutyFeedback(null);
-    setUpdatingDutyUserId(userId);
-
-    try {
-      const { data, error } = await supabase.rpc('admin_set_emergency_duty', {
-        p_on_duty: onDuty,
-        p_user_id: userId,
-      });
-      if (error || !data?.[0]) throw error ?? new Error('Missing duty assignment result.');
-
-      const result = data[0];
-      setUsers((current) =>
-        current.map((user) =>
-          user.user_id === userId
-            ? { ...user, emergency_on_duty: result.emergency_on_duty }
-            : user,
-        ),
-      );
-
-      if (!result.notification_id) {
-        setDutyFeedback({ type: 'success', userId });
-        return;
-      }
-
-      try {
-        const dispatch = await dispatchDutyPush(result.notification_id);
-        if (dispatch?.error) {
-          setDutyFeedback({ message: dispatch.error.message, type: 'error', userId });
-          return;
-        }
-        const pushAccepted = Boolean(
-          dispatch && (dispatch.data?.accepted ?? 0) > 0,
-        );
-        setDutyFeedback({ type: pushAccepted ? 'success' : 'push-error', userId });
-      } catch (error) {
-        const message = getOriginalErrorMessage(error);
-        if (message) setDutyFeedback({ message, type: 'error', userId });
-      }
-    } catch (error) {
-      const message = getOriginalErrorMessage(error);
-      if (message) setDutyFeedback({ message, type: 'error', userId });
-    } finally {
-      setUpdatingDutyUserId(null);
-    }
-  }, []);
-
   useEffect(() => {
     const initialLoadTimeout = setTimeout(() => void loadUsers(), 0);
 
@@ -319,7 +241,6 @@ function AdminContent() {
 
   const toggleUserDetails = (userId: string) => {
     setRoleFeedback(null);
-    setDutyFeedback(null);
     setExpandedRoleUserId(null);
     setExpandedUserId((current) => (current === userId ? null : userId));
   };
@@ -339,8 +260,6 @@ function AdminContent() {
           expandedRoleUserId,
           expandedUserId,
           roleFeedback,
-          dutyFeedback,
-          updatingDutyUserId,
           updatingRoleUserId,
         }}
         keyboardShouldPersistTaps="handled"
@@ -660,7 +579,6 @@ function AdminContent() {
               expanded={expandedUserId === user.user_id}
               key={user.user_id}
               onAssignRole={(role) => void assignRole(user.user_id, role)}
-              onAssignDuty={(onDuty) => void assignDuty(user.user_id, onDuty)}
               onToggleDetails={() => toggleUserDetails(user.user_id)}
               onToggleRoleAssignment={() => {
                 setRoleFeedback(null);
@@ -673,15 +591,8 @@ function AdminContent() {
                 roleFeedback?.userId === user.user_id ? roleFeedback : null
               }
               roleChoicesDisabled={
-                updatingRoleUserId !== null || updatingDutyUserId !== null
+                updatingRoleUserId !== null
               }
-              dutyFeedback={
-                dutyFeedback?.userId === user.user_id ? dutyFeedback : null
-              }
-              dutyUpdateDisabled={
-                updatingDutyUserId !== null || updatingRoleUserId !== null
-              }
-              updatingDuty={updatingDutyUserId === user.user_id}
               updatingRole={updatingRoleUserId === user.user_id}
               user={user}
             />
@@ -717,10 +628,7 @@ function AdminContent() {
 }
 
 function AdminUserDisclosure({
-  dutyFeedback,
-  dutyUpdateDisabled,
   expanded,
-  onAssignDuty,
   onAssignRole,
   onToggleDetails,
   onToggleRoleAssignment,
@@ -728,13 +636,9 @@ function AdminUserDisclosure({
   roleChoicesDisabled,
   roleFeedback,
   updatingRole,
-  updatingDuty,
   user,
 }: {
-  dutyFeedback: DutyFeedback | null;
-  dutyUpdateDisabled: boolean;
   expanded: boolean;
-  onAssignDuty: (onDuty: boolean) => void;
   onAssignRole: (role: AppRole) => void;
   onToggleDetails: () => void;
   onToggleRoleAssignment: () => void;
@@ -742,7 +646,6 @@ function AdminUserDisclosure({
   roleChoicesDisabled: boolean;
   roleFeedback: RoleFeedback | null;
   updatingRole: boolean;
-  updatingDuty: boolean;
   user: AdminUserSummary;
 }) {
   const theme = useTheme();
@@ -862,64 +765,6 @@ function AdminUserDisclosure({
                 ? t('admin.roleAssignment.saved')
                 : roleFeedback.message}
             </ThemedText>
-          ) : null}
-
-          {user.role === 'medical_staff' || user.role === 'organization_team' ? (
-            <View style={[styles.dutyAssignment, { borderColor: theme.border }]}>
-              <View style={styles.dutyHeader}>
-                <View style={styles.dutyText}>
-                  <ThemedText type="smallBold">{t('admin.duty.title')}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('admin.duty.body')}
-                  </ThemedText>
-                </View>
-                <View
-                  style={[
-                    styles.dutyBadge,
-                    {
-                      backgroundColor: user.emergency_on_duty
-                        ? theme.successSoft
-                        : theme.background,
-                      borderColor: user.emergency_on_duty ? theme.success : theme.border,
-                    },
-                  ]}>
-                  <ThemedText
-                    type="tinyBold"
-                    themeColor={user.emergency_on_duty ? 'success' : 'textSecondary'}>
-                    {t(user.emergency_on_duty ? 'admin.duty.on' : 'admin.duty.off')}
-                  </ThemedText>
-                </View>
-              </View>
-              <Button
-                disabled={dutyUpdateDisabled}
-                icon="alarm"
-                label={t(
-                  user.emergency_on_duty
-                    ? 'admin.duty.remove'
-                    : 'admin.duty.assign',
-                )}
-                onPress={() => onAssignDuty(!user.emergency_on_duty)}
-                variant={user.emergency_on_duty ? 'secondary' : 'primary'}
-              />
-              {updatingDuty ? (
-                <View style={styles.roleProgress}>
-                  <ActivityIndicator color={theme.accent} size="small" />
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('admin.duty.saving')}
-                  </ThemedText>
-                </View>
-              ) : null}
-              {dutyFeedback ? (
-                <ThemedText
-                  accessibilityLiveRegion="polite"
-                  type="small"
-                  themeColor={dutyFeedback.type === 'success' ? 'success' : 'danger'}>
-                  {dutyFeedback.type === 'error'
-                    ? dutyFeedback.message
-                    : t(`admin.duty.${dutyFeedback.type}`)}
-                </ThemedText>
-              ) : null}
-            </View>
           ) : null}
         </View>
       ) : null}
@@ -1055,28 +900,6 @@ const styles = StyleSheet.create({
   },
   roleAssignmentButton: {
     alignSelf: 'flex-start',
-  },
-  dutyAssignment: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.two,
-    marginTop: Spacing.one,
-    paddingTop: Spacing.three,
-  },
-  dutyHeader: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: Spacing.two,
-    justifyContent: 'space-between',
-  },
-  dutyText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  dutyBadge: {
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
   },
   roleChoices: {
     gap: Spacing.two,

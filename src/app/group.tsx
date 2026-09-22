@@ -109,7 +109,9 @@ function GroupContent() {
 
   if (isLoading) {
     return (
-      <Screen contentStyle={styles.centered}>
+      <Screen
+        contentStyle={styles.centered}
+        safeAreaEdges={['right', 'bottom', 'left']}>
         <ActivityIndicator color={theme.accent} size="large" />
         <ThemedText themeColor="textSecondary">{t('tripGroups.loading')}</ThemedText>
       </Screen>
@@ -117,7 +119,7 @@ function GroupContent() {
   }
 
   return (
-    <Screen>
+    <Screen safeAreaEdges={['right', 'bottom', 'left']}>
       <View style={styles.heading}>
         <View style={styles.headingText}>
           <ThemedText type="title">{t('tripGroups.title')}</ThemedText>

@@ -130,7 +130,7 @@ describe('AdminTravelOrganizationPanel', () => {
     actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT = originalActEnvironment;
   });
 
-  it('zeigt die gemeinsame Reiseübersicht und startet mit Reise & Busse', async () => {
+  it('zeigt die Zwischenreiseübersicht und startet mit Zwischenreise & Busse', async () => {
     await act(async () => {
       renderer = create(<AdminTravelOrganizationPanel families={[]} users={[]} />);
     });

@@ -135,18 +135,17 @@ export type Trip = {
   name: string;
 };
 
-export type TripDailyProgram = {
+export type DailyProgram = {
   created_at: string;
   details: string;
   id: number;
   program_date: string;
   published_by_profile_id: number | null;
   title: string | null;
-  trip_id: number;
   updated_at: string;
 };
 
-export type TripDailyProgramInput = {
+export type DailyProgramInput = {
   details: string;
   program_date: string;
   title: string;
@@ -372,12 +371,6 @@ export type EmergencyDutyNotification = {
   notification_id: number;
   read_at: string | null;
   team: EmergencyTeam;
-};
-
-export type EmergencyDutyAssignmentResult = {
-  emergency_on_duty: boolean;
-  notification_id: number | null;
-  profile_id: number;
 };
 
 export type EmergencyDutyNotificationAttempt = {
@@ -897,7 +890,7 @@ export type Database = {
           updated_at?: string;
         };
       };
-      trip_daily_programs: {
+      daily_programs: {
         Insert: {
           created_at?: string;
           details: string;
@@ -905,11 +898,10 @@ export type Database = {
           program_date: string;
           published_by_profile_id?: number | null;
           title?: string | null;
-          trip_id: number;
           updated_at?: string;
         };
         Relationships: [];
-        Row: TripDailyProgram;
+        Row: DailyProgram;
         Update: {
           details?: string;
           program_date?: string;
@@ -1090,9 +1082,9 @@ export type Database = {
         Args: { p_group_id: number };
         Returns: TripGroupLocationRequest;
       };
-      admin_upsert_trip_daily_programs: {
-        Args: { p_programs: TripDailyProgramInput[]; p_trip_id: number };
-        Returns: TripDailyProgram[];
+      admin_upsert_daily_programs: {
+        Args: { p_programs: DailyProgramInput[] };
+        Returns: DailyProgram[];
       };
       admin_upsert_trip_group: {
         Args: {
@@ -1103,10 +1095,6 @@ export type Database = {
           p_trip_id: number;
         };
         Returns: TripGroup;
-      };
-      can_read_current_trip_daily_program: {
-        Args: { p_trip_id: number };
-        Returns: boolean;
       };
       admin_group_check_results: {
         Args: { p_check_id: number };
@@ -1180,10 +1168,6 @@ export type Database = {
       admin_set_user_role: {
         Args: { p_role: AppRole; p_user_id: string };
         Returns: UserProfile;
-      };
-      admin_set_emergency_duty: {
-        Args: { p_on_duty: boolean; p_user_id: string };
-        Returns: EmergencyDutyAssignmentResult[];
       };
       admin_set_bus_boarding_status: {
         Args: {
