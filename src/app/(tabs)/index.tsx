@@ -28,6 +28,7 @@ import { useTripGuidance } from "@/features/trip-guidance/trip-guidance-context"
 import { useTripGroups } from "@/features/trip-groups/trip-group-context";
 import { SymbolIcon } from "@/components/ui/symbol-icon";
 import { useThemeMode } from "@/features/theme/theme-mode";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const featuredSlugs = [
   "shrine-imam-hussain",
@@ -75,7 +76,7 @@ export default function HomeScreen() {
     .map((slug) => allPlaces.find((place) => place.slug === slug))
     .filter(isPlace)
     .map((place) => localizePlace(place, language));
-  const cities = ["Karbala", "Najaf", "Kufa", "Kadhimayn", "Samarra"];
+  const cities = ["Kadhimayn", "Samarra", "Balad", "Karbala", "Najaf", "Kufa"];
 
 
   return (

@@ -13,6 +13,40 @@ function expectUnique(values: string[]) {
   expect(new Set(values).size).toBe(values.length);
 }
 
+const expectedPlaceIds = [
+  'place-imam-hussain',
+  'place-abul-fadhl-abbas',
+  'place-bayn-al-haramayn',
+  'place-mukhayyam',
+  'place-tall-al-zaynabiyya',
+  'place-kaff-al-abbas',
+  'place-maqam-ali-al-akbar',
+  'place-maqam-abdullah-al-radi',
+  'place-maqam-imam-al-mahdi-karbala',
+  'place-hur',
+  'place-imam-ali',
+  'place-wadi-salam',
+  'place-masjid-kufa',
+  'place-house-imam-ali',
+  'place-masjid-sahlah',
+  'place-kumayl-ibn-ziyad',
+  'place-kadhimayn',
+  'place-sayyid-muhammad',
+  'place-askari',
+];
+
+const researchedIntroPlaceIds = [
+  'place-tall-al-zaynabiyya',
+  'place-kaff-al-abbas',
+  'place-maqam-ali-al-akbar',
+  'place-maqam-abdullah-al-radi',
+  'place-maqam-imam-al-mahdi-karbala',
+  'place-masjid-kufa',
+  'place-house-imam-ali',
+  'place-kumayl-ibn-ziyad',
+  'place-sayyid-muhammad',
+];
+
 describe('catalog integrity', () => {
   it('uses unique stable identifiers and slugs', () => {
     expectUnique(allPlaces.map((place) => place.id));
@@ -21,6 +55,25 @@ describe('catalog integrity', () => {
     expectUnique(religiousContent.map((content) => content.id));
     expectUnique(religiousContent.map((content) => content.slug));
     expectUnique(sourceReferences.map((source) => source.id));
+  });
+
+  it('contains exactly the requested pilgrimage destinations', () => {
+    expect(allPlaces.map((place) => place.id)).toEqual(expectedPlaceIds);
+  });
+
+  it('provides source-backed introductions for the newly researched places', () => {
+    const linkedSourceIds = new Set(
+      sourceReferences.filter((source) => source.url).map((source) => source.id),
+    );
+
+    researchedIntroPlaceIds.forEach((id) => {
+      const place = allPlaces.find((candidate) => candidate.id === id);
+
+      expect(place).toBeDefined();
+      expect(place?.longDescription).not.toMatch(/qualifizierten (Quellen)?prüfung/i);
+      expect(place?.sourceReferences.some((sourceId) => linkedSourceIds.has(sourceId))).toBe(true);
+      expect(place?.verificationStatus).toBe('needs_review');
+    });
   });
 
   it('keeps every catalog relationship resolvable', () => {
@@ -82,6 +135,13 @@ describe('catalog search', () => {
       expect.arrayContaining(plain.map((result) => result.id)),
     );
   });
+
+  it.each(['Kazimkya', 'Samaraa', 'Sayyed Mohamad', 'Kfuf El Abbas', 'Kumeil'])(
+    'finds the supplied spelling %s',
+    (query) => {
+      expect(searchCatalog(query, 'places', 'de').length).toBeGreaterThan(0);
+    },
+  );
 
   it('does not route acts without reader content to an unrelated entry', () => {
     const prayerResults = searchCatalog('Gebet mit zwei', 'acts', 'de');

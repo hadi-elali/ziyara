@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { BottomTabInset, Colors, Spacing } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
+import { canAccessNonBlockingRoutes } from '@/features/auth/protected-route-policy';
 import { BusManagementProvider } from '@/features/bus-management/bus-management-context';
 import { DailyProgramProvider } from '@/features/daily-program/daily-program-context';
 import { AppErrorBoundary } from '@/features/errors/AppErrorBoundary';
@@ -66,8 +67,20 @@ function RootNavigation() {
   const colors = Colors[scheme];
   const { loaded: isLanguageLoaded, t } = useI18n();
   const { loaded: isOnboardingLoaded } = useOnboarding();
-  const { profileRefreshError, refreshProfile, session } = useAuth();
+  const {
+    hasProfileError,
+    isLoading: isAuthLoading,
+    profileRefreshError,
+    refreshProfile,
+    session,
+  } = useAuth();
   const { isBlocking } = useGroupCheck();
+  const canAccessAppRoutes = canAccessNonBlockingRoutes({
+    hasProfileError,
+    hasSession: Boolean(session),
+    isAuthLoading,
+    isGroupCheckBlocking: isBlocking,
+  });
 
   useEffect(() => {
     if (isLanguageLoaded && isOnboardingLoaded && isThemeLoaded) {
@@ -115,7 +128,7 @@ function RootNavigation() {
             options={{ title: t('nav.resetPassword') }}
           />
 
-          <Stack.Protected guard={!isBlocking}>
+          <Stack.Protected guard={canAccessAppRoutes}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('nav.home') }} />
             <Stack.Screen name="city/[city]" options={{ title: t('nav.city') }} />
             <Stack.Screen name="place/[slug]" options={{ title: t('nav.placeDetails') }} />

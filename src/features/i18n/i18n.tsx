@@ -1034,6 +1034,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Najaf ist eine der wichtigsten heiligen Städte des Irak. Im Zentrum steht der Schrein von Imam Ali ibn Abi Talib (a.), dem Fürsten der Gläubigen. Die Stadt ist zugleich ein bedeutender Ort des Wissens, der Gelehrsamkeit und der spirituellen Nähe.",
     "city.description.Kadhimayn":
       "Kadhimiya ist bekannt für den Schrein von Imam Musa al-Kadhim (a.) und Imam Muhammad al-Jawad (a.). Der Besuch dieses Ortes verbindet die Pilgerinnen und Pilger mit Geduld, Gottesvertrauen und der Liebe zur Ahlulbayt (a.).",
+    "city.description.Balad":
+      "In Balad befindet sich der Schrein von Sayyid Muhammad. Weitere ortsbezogene und historische Details bleiben bis zur qualifizierten Quellenprüfung als zu prüfen markiert.",
     "city.description.Kufa":
       "Kufa ist eine Stadt mit großer islamischer Geschichte. Besonders die Moschee von Kufa ist eng mit Imam Ali (a.) und vielen bedeutenden Persönlichkeiten verbunden. Sie ist ein Ort des Gebets, der Erinnerung und der Besinnung.",
     "city.description.Samarra":
@@ -2219,6 +2221,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Najaf is one of the most important holy cities in Iraq. At its heart lies the shrine of Imam Ali ibn Abi Talib (a.), the Commander of the Faithful. The city is also a major center of knowledge, scholarship, and spiritual closeness.",
     "city.description.Kadhimayn":
       "Kadhimiya is known for the shrine of Imam Musa al-Kadhim (a.) and Imam Muhammad al-Jawad (a.). Visiting this holy place connects pilgrims with patience, trust in Allah, and love for the Ahlulbayt (a.).",
+    "city.description.Balad":
+      "The Shrine of Sayyid Muhammad is located in Balad. Further location and historical details remain marked for review until qualified source checking is complete.",
     "city.description.Kufa":
       "Kufa is a city with a rich Islamic history. The Mosque of Kufa is especially connected to Imam Ali (a.) and many important personalities. It is a place of prayer, remembrance, and reflection.",
     "city.description.Samarra":
@@ -3388,6 +3392,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "تُعدّ النجف من أهم المدن المقدسة في العراق، وفي قلبها مرقد الإمام علي بن أبي طالب (ع)، أمير المؤمنين. كما تُعرف المدينة بأنها مركز مهم للعلم والحوزة والقرب الروحي.",
     "city.description.Kadhimayn":
       "تُعرف الكاظمية بمرقد الإمام موسى الكاظم (ع) والإمام محمد الجواد (ع). ويرتبط الزائر في هذا المكان المقدس بمعاني الصبر والتوكل على الله ومحبة أهل البيت (ع).",
+    "city.description.Balad":
+      "يقع مرقد السيد محمد في بلد. وتبقى التفاصيل المكانية والتاريخية بعلامة المراجعة حتى تكتمل مراجعة المصادر المؤهلة.",
     "city.description.Kufa":
       "الكوفة مدينة ذات تاريخ إسلامي عظيم، ويُعدّ مسجد الكوفة من أبرز معالمها، إذ يرتبط بالإمام علي (ع) وبالعديد من الشخصيات المهمة. وهي مكان للصلاة والذكر والتأمل.",
     "city.description.Samarra":

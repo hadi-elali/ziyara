@@ -20,6 +20,7 @@ const cityDescriptionKeys: Record<string, string> = {
   Kadhimayn: "city.description.Kadhimayn",
   Kufa: "city.description.Kufa",
   Samarra: "city.description.Samarra",
+  Balad: "city.description.Balad",
 };
 
 function getCityRegion(places: Place[]) {

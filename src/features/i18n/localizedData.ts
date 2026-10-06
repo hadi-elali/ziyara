@@ -146,6 +146,76 @@ const placeTranslations: Record<string, Partial<Record<Language, PlaceTranslatio
       },
     },
   },
+  'place-tall-al-zaynabiyya': {
+    en: {
+      name: 'Tall al-Zaynabiyya',
+      shortDescription: 'Tall al-Zaynabiyya is a Ziyārah site near the Shrine of Imam Hussain (a.) in Karbala.',
+      longDescription:
+        'Tall al-Zaynabiyya lies west of the Shrine of Imam Hussain (a.), near Bab al-Zaynabiyya. In Shia memory, this elevated site is associated with Sayyida Zaynab (a.), who is said to have observed the events of Karbala from here. Today, the maqam especially recalls her steadfastness and patience.',
+    },
+    ar: {
+      name: 'التل الزينبي',
+      shortDescription: 'التل الزينبي موقع للزيارة قرب مرقد الإمام الحسين (ع) في كربلاء.',
+      longDescription:
+        'يقع التل الزينبي غرب مرقد الإمام الحسين (ع) قرب باب الزينبية. ويرتبط هذا الموضع المرتفع في الذاكرة الشيعية بالسيدة زينب (ع)، إذ يروى أنها كانت تشاهد منه أحداث كربلاء. ويذكّر المقام اليوم بثباتها وصبرها على وجه الخصوص.',
+    },
+  },
+  'place-kaff-al-abbas': {
+    en: {
+      name: 'Maqams of Kaf al-Abbas',
+      shortDescription: 'The Kaf al-Abbas maqams are near the Shrine of Abul-Fadhl al-Abbas (a.) in Karbala.',
+      longDescription:
+        'The two Kaf al-Abbas maqams stand in the old city near the Shrine of Abul-Fadhl al-Abbas (a.). In local Ziyārah tradition, they mark the places where Abul-Fadhl al-Abbas (a.) is said to have lost his right and left hands during the Battle of Karbala. Their precise present-day identification is based on later commemorative tradition.',
+    },
+    ar: {
+      name: 'مقاما كفي العباس',
+      shortDescription: 'يقع مقاما كفي العباس قرب مرقد أبي الفضل العباس (ع) في كربلاء.',
+      longDescription:
+        'يقع مقاما كفي العباس في المدينة القديمة قرب مرقد أبي الفضل العباس (ع). وفي تقاليد الزيارة المحلية يحددان الموضعين اللذين يروى أن أبا الفضل العباس (ع) فقد فيهما يده اليمنى واليسرى في واقعة كربلاء. ويستند التحديد الدقيق للموقعين اليوم إلى تقاليد تذكارية متأخرة.',
+    },
+  },
+  'place-maqam-ali-al-akbar': {
+    en: {
+      name: 'Maqam Ali al-Akbar',
+      shortDescription: 'Maqam Ali al-Akbar is a Ziyārah site in Karbala.',
+      longDescription:
+        'Maqam Ali al-Akbar in the old city of Karbala commemorates Ali al-Akbar, the son of Imam Hussain (a.). According to local tradition, it marks the area where Ali al-Akbar fell during the Battle of Karbala. It is a memorial site rather than his grave, which is located within the Imam Hussain Shrine complex.',
+    },
+    ar: {
+      name: 'مقام علي الأكبر',
+      shortDescription: 'مقام علي الأكبر موقع للزيارة في كربلاء.',
+      longDescription:
+        'يخلّد مقام علي الأكبر في مدينة كربلاء القديمة ذكرى علي الأكبر ابن الإمام الحسين (ع). ووفقًا للتقاليد المحلية، يحدد المقام الموضع الذي سقط فيه علي الأكبر خلال واقعة كربلاء. وهو موضع تذكاري وليس قبره، إذ يقع قبره داخل مجمع مرقد الإمام الحسين (ع).',
+    },
+  },
+  'place-maqam-abdullah-al-radi': {
+    en: {
+      name: "Maqam Abdullah al-Radi'",
+      shortDescription: "Maqam Abdullah al-Radi' is a Ziyārah site near the Shrine of Imam Hussain (a.) in Karbala.",
+      longDescription:
+        "The small Maqam Abdullah al-Radi' is in the Bab al-Taq quarter near the Shrine of Imam Hussain (a.). It commemorates the infant son of Imam Hussain (a.), referred to in Karbala tradition as Abdullah al-Radi' or Ali al-Asghar. The name varies between sources.",
+    },
+    ar: {
+      name: 'مقام عبد الله الرضيع',
+      shortDescription: 'مقام عبد الله الرضيع موقع للزيارة قرب مرقد الإمام الحسين (ع) في كربلاء.',
+      longDescription:
+        'يقع مقام عبد الله الرضيع الصغير في محلة باب الطاق قرب مرقد الإمام الحسين (ع). ويحيي ذكرى طفل الإمام الحسين (ع) الذي يرد في تراث كربلاء باسم عبد الله الرضيع أو علي الأصغر. وتختلف التسمية باختلاف المصادر.',
+    },
+  },
+  'place-maqam-imam-al-mahdi-karbala': {
+    en: {
+      name: 'Maqam Imam al-Mahdi',
+      shortDescription: 'Maqam Imam al-Mahdi is a Ziyārah site in Karbala.',
+      longDescription:
+        'Maqam Imam al-Mahdi is located at the northern entrance to Karbala on the bank of the Husseiniya River. The present building is a place of devotion and remembrance associated with Imam al-Mahdi (a.) in local Ziyārah tradition. Its precise historical origin has not been conclusively established.',
+    },
+    ar: {
+      name: 'مقام الإمام المهدي',
+      shortDescription: 'مقام الإمام المهدي موقع للزيارة في كربلاء.',
+      longDescription:
+        'يقع مقام الإمام المهدي عند المدخل الشمالي لكربلاء على ضفة نهر الحسينية. والبناء الحالي موضع للعبادة والذكر يرتبط بالإمام المهدي (ع) في تقاليد الزيارة المحلية. ولم يُحسم أصل المقام التاريخي بدقة.',
+    },
+  },
   'place-hur': {
     en: {
       name: 'Shrine of Hur ibn Yazid al-Riyahi',
@@ -215,24 +285,40 @@ const placeTranslations: Record<string, Partial<Record<Language, PlaceTranslatio
   },
   'place-masjid-kufa': {
     en: {
-      name: 'Masjid al-Kufa',
-      shortDescription: 'Masjid al-Kufa is one of the most important mosques in Islam.',
+      name: 'Kufa Mosque with Maqam Muslim and Imam Ali’s Mihrab',
+      shortDescription:
+        'This entry includes the Kufa Mosque, the Maqam of Muslim ibn Aqil, and the Mihrab of Imam Ali (a.).',
       longDescription:
-        'Masjid al-Kufa is one of the most important mosques in Islam. It is closely connected to Imam Ali (a.) and is a place of prayer, Ziyārah, and remembrance.',
+        'The Great Mosque of Kufa is a historic place of prayer and Ziyārah in Kufa. Imam Ali’s (a.) mihrab is located inside the mosque, while the Shrine of Muslim ibn Aqil is directly adjacent. This entry presents the closely connected areas as one destination.',
       historicalNotes: '',
       imageDescriptions: {
         'kufa-grand-mosque': 'Exterior view of the Great Mosque of Kufa.',
       },
     },
     ar: {
-      name: 'مسجد الكوفة',
-      shortDescription: 'يُعدّ مسجد الكوفة من أهم مساجد الإسلام، ويرتبط ارتباطًا وثيقًا بالإمام علي (ع).',
+      name: 'مسجد الكوفة مع مقام مسلم ومحراب الإمام علي',
+      shortDescription:
+        'يشمل هذا الإدخال مسجد الكوفة ومقام مسلم بن عقيل ومحراب الإمام علي (ع).',
       longDescription:
-        'يُعدّ مسجد الكوفة من أهم مساجد الإسلام، ويرتبط ارتباطًا وثيقًا بالإمام علي (ع). وهو مكان للصلاة والزيارة والذكر.',
+        'مسجد الكوفة المعظم موضع تاريخي للصلاة والزيارة في الكوفة. يقع محراب الإمام علي (ع) داخل المسجد، ويقع مرقد مسلم بن عقيل بمحاذاته مباشرة. ويجمع هذا الإدخال هذه المواضع المترابطة في وجهة واحدة.',
       historicalNotes: '',
       imageDescriptions: {
         'kufa-grand-mosque': 'منظر خارجي لمسجد الكوفة الكبير.',
       },
+    },
+  },
+  'place-house-imam-ali': {
+    en: {
+      name: 'House of Imam Ali in Kufa',
+      shortDescription: 'The destination known as the House of Imam Ali (a.) is located in Kufa.',
+      longDescription:
+        'The building known as the House of Imam Ali (a.) is a short walk southwest of the Kufa Mosque. Local tradition presents the simple courtyard house as Imam Ali’s residence during his time in Kufa and as a reminder of the simplicity of his life. The historical identification of the present building has not been conclusively established.',
+    },
+    ar: {
+      name: 'بيت الإمام علي في الكوفة',
+      shortDescription: 'يقع الموقع المعروف ببيت الإمام علي (ع) في الكوفة.',
+      longDescription:
+        'يقع البناء المعروف ببيت الإمام علي (ع) على مسافة قصيرة سيرًا إلى الجنوب الغربي من مسجد الكوفة. وتعرضه التقاليد المحلية بوصفه دار إقامة الإمام علي (ع) في الكوفة، ويذكّر بنمط حياته البسيط. ولم تثبت بصورة قاطعة النسبة التاريخية للبناء القائم اليوم.',
     },
   },
   'place-masjid-sahlah': {
@@ -257,64 +343,18 @@ const placeTranslations: Record<string, Partial<Record<Language, PlaceTranslatio
       },
     },
   },
-  'place-muslim-ibn-aqil': {
+  'place-kumayl-ibn-ziyad': {
     en: {
-      name: 'Shrine of Muslim ibn Aqil',
-      shortDescription: 'The shrine of Muslim ibn Aqil recalls the envoy of Imam Hussain (a.) to Kufa.',
+      name: 'Shrine of Kumayl ibn Ziyad',
+      shortDescription: 'The Shrine of Kumayl ibn Ziyad is a destination in the Najaf and Kufa area.',
       longDescription:
-        'The shrine of Muslim ibn Aqil recalls the envoy of Imam Hussain (a.) to Kufa. His life represents loyalty, courage, and holding firmly to the truth.',
-      historicalNotes: '',
-      imageDescriptions: {
-        'muslim-shrine-in-kufa': 'View of the Shrine of Muslim ibn Aqil in Kufa.',
-      },
+        'The Shrine of Kumayl ibn Ziyad is in al-Thawiya between Najaf and Kufa, near the road linking the two cities. In Shia tradition, Kumayl is regarded as a close companion of Imam Ali (a.); the shrine recalls his loyalty and steadfastness.',
     },
     ar: {
-      name: 'ضريح مسلم بن عقيل',
-      shortDescription: 'يذكّر مرقد مسلم بن عقيل بسفير الإمام الحسين (ع) إلى الكوفة.',
+      name: 'مرقد كميل بن زياد',
+      shortDescription: 'مرقد كميل بن زياد وجهة في منطقة النجف والكوفة.',
       longDescription:
-        'يذكّر مرقد مسلم بن عقيل بسفير الإمام الحسين (ع) إلى الكوفة. وتمثّل سيرته الوفاء والشجاعة والثبات على الحق.',
-      historicalNotes: '',
-      imageDescriptions: {
-        'muslim-shrine-in-kufa': 'منظر لضريح مسلم بن عقيل في الكوفة.',
-      },
-    },
-  },
-  'place-hani-ibn-urwah': {
-    en: {
-      name: 'Shrine of Hani ibn Urwah',
-      shortDescription: 'The shrine of Hani ibn Urwah recalls a loyal supporter of Muslim ibn Aqil.',
-      longDescription:
-        'The shrine of Hani ibn Urwah recalls a loyal supporter of Muslim ibn Aqil. He represents steadfastness, hospitality, and loyalty to the truth.',
-      historicalNotes: '',
-    },
-    ar: {
-      name: 'ضريح هاني بن عروة',
-      shortDescription: 'يذكّر مرقد هاني بن عروة بأحد أنصار مسلم بن عقيل الأوفياء.',
-      longDescription:
-        'يذكّر مرقد هاني بن عروة بأحد أنصار مسلم بن عقيل الأوفياء. وتمثّل شخصيته الثبات والكرم والوفاء للحق.',
-      historicalNotes: '',
-    },
-  },
-  'place-maytham': {
-    en: {
-      name: 'Shrine of Maytham al-Tammar',
-      shortDescription: 'The shrine of Maytham al-Tammar recalls a loyal companion of Imam Ali (a.).',
-      longDescription:
-        'The shrine of Maytham al-Tammar recalls a loyal companion of Imam Ali (a.). His story represents knowledge, love for the Ahlulbayt (a.), and steadfastness in faith.',
-      historicalNotes: '',
-      imageDescriptions: {
-        'maytham-tammar-shrine': 'Exterior view of the Shrine of Maytham al-Tammar in Kufa.',
-      },
-    },
-    ar: {
-      name: 'ضريح ميثم التمار',
-      shortDescription: 'يذكّر مرقد ميثم التمار بأحد أصحاب الإمام علي (ع) الأوفياء.',
-      longDescription:
-        'يذكّر مرقد ميثم التمار بأحد أصحاب الإمام علي (ع) الأوفياء. وتمثّل قصته العلم ومحبة أهل البيت (ع) والثبات على الإيمان.',
-      historicalNotes: '',
-      imageDescriptions: {
-        'maytham-tammar-shrine': 'منظر خارجي لضريح ميثم التمار في الكوفة.',
-      },
+        'يقع مرقد كميل بن زياد في الثوية بين النجف والكوفة قرب الطريق الواصل بين المدينتين. ويُعد كميل في التراث الشيعي من خواص أصحاب الإمام علي (ع)، ويذكّر المرقد بولائه وثباته.',
     },
   },
   'place-kadhimayn': {
@@ -341,6 +381,20 @@ const placeTranslations: Record<string, Partial<Record<Language, PlaceTranslatio
       },
     },
   },
+  'place-sayyid-muhammad': {
+    en: {
+      name: 'Shrine of Sayyid Muhammad',
+      shortDescription: 'The Shrine of Sayyid Muhammad is located in Balad.',
+      longDescription:
+        'The Shrine of Sayyid Muhammad is in Balad, south of Samarra. Sayyid Muhammad was a son of Imam Ali al-Hadi (a.) and a brother of Imam Hasan al-Askari (a.); according to the transmitted biography, he died near Balad and was buried there. The site is also known as Sabʿ al-Dujayl.',
+    },
+    ar: {
+      name: 'مرقد السيد محمد',
+      shortDescription: 'يقع مرقد السيد محمد في بلد.',
+      longDescription:
+        'يقع مرقد السيد محمد في بلد جنوب سامراء. وكان السيد محمد ابن الإمام علي الهادي (ع) وأخا الإمام الحسن العسكري (ع)، وتذكر سيرته المروية أنه توفي قرب بلد ودفن فيها. ويعرف الموضع أيضًا باسم سبع الدجيل.',
+    },
+  },
   'place-askari': {
     en: {
       name: 'Shrine of Imam Ali al-Hadi and Imam Hasan al-Askari',
@@ -363,24 +417,6 @@ const placeTranslations: Record<string, Partial<Record<Language, PlaceTranslatio
       imageDescriptions: {
         'imam-hadi-imam-askari': 'منظر خارجي لضريح العسكريين في سامراء.',
       },
-    },
-  },
-  'place-sardab': {
-    en: {
-      name: 'Sardab al-Ghaybah',
-      shortDescription:
-        'Sardab al-Ghaybah is a special place in Samarra connected to the remembrance of Imam al-Mahdi (a.).',
-      longDescription:
-        'Sardab al-Ghaybah is a special place in Samarra connected to the remembrance of Imam al-Mahdi (a.). It represents hope, expectation, and trust in Allah’s promise.',
-      historicalNotes: '',
-    },
-    ar: {
-      name: 'سرداب الغيبة',
-      shortDescription:
-        'السرداب المعروف بسرداب الغيبة مكان خاص في سامراء يرتبط بذكر الإمام المهدي (ع).',
-      longDescription:
-        'السرداب المعروف بسرداب الغيبة مكان خاص في سامراء يرتبط بذكر الإمام المهدي (ع). وهو يرمز إلى الأمل والانتظار والثقة بوعد الله تعالى.',
-      historicalNotes: '',
     },
   },
 };
@@ -438,9 +474,6 @@ const recommendedActTranslations: Record<
   'act-two-rakat-imam-ali': twoRakatPrayerTranslation,
   'act-two-rakat-abul-fadhl-abbas': twoRakatPrayerTranslation,
   'act-two-rakat-hur': twoRakatPrayerTranslation,
-  'act-two-rakat-muslim-ibn-aqil': twoRakatPrayerTranslation,
-  'act-two-rakat-hani-ibn-urwah': twoRakatPrayerTranslation,
-  'act-two-rakat-maytham': twoRakatPrayerTranslation,
   'act-two-rakat-kadhimayn': twoRakatPrayerTranslation,
   'act-two-rakat-askari': twoRakatPrayerTranslation,
 };
@@ -647,6 +680,131 @@ const sourceReferenceTranslations: Record<
         'يوفر موقع duas.org صفحة خاصة بزيارة أمين الله. يبقى الإدخال بعلامة الحاجة إلى المراجعة حتى تكتمل المراجعة المتخصصة.',
     },
   },
+  'karbala-center-tall-zaynabiyya': {
+    en: {
+      language: 'Arabic',
+      notes:
+        'The page describes the location and present form of Tall al-Zaynabiyya and its transmitted association with Sayyida Zaynab (a.).',
+      title: 'Karbala Center: Maqam Tall al-Zaynabiyya',
+    },
+    ar: {
+      language: 'العربية',
+      notes:
+        'تصف الصفحة موقع التل الزينبي وشكله الحالي وارتباطه المروي بالسيدة زينب (ع).',
+      title: 'مركز كربلاء: مقام التل الزينبي',
+    },
+  },
+  'karbala-center-kaff-al-abbas': {
+    en: {
+      language: 'Arabic',
+      notes:
+        'The page describes the Kaf al-Abbas maqams, their location near the Abbas Shrine, and their place in local commemorative tradition.',
+      title: 'Karbala Center: Maqam Kaf al-Abbas',
+    },
+    ar: {
+      language: 'العربية',
+      notes:
+        'تصف الصفحة مقامي كفي العباس وموقعهما قرب مرقد العباس ومكانتهما في التقاليد التذكارية المحلية.',
+      title: 'مركز كربلاء: مقام كف العباس',
+    },
+  },
+  'imam-hussain-maqam-ali-al-akbar': {
+    en: {
+      language: 'Arabic',
+      notes:
+        'The publication explains the maqam as the transmitted location where Ali al-Akbar fell and distinguishes it from his grave inside the Imam Hussain Shrine.',
+      title: 'Al-Ahrar: Maqam Ali al-Akbar',
+    },
+    ar: {
+      language: 'العربية',
+      notes:
+        'توضح المطبوعة أن المقام هو الموضع المروي لسقوط علي الأكبر، وتميزه عن قبره داخل مرقد الإمام الحسين (ع).',
+      title: 'الأحرار: مقام علي الأكبر',
+    },
+  },
+  'karbala-guide-abdullah-al-radi': {
+    en: {
+      language: 'Arabic',
+      notes:
+        "The page describes the small maqam's location in Bab al-Taq and its association with the infant son of Imam Hussain (a.).",
+      title: "Arbaeen Network: Maqam Abdullah al-Radi'",
+    },
+    ar: {
+      language: 'العربية',
+      notes:
+        'تصف الصفحة موقع المقام الصغير في باب الطاق وارتباطه بطفل الإمام الحسين (ع).',
+      title: 'شبكة زيارة الأربعين: مقام عبد الله الرضيع',
+    },
+  },
+  'islamicpedia-maqam-imam-mahdi': {
+    en: {
+      language: 'English',
+      notes:
+        'The entry documents the location and local identification of the maqam while noting that its historical review remains open.',
+      title: 'Islamicpedia: Maqam Imam al-Mahdi in Karbala',
+    },
+    ar: {
+      language: 'الإنجليزية',
+      notes:
+        'يوثق الإدخال موقع المقام ونسبته المحلية، مع الإشارة إلى أن مراجعته التاريخية ما تزال مفتوحة.',
+      title: 'الموسوعة الإسلامية: مقام الإمام المهدي في كربلاء',
+    },
+  },
+  'imam-hussain-house-imam-ali': {
+    en: {
+      language: 'Arabic',
+      notes:
+        'The publication describes the location and form of the house transmitted as Imam Ali’s (a.) residence near the Kufa Mosque.',
+      title: 'Imam Hussain Shrine: The House of Imam Ali in Kufa',
+    },
+    ar: {
+      language: 'العربية',
+      notes:
+        'تصف المطبوعة موقع وشكل الدار المروية بوصفها مسكن الإمام علي (ع) قرب مسجد الكوفة.',
+      title: 'العتبة الحسينية المقدسة: بيت الإمام علي في الكوفة',
+    },
+  },
+  'kufa-mosque-sites': {
+    en: {
+      language: 'Arabic',
+      notes:
+        'The official page describes, among other sites, Imam Ali’s (a.) mihrab inside the mosque and the entrance to the adjoining Shrine of Muslim ibn Aqil.',
+      title: 'Kufa Mosque: historic and religious sites in the mosque complex',
+    },
+    ar: {
+      language: 'العربية',
+      notes:
+        'تصف الصفحة الرسمية، من بين مواضع أخرى، محراب الإمام علي (ع) داخل المسجد والمدخل إلى مرقد مسلم بن عقيل المجاور.',
+      title: 'مسجد الكوفة: المواقع التاريخية والدينية في مجمع المسجد',
+    },
+  },
+  'iraq-tourism-kumayl': {
+    en: {
+      language: 'Arabic',
+      notes:
+        'The official publication locates the shrine in al-Thawiya between Najaf and Kufa and describes Kumayl as a companion of Imam Ali (a.).',
+      title: 'Iraqi Tourism Authority: Shrine of Kumayl ibn Ziyad',
+    },
+    ar: {
+      language: 'العربية',
+      notes:
+        'تحدد المطبوعة الرسمية موقع المرقد في الثوية بين النجف والكوفة، وتصف كميلًا بأنه من أصحاب الإمام علي (ع).',
+      title: 'هيئة السياحة العراقية: مرقد كميل بن زياد',
+    },
+  },
+  'imam-hussain-sayyid-muhammad': {
+    en: {
+      language: 'Arabic',
+      notes:
+        'The page describes Sayyid Muhammad’s lineage, his death near Balad, and his burial there.',
+      title: 'Imam Hussain Shrine: Sayyid Muhammad ibn Imam al-Hadi',
+    },
+    ar: {
+      language: 'العربية',
+      notes: 'تصف الصفحة نسب السيد محمد ووفاته قرب بلد ودفنه فيها.',
+      title: 'العتبة الحسينية المقدسة: السيد محمد بن الإمام الهادي',
+    },
+  },
   'editorial-review-required': {
     en: {
       notes:
@@ -663,7 +821,8 @@ const sourceReferenceTranslations: Record<
 
 const cityTranslations: Record<string, Partial<Record<Language, string>>> = {
   Bagdad: { en: 'Baghdad', ar: 'بغداد' },
-  Kadhimayn: { en: 'Kadhimayn', ar: 'الكاظمية' },
+  Balad: { en: 'Balad', ar: 'بلد' },
+  Kadhimayn: { de: 'Kadhimiya', en: 'Kadhimiya', ar: 'الكاظمية' },
   Karbala: { en: 'Karbala', ar: 'كربلاء' },
   Kufa: { en: 'Kufa', ar: 'الكوفة' },
   Najaf: { en: 'Najaf', ar: 'النجف' },

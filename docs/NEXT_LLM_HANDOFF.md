@@ -80,7 +80,7 @@ Diese Punkte können nicht sinnvoll ohne Angaben oder Freigabe des Auftraggebers
 - App-Icon, Splashscreen und Adaptive Icon sind noch Expo-Startergrafiken und müssen durch freigegebene Marken-Assets ersetzt werden.
 - iOS `bundleIdentifier`, Android `package`, finale Versionsnummern und Signing fehlen.
 - Datenschutzseite, Supportseite und Store-Metadaten fehlen beziehungsweise brauchen rechtliche Freigabe.
-- Alle 15 Orte, 13 Handlungen und 5 religiösen Einträge sind noch als `needs_review` markiert.
+- Alle 19 Orte, acht von neun Handlungen und vier von fünf religiösen Einträgen sind noch als `needs_review` markiert; Ziyarat Ashura ist als `verified` freigegeben.
 - Der vollständige arabische Text und die Transliteration von Ziyarat Ashura stehen auf `pending_rights_review`. Fachliche religiöse Prüfung und Rechteklärung sind zwingend.
 - Supabase-Projektplan und Produktionseinstellungen prüfen: E-Mail-Bestätigung, Redirect-URLs, Signup-Schutz/CAPTCHA, Rate Limits, Backups und gegebenenfalls PITR.
 - Reale Tests auf iOS und Android sowie unter schwacher Reiseverbindung stehen aus.

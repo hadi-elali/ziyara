@@ -57,9 +57,6 @@ export const recommendedActs: RecommendedAct[] = [
     verificationStatus: 'needs_review',
   },
   twoRakatPrayerAct('act-two-rakat-imam-ali', 'place-imam-ali', 2),
-  twoRakatPrayerAct('act-two-rakat-muslim-ibn-aqil', 'place-muslim-ibn-aqil'),
-  twoRakatPrayerAct('act-two-rakat-hani-ibn-urwah', 'place-hani-ibn-urwah'),
-  twoRakatPrayerAct('act-two-rakat-maytham', 'place-maytham'),
   twoRakatPrayerAct('act-two-rakat-kadhimayn', 'place-kadhimayn'),
   twoRakatPrayerAct('act-two-rakat-askari', 'place-askari'),
 ];

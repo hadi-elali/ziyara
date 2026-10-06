@@ -13,7 +13,7 @@
         "NSLocationWhenInUseUsageDescription": "Erlaube Al-Batoul, deinen Standort auf der Karte anzuzeigen, als Treffpunkt zu übernehmen, die Entfernung zu berechnen oder ihn nach deiner ausdrücklichen Zustimmung einmalig mit der Reiseleitung beziehungsweise einem ausgewählten Notfallteam zu teilen.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "de.albatoul.ziyara"
+      "bundleIdentifier": "de.albatoul.ziyara.app"
     },
     "android": {
       "permissions": [
@@ -26,7 +26,7 @@
         "monochromeImage": "./assets/images/logo.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "de.albatoul.ziyara",
+      "package": "de.albatoul.ziyara.app",
       "googleServicesFile": "./google-services.json"
     },
     "web": {
