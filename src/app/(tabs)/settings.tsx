@@ -13,6 +13,8 @@ import { languageOptions, useI18n } from "@/features/i18n/i18n";
 import { ReaderPreferenceControls } from "@/features/reader/ReaderPreferenceControls";
 import {
   busRoute,
+  alarmRoute,
+  groupRoute,
   emergencyDashboardRoute,
   loginRoute,
 } from "@/features/navigation/routes";
@@ -223,6 +225,8 @@ export default function SettingsScreen() {
                 variant="secondary"
                 onPress={() => router.push("/account")}
               />
+              <Button label={t('tripGroups.open')} icon="people" onPress={() => router.push(groupRoute())} variant="secondary" />
+              <Button icon="warning" label={t('wakeUp.title')} onPress={() => router.push(alarmRoute())} variant="secondary" />
               <Button
                 icon="bus"
                 label={t("settings.openBusManagement")}

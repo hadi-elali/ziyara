@@ -96,7 +96,7 @@ const navigationDestination: TripNavigationDestination = {
   longitude: 44.034,
   name: 'Hotel',
   sort_order: 0,
-  trip_id: activeTrip.id,
+  trip_id: null,
   updated_at: '2026-08-27T08:10:00Z',
 };
 const guidance: TripGuidanceUpdate = {
@@ -337,6 +337,7 @@ describe('TripGuidanceProvider', () => {
 
   it('bleibt ohne aktive Reise in einem leeren, bereiten Zustand', async () => {
     enqueue('trips', { data: null, error: null });
+    enqueue('trip_navigation_destinations', { data: [], error: null });
 
     await act(async () => {
       renderer = create(
@@ -353,7 +354,51 @@ describe('TripGuidanceProvider', () => {
       hasSyncError: false,
       participants: [],
     });
-    expect(mockSupabase.from).toHaveBeenCalledTimes(1);
+    expect(mockSupabase.from).toHaveBeenCalledTimes(2);
+  });
+
+  it('lädt und speichert Kartenorte ohne aktive Zwischenreise oder Zuordnung', async () => {
+    enqueue('trips', { data: null, error: null });
+    enqueue('trip_navigation_destinations', { data: [navigationDestination], error: null });
+
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => !context().isLoading);
+
+    expect(context()).toMatchObject({
+      activeTrip: null,
+      activeGuidance: null,
+      hasSyncError: false,
+      navigationDestinations: [navigationDestination],
+    });
+    expect(mockNavigationCacheState.setValue).toHaveBeenCalledWith({
+      destinations: [navigationDestination],
+      userId: session.user.id,
+    });
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('trip_participants');
+  });
+
+  it('behält Kartenorte beim Beenden einer Zwischenreise und übernimmt spätere Entfernungen', async () => {
+    queueSnapshot([], [navigationDestination]);
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => !context().isLoading);
+
+    enqueue('trips', { data: null, error: null });
+    enqueue('trip_navigation_destinations', { data: [navigationDestination], error: null });
+    await act(async () => { await context().refresh(); });
+    expect(context().activeTrip).toBeNull();
+    expect(context().navigationDestinations).toEqual([navigationDestination]);
+
+    enqueue('trips', { data: null, error: null });
+    enqueue('trip_navigation_destinations', { data: [], error: null });
+    await act(async () => { await context().refresh(); });
+    expect(context().navigationDestinations).toEqual([]);
+    expect(mockNavigationCacheState.setValue).toHaveBeenLastCalledWith({
+      destinations: [], userId: session.user.id,
+    });
   });
 
   it('speichert geladene Kartenorte für den nächsten App-Start', async () => {
@@ -370,7 +415,6 @@ describe('TripGuidanceProvider', () => {
 
     expect(mockNavigationCacheState.setValue).toHaveBeenCalledWith({
       destinations: [navigationDestination],
-      tripId: activeTrip.id,
       userId: session.user.id,
     });
   });
@@ -378,10 +422,10 @@ describe('TripGuidanceProvider', () => {
   it('zeigt gespeicherte Kartenorte nach einem Neustart trotz erstem Lesefehler', async () => {
     mockNavigationCacheState.value = {
       destinations: [navigationDestination],
-      tripId: activeTrip.id,
       userId: session.user.id,
     };
-    enqueue('trips', { data: null, error: new TypeError('Failed to fetch') });
+    enqueue('trips', { data: null, error: null });
+    enqueue('trip_navigation_destinations', { data: null, error: new TypeError('Failed to fetch') });
 
     await act(async () => {
       renderer = create(
@@ -399,7 +443,6 @@ describe('TripGuidanceProvider', () => {
   it('ersetzt den Cache mit einer erfolgreichen leeren Serverantwort', async () => {
     mockNavigationCacheState.value = {
       destinations: [navigationDestination],
-      tripId: activeTrip.id,
       userId: session.user.id,
     };
     queueSnapshot();
@@ -416,7 +459,6 @@ describe('TripGuidanceProvider', () => {
     expect(context().navigationDestinations).toEqual([]);
     expect(mockNavigationCacheState.setValue).toHaveBeenCalledWith({
       destinations: [],
-      tripId: activeTrip.id,
       userId: session.user.id,
     });
   });
@@ -424,10 +466,10 @@ describe('TripGuidanceProvider', () => {
   it('zeigt den Cache eines anderen Kontos nicht an', async () => {
     mockNavigationCacheState.value = {
       destinations: [navigationDestination],
-      tripId: activeTrip.id,
       userId: 'anderes-konto',
     };
-    enqueue('trips', { data: null, error: new TypeError('Failed to fetch') });
+    enqueue('trips', { data: null, error: null });
+    enqueue('trip_navigation_destinations', { data: null, error: new TypeError('Failed to fetch') });
 
     await act(async () => {
       renderer = create(

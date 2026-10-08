@@ -2,6 +2,7 @@ import type { Href } from 'expo-router';
 
 export const protectedRoutePaths = [
   '/account',
+  '/alarm',
   '/admin',
   '/bus',
   '/emergency',
@@ -93,4 +94,8 @@ export function checkInRoute(returnTo: ProtectedRoutePath | '/' = '/'): Href {
   return returnTo === '/'
     ? ('/check-in' as Href)
     : ({ pathname: '/check-in', params: { returnTo } } as Href);
+}
+
+export function alarmRoute(): Href & ProtectedRoutePath {
+  return '/alarm' as Href & ProtectedRoutePath;
 }

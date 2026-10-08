@@ -19,6 +19,7 @@ export type GeneralAlarmSendResult = {
 };
 
 export type DispatchGeneralAlarmDependencies = {
+  dispatchWakeUpCalls?: () => Promise<void>;
   claimDueNotifications: () => Promise<GeneralAlarmNotificationClaim[]>;
   completeAttempts: (result: GeneralAlarmSendResult) => Promise<void>;
   getAuthenticatedUserId: (accessToken: string) => Promise<string | null>;
@@ -87,8 +88,15 @@ export async function handleDispatchGeneralAlarmRequest(
       };
     }
 
-    const claims = await dependencies.claimDueNotifications();
+    // Both jobs run after authorization, even when there is no active boarding.
+    const [boarding, wakeUp] = await Promise.allSettled([
+      dependencies.claimDueNotifications(),
+      dependencies.dispatchWakeUpCalls?.(),
+    ]);
+    if (boarding.status === 'rejected') throw boarding.reason;
+    const claims = boarding.value;
     if (claims.length === 0) {
+      if (wakeUp.status === 'rejected') throw wakeUp.reason;
       return {
         body: {
           accepted: 0,
@@ -103,6 +111,7 @@ export async function handleDispatchGeneralAlarmRequest(
 
     const results = await dependencies.sendNotifications(claims);
     await Promise.all(results.map((result) => dependencies.completeAttempts(result)));
+    if (wakeUp.status === 'rejected') throw wakeUp.reason;
     const accepted = results
       .filter((result) => result.accepted)
       .reduce((count, result) => count + result.attemptIds.length, 0);

@@ -50,11 +50,11 @@ async function ensureAndroidChannels() {
   if (Platform.OS !== 'android' || !Notifications) return;
 
   await Notifications.setNotificationChannelAsync(channelId, {
-    description: 'Zeitkritische Erinnerungen für Abfahrt und Bus-Boarding',
+    description: 'Weckrufe und Erinnerungen der Reiseleitung',
     enableVibrate: true,
     importance: Notifications.AndroidImportance.HIGH,
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-    name: 'Generalalarm',
+    name: 'Weckrufe',
     showBadge: true,
     sound: 'default',
     vibrationPattern: [0, 300, 180, 300],
@@ -308,4 +308,14 @@ export function subscribeToEmergencyDashboardNotificationResponses(
 
 export function openGeneralAlarmNotificationSettings() {
   return Linking.openSettings();
+}
+
+export function subscribeToWakeUpCallNotificationResponses(listener: () => void): NotificationResponseSubscription {
+  if (!Notifications) return { remove: () => undefined };
+  const matches = (response: NotificationResponse | null) => response?.notification.request.content.data?.route === '/alarm';
+  if (matches(Notifications.getLastNotificationResponse())) {
+    Notifications.clearLastNotificationResponse();
+    queueMicrotask(listener);
+  }
+  return Notifications.addNotificationResponseReceivedListener((response) => { if (matches(response)) listener(); });
 }

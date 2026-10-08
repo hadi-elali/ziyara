@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.112.3';
+import { dispatchWakeUpCalls } from '../_shared/wake-up-dispatch/index.ts';
 
 import {
   handleDispatchGeneralAlarmRequest,
@@ -36,24 +37,24 @@ const translations = {
     departure: (minutes: number) =>
       minutes > 0 ? `المغادرة بعد ${minutes} دقيقة.` : 'حان وقت المغادرة.',
     statuses: { boarded: 'في الحافلة', on_way: 'أنا في الطريق', read: 'تمت القراءة' },
-    title: 'الإنذار العام',
-    urgentTitle: 'الإنذار العام – المغادرة وشيكة',
+    title: 'صعود الحافلة',
+    urgentTitle: 'صعود الحافلة – المغادرة وشيكة',
   },
   de: {
     body: (codes: string, status: string) => `${codes}: Bitte jetzt „${status}“ bestätigen.`,
     departure: (minutes: number) =>
       minutes > 0 ? `Abfahrt in ${minutes} Minuten.` : 'Abfahrt ist jetzt fällig.',
     statuses: { boarded: 'Im Bus', on_way: 'Ich bin unterwegs', read: 'Gelesen' },
-    title: 'Generalalarm',
-    urgentTitle: 'Generalalarm – Abfahrt dringend',
+    title: 'Boarding',
+    urgentTitle: 'Boarding – Abfahrt dringend',
   },
   en: {
     body: (codes: string, status: string) => `${codes}: Please confirm “${status}” now.`,
     departure: (minutes: number) =>
       minutes > 0 ? `Departure in ${minutes} minutes.` : 'Departure is due now.',
     statuses: { boarded: 'On the bus', on_way: 'I am on my way', read: 'Read' },
-    title: 'General alarm',
-    urgentTitle: 'General alarm – departure imminent',
+    title: 'Boarding',
+    urgentTitle: 'Boarding – departure imminent',
   },
 } as const;
 
@@ -166,6 +167,10 @@ Deno.serve(async (request: Request) => {
     auth: { autoRefreshToken: false, detectSessionInUrl: false, persistSession: false },
   });
   const dependencies: DispatchGeneralAlarmDependencies = {
+    dispatchWakeUpCalls: async () => {
+      const result = await dispatchWakeUpCalls(adminClient);
+      if (result.failed > 0) throw new Error('Wake-up push dispatch failed.');
+    },
     claimDueNotifications: async () => {
       const { data, error } = await adminClient.rpc(
         'claim_due_general_alarm_notifications',
@@ -196,12 +201,12 @@ Deno.serve(async (request: Request) => {
       return data === true;
     },
     sendNotifications: (claims) =>
-      sendToExpo(claims, Deno.env.get('EXPO_ACCESS_TOKEN')),
+      sendToExpo(claims, Deno.env.get('EXPO_ACCESS_TOKEN') ?? null),
   };
   const result = await handleDispatchGeneralAlarmRequest(
     {
       authorization: request.headers.get('Authorization'),
-      configuredCronSecret: Deno.env.get('GENERAL_ALARM_CRON_SECRET'),
+      configuredCronSecret: Deno.env.get('GENERAL_ALARM_CRON_SECRET') ?? null,
       cronSecret: request.headers.get('x-general-alarm-cron-secret'),
       method: request.method,
     },

@@ -67,7 +67,6 @@ export function AdminMeetingPointPanel() {
   const theme = useTheme();
   const { t } = useI18n();
   const {
-    activeTrip,
     hasSyncError,
     isLoading,
     navigationDestinations,
@@ -121,7 +120,7 @@ export function AdminMeetingPointPanel() {
   };
 
   const save = async () => {
-    if (!activeTrip || !coordinate || !formValid || isWorking) return;
+    if (!coordinate || !formValid || isWorking) return;
     setIsWorking(true);
     setActionErrorMessage(null);
     setSavedMessage(null);
@@ -133,7 +132,7 @@ export function AdminMeetingPointPanel() {
         p_latitude: coordinate.latitude,
         p_longitude: coordinate.longitude,
         p_name: savedName,
-        p_trip_id: activeTrip.id,
+        p_trip_id: null,
       });
       if (error) {
         setActionErrorMessage(error.message);
@@ -179,29 +178,6 @@ export function AdminMeetingPointPanel() {
       <Card style={styles.stateCard}>
         <ActivityIndicator color={theme.accent} />
         <ThemedText themeColor="textSecondary">{t('navigation.admin.loading')}</ThemedText>
-      </Card>
-    );
-  }
-
-  if (hasSyncError && !activeTrip) {
-    return (
-      <Card style={styles.stateCard}>
-        <ThemedText type="heading">{t('navigation.admin.unavailableTitle')}</ThemedText>
-        <ThemedText themeColor="textSecondary">
-          {syncErrorMessage}
-        </ThemedText>
-        <Button icon="refresh" label={t('guide.retry')} onPress={() => void refresh()} />
-      </Card>
-    );
-  }
-
-  if (!activeTrip) {
-    return (
-      <Card style={styles.stateCard}>
-        <ThemedText type="heading">{t('navigation.admin.tripRequiredTitle')}</ThemedText>
-        <ThemedText themeColor="textSecondary">
-          {t('navigation.admin.tripRequiredBody')}
-        </ThemedText>
       </Card>
     );
   }

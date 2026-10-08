@@ -162,7 +162,7 @@ function GroupContent() {
                 <View style={styles.headingText}>
                   <ThemedText type="heading">{group.name}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {t('tripGroups.memberCount', { count: group.members.length })}
+                    {t('tripGroups.memberCount', { count: group.members.reduce((total, member) => total + member.party_size, 0) })}
                   </ThemedText>
                 </View>
                 {group.is_current_user_leader ? (
@@ -177,10 +177,10 @@ function GroupContent() {
               <View style={styles.members}>
                 {group.members.map((member) => (
                   <View
-                    key={member.participant_id}
+                    key={member.user_id}
                     style={[styles.member, { borderColor: theme.border }]}>
                     <ThemedText type="smallBold">
-                      {member.display_name}
+                      {member.display_name}{member.party_size > 1 ? ` · ${t('tripGroups.memberCount', { count: member.party_size })}` : ''}
                     </ThemedText>
                     {member.is_leader ? (
                       <ThemedText type="tinyBold" themeColor="accent">

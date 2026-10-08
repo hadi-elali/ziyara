@@ -91,7 +91,6 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
   const previousUserIdRef = useRef(userId);
   const syncedUserIdRef = useRef<string | null>(null);
   const activeGuidanceRef = useRef<TripGuidanceUpdate | null>(null);
-  const navigationDestinationsRef = useRef<TripNavigationDestination[]>([]);
   const outboxRef = useRef<PendingTripGuidanceStatus[]>([]);
   const flushInProgressRef = useRef(false);
   const attemptedOutboxEntriesRef = useRef(new Set<string>());
@@ -119,10 +118,6 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     activeGuidanceRef.current = snapshot.activeGuidance;
   }, [snapshot.activeGuidance]);
-
-  useEffect(() => {
-    navigationDestinationsRef.current = visibleNavigationDestinations;
-  }, [visibleNavigationDestinations]);
 
   useEffect(() => {
     outboxRef.current = outbox;
@@ -158,20 +153,36 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
     );
 
     try {
-      const { data: activeTrip, error: tripError } = await withSupabaseReadTimeout((signal) =>
-        supabase
-          .from('trips')
-          .select('id, name, created_by_profile_id, created_at, archived_at')
-          .is('archived_at', null)
-          .abortSignal(signal)
-          .maybeSingle(),
-      );
-      if (tripError) throw tripError;
+      const [tripResult, destinationsResult] = await Promise.all([
+        withSupabaseReadTimeout((signal) =>
+          supabase
+            .from('trips')
+            .select('id, name, created_by_profile_id, created_at, archived_at')
+            .is('archived_at', null)
+            .abortSignal(signal)
+            .maybeSingle(),
+        ),
+        withSupabaseReadTimeout((signal) =>
+          supabase
+            .from('trip_navigation_destinations')
+            .select(
+              'id, trip_id, name, details, latitude, longitude, sort_order, created_by_profile_id, created_at, updated_at, archived_at',
+            )
+            .is('archived_at', null)
+            .order('sort_order')
+            .order('id')
+            .abortSignal(signal),
+        ),
+      ]);
+      if (tripResult.error) throw tripResult.error;
+      if (destinationsResult.error) throw destinationsResult.error;
+      const activeTrip = tripResult.data;
+      const navigationDestinations = destinationsResult.data ?? [];
 
       if (!activeTrip) {
         if (requestVersion === stateVersion.current) {
-          setSnapshot(emptySnapshot);
-          setNavigationCache(null);
+          setSnapshot({ ...emptySnapshot, navigationDestinations });
+          setNavigationCache({ destinations: navigationDestinations, userId });
           syncedUserIdRef.current = userId;
           setSyncedUserId(userId);
           setSyncErrorMessage(null);
@@ -181,7 +192,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
         return;
       }
 
-      const [participantsResult, guidanceResult, destinationsResult] = await Promise.all([
+      const [participantsResult, guidanceResult] = await Promise.all([
         withSupabaseReadTimeout((signal) =>
           supabase
             .from('trip_participants')
@@ -203,24 +214,9 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
             .abortSignal(signal)
             .maybeSingle(),
         ),
-        withSupabaseReadTimeout((signal) =>
-          supabase
-            .from('trip_navigation_destinations')
-            .select(
-              'id, trip_id, name, details, latitude, longitude, sort_order, created_by_profile_id, created_at, updated_at, archived_at',
-            )
-            .eq('trip_id', activeTrip.id)
-            .is('archived_at', null)
-            .order('sort_order')
-            .order('id')
-            .abortSignal(signal),
-        ),
       ]);
       if (participantsResult.error) throw participantsResult.error;
       if (guidanceResult.error) throw guidanceResult.error;
-      if (destinationsResult.error && destinationsResult.error.code !== 'PGRST205') {
-        throw destinationsResult.error;
-      }
 
       let responses: TripGuidanceResponse[] = [];
       const activeGuidance = guidanceResult.data;
@@ -239,17 +235,7 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       }
 
       if (requestVersion === stateVersion.current) {
-        const navigationDestinations = destinationsResult.error
-          ? navigationDestinationsRef.current
-          : (destinationsResult.data ?? []);
-
-        if (!destinationsResult.error) {
-          setNavigationCache({
-            destinations: navigationDestinations,
-            tripId: activeTrip.id,
-            userId,
-          });
-        }
+        setNavigationCache({ destinations: navigationDestinations, userId });
 
         setSnapshot({
           activeGuidance,

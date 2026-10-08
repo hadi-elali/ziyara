@@ -3,7 +3,6 @@ import { createPersistentState } from '@/features/storage/persistentState';
 
 export type TripNavigationCache = {
   destinations: TripNavigationDestination[];
-  tripId: number;
   userId: string;
 };
 
@@ -25,8 +24,7 @@ function isTripNavigationDestination(value: unknown): value is TripNavigationDes
   return (
     typeof value.id === 'number' &&
     Number.isFinite(value.id) &&
-    typeof value.trip_id === 'number' &&
-    Number.isFinite(value.trip_id) &&
+    isNullableNumber(value.trip_id) &&
     typeof value.name === 'string' &&
     isNullableString(value.details) &&
     typeof value.latitude === 'number' &&
@@ -50,26 +48,24 @@ export function parseTripNavigationCache(value: unknown): TripNavigationCache | 
   if (value === null) return null;
   if (!isRecord(value)) return undefined;
 
-  const { destinations, tripId, userId } = value;
+  const { destinations, userId } = value;
   if (
     typeof userId !== 'string' ||
     userId.length === 0 ||
-    typeof tripId !== 'number' ||
-    !Number.isFinite(tripId) ||
     !Array.isArray(destinations) ||
     !destinations.every(
       (destination) =>
-        isTripNavigationDestination(destination) && destination.trip_id === tripId,
+        isTripNavigationDestination(destination) && destination.archived_at === null,
     )
   ) {
     return undefined;
   }
 
-  return { destinations, tripId, userId };
+  return { destinations, userId };
 }
 
 export const useTripNavigationCache = createPersistentState<TripNavigationCache | null>(
-  'ziyara.trip-navigation-destinations.v1',
+  'ziyara.trip-navigation-destinations.v2',
   null,
   parseTripNavigationCache,
 );

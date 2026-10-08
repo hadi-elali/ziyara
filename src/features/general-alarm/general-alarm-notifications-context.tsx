@@ -19,6 +19,7 @@ import {
   subscribeToEmergencyDashboardNotificationResponses,
   subscribeToEmergencyNotificationResponses,
   subscribeToGeneralAlarmNotificationResponses,
+  subscribeToWakeUpCallNotificationResponses,
   syncGeneralAlarmReminders,
   unregisterGeneralAlarmNotifications,
 } from '@/features/general-alarm/general-alarm-notifications';
@@ -26,7 +27,7 @@ import type { GeneralAlarmNotificationState } from '@/features/general-alarm/gen
 import { buildGeneralAlarmReminderPlans } from '@/features/general-alarm/general-alarm-reminders';
 import { useNotificationsDisabled } from '@/features/general-alarm/useNotificationPreference';
 import { useI18n } from '@/features/i18n/i18n';
-import { emergencyDashboardRoute, emergencyRoute } from '@/features/navigation/routes';
+import { alarmRoute, emergencyDashboardRoute, emergencyRoute } from '@/features/navigation/routes';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 
 type GeneralAlarmNotificationsContextValue = GeneralAlarmNotificationState & {
@@ -61,6 +62,7 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
   const [isWorking, setIsWorking] = useState(false);
 
   useEffect(() => {
+    const wakeUpSubscription = subscribeToWakeUpCallNotificationResponses(() => router.push(alarmRoute()));
     const busSubscription = subscribeToGeneralAlarmNotificationResponses(() => {
       router.push('/bus');
     });
@@ -72,6 +74,7 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
         router.push(emergencyDashboardRoute());
       });
     return () => {
+      wakeUpSubscription.remove();
       busSubscription.remove();
       emergencyDashboardSubscription.remove();
       emergencySubscription.remove();

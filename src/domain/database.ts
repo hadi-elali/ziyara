@@ -172,6 +172,38 @@ export type TripParticipant = {
   updated_at: string;
 };
 
+export type OrganizationGroup = {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+};
+export type OrganizationGroupMember = {
+  group_id: number;
+  user_id: string;
+  display_name: string;
+  party_size: number;
+  family_name: string | null;
+  is_leader: boolean;
+};
+export type OrganizationGroupLocationRequest = Omit<TripGroupLocationRequest, 'trip_id' | 'requested_by_profile_id'> & {
+  leader_user_id: string;
+};
+export type WakeUpCall = {
+  id: number;
+  scheduled_for: string;
+  activated_at: string | null;
+  message: string;
+  created_at: string;
+  closed_at: string | null;
+  created_by_user_id: string | null;
+};
+export type WakeUpCallRecipient = {
+  call_id: number;
+  user_id: string;
+  acknowledged_at: string | null;
+};
+
 export type TripGroup = {
   created_at: string;
   created_by_profile_id: number | null;
@@ -222,7 +254,7 @@ export type TripNavigationDestination = {
   longitude: number;
   name: string;
   sort_order: number;
-  trip_id: number;
+  trip_id: number | null;
   updated_at: string;
 };
 
@@ -428,6 +460,11 @@ export type TripGuidanceResponse = {
 export type Database = {
   public: {
     Tables: {
+      organization_groups: { Row: OrganizationGroup; Insert: never; Update: never; Relationships: [] };
+      organization_group_members: { Row: Pick<OrganizationGroupMember, 'group_id' | 'user_id' | 'is_leader'>; Insert: never; Update: never; Relationships: [] };
+      organization_group_location_requests: { Row: OrganizationGroupLocationRequest; Insert: never; Update: never; Relationships: [] };
+      wake_up_calls: { Row: WakeUpCall; Insert: never; Update: never; Relationships: [] };
+      wake_up_call_recipients: { Row: WakeUpCallRecipient; Insert: never; Update: never; Relationships: [] };
       account_families: {
         Insert: {
           created_at?: string;
@@ -944,7 +981,7 @@ export type Database = {
           longitude: number;
           name: string;
           sort_order?: number;
-          trip_id: number;
+          trip_id?: number | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -1042,6 +1079,24 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_organization_group_members: { Args: Record<string, never>; Returns: OrganizationGroupMember[] };
+      admin_save_organization_group: {
+        Args: { p_name: string; p_leader_user_ids: string[]; p_member_user_ids: string[]; p_family_ids: number[]; p_group_id: number | null };
+        Returns: OrganizationGroup;
+      };
+      admin_delete_organization_group: { Args: { p_group_id: number }; Returns: undefined };
+      admin_request_organization_group_location: { Args: { p_group_id: number; p_leader_user_id: string }; Returns: OrganizationGroupLocationRequest };
+      respond_to_organization_group_location: {
+        Args: { p_request_id: number; p_share: boolean; p_latitude: number | null; p_longitude: number | null; p_accuracy_meters: number | null };
+        Returns: OrganizationGroupLocationRequest;
+      };
+      admin_schedule_wake_up_call: {
+        Args: { p_message: string; p_scheduled_for: string; p_call_id: number | null };
+        Returns: WakeUpCall;
+      };
+      admin_start_wake_up_call: { Args: { p_message: string }; Returns: WakeUpCall };
+      admin_close_wake_up_call: { Args: { p_call_id: number }; Returns: undefined };
+      acknowledge_wake_up_call: { Args: { p_call_id: number }; Returns: undefined };
       admin_delete_account_family: {
         Args: { p_family_id: number };
         Returns: AccountFamily;
@@ -1153,7 +1208,7 @@ export type Database = {
           p_latitude: number;
           p_longitude: number;
           p_name: string;
-          p_trip_id: number;
+          p_trip_id: number | null;
         };
         Returns: TripNavigationDestination;
       };

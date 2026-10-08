@@ -30,6 +30,11 @@ import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrgani
 import { useAuth } from '@/features/auth/auth-context';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { supabase } from '@/features/auth/supabase';
+import { AdminBoardingPanel } from '@/features/bus-management/AdminBoardingPanel';
+import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
+import { AdminTripGuidancePanel } from '@/features/trip-guidance/AdminTripGuidancePanel';
+import { AdminGeneralAlarmPanel } from '@/features/general-alarm/AdminGeneralAlarmPanel';
+import { useWakeUpCall } from '@/features/wake-up-call/wake-up-call-context';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import { AdminDailyProgramPanel } from '@/features/daily-program/AdminDailyProgramPanel';
 import { useDailyProgram } from '@/features/daily-program/daily-program-context';
@@ -52,6 +57,8 @@ const adminPageSize = 200;
 const assignableRoles: AppRole[] = ['user', 'medical_staff', 'organization_team', 'admin'];
 
 type AdminSection =
+  | 'alarm'
+  | 'transport'
   | 'families'
   | 'navigation'
   | 'organization'
@@ -123,7 +130,8 @@ function AdminContent() {
     localISODate(),
   ).length;
   const { activeCheck, hasSyncError: hasGroupCheckSyncError } = useGroupCheck();
-  const { hasSyncError: hasTripGroupSyncError } = useTripGroups();
+  const { groups, hasSyncError: hasTripGroupSyncError } = useTripGroups();
+  const { call: wakeUpCall, scheduledCalls, error: wakeUpError } = useWakeUpCall();
   const { activeRound, hasSyncError: hasQuestionRoundSyncError } = useQuestionRound();
   const {
     hasSyncError: hasTripGuidanceSyncError,
@@ -143,6 +151,8 @@ function AdminContent() {
   const usersRequestSequence = useRef(0);
   const hasError = readErrorMessage !== null;
   const [expandedSections, setExpandedSections] = useState<Record<AdminSection, boolean>>({
+    alarm: false,
+    transport: false,
     families: false,
     navigation: false,
     organization: false,
@@ -284,26 +294,69 @@ function AdminContent() {
                 <AdminSectionHeader
                   description={t('admin.section.organization.description')}
                   expanded={expandedSections.organization}
-                  icon="bus"
+                  icon="people"
                   onToggle={() => toggleSection('organization')}
                   status={t(
-                    hasBusSyncError || hasTripGroupSyncError || hasTripGuidanceSyncError
+                    hasTripGroupSyncError
                       ? 'admin.section.organization.error'
-                      : activeTrip
-                        ? 'admin.section.organization.active'
-                        : 'admin.section.organization.inactive',
+                      : 'tripGroups.groupCount',
+                    { count: groups.length },
                   )}
                   statusColor={
-                    hasBusSyncError || hasTripGroupSyncError || hasTripGuidanceSyncError
-                      ? 'danger'
-                      : activeTrip
-                        ? 'success'
-                        : 'textSecondary'
+                    hasTripGroupSyncError ? 'danger' : groups.length ? 'success' : 'textSecondary'
                   }
                   title={t('admin.section.organization.title')}
                 />
                 {expandedSections.organization ? (
-                  <AdminTravelOrganizationPanel families={families} users={users} />
+                  !hasLoaded ? (
+                    <ActivityIndicator color={theme.accent} />
+                  ) : hasError ? (
+                    <Card style={styles.state}>
+                      <ThemedText themeColor="danger">{readErrorMessage}</ThemedText>
+                      <Button icon="refresh" label={t('admin.retry')} onPress={() => void loadUsers()} />
+                    </Card>
+                  ) : (
+                    <AdminTravelOrganizationPanel families={families} users={users} />
+                  )
+                ) : null}
+              </View>
+
+              <View style={styles.section}>
+                <AdminSectionHeader
+                  description={t('wakeUp.description')}
+                  expanded={expandedSections.alarm}
+                  icon="warning"
+                  onToggle={() => toggleSection('alarm')}
+                  title={t('wakeUp.title')}
+                  status={t(
+                    wakeUpError ? 'admin.section.organization.error' : wakeUpCall ? 'wakeUp.active' : scheduledCalls.length ? 'wakeUp.plannedCount' : 'wakeUp.inactive',
+                    { count: scheduledCalls.length },
+                  )}
+                  statusColor={wakeUpError ? 'danger' : wakeUpCall ? 'warning' : 'textSecondary'}
+                />
+                {expandedSections.alarm ? <AdminGeneralAlarmPanel /> : null}
+              </View>
+
+              <View style={styles.section}>
+                <AdminSectionHeader
+                  description={t('admin.transport.description')}
+                  expanded={expandedSections.transport}
+                  icon="bus"
+                  onToggle={() => toggleSection('transport')}
+                  title={t('admin.transport.title')}
+                  status={activeTrip?.name ?? t('admin.organization.overview.noActiveTrip')}
+                  statusColor={hasBusSyncError ? 'danger' : activeTrip ? 'success' : 'textSecondary'}
+                />
+                {expandedSections.transport ? (
+                  <>
+                    <AdminBusManagementPanel families={families} users={users} />
+                    {activeTrip ? (
+                      <>
+                        <AdminTripGuidancePanel />
+                        <AdminBoardingPanel />
+                      </>
+                    ) : null}
+                  </>
                 ) : null}
               </View>
 

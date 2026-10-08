@@ -28,6 +28,7 @@ import { useOnboarding } from '@/features/onboarding/onboarding-state';
 import { QuestionRoundProvider } from '@/features/question-round/question-round-context';
 import { AppThemeProvider, useThemeMode } from '@/features/theme/theme-mode';
 import { TripGuidanceProvider } from '@/features/trip-guidance/trip-guidance-context';
+import { WakeUpCallProvider } from '@/features/wake-up-call/wake-up-call-context';
 import { TripGroupProvider } from '@/features/trip-groups/trip-group-context';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -41,15 +42,17 @@ export default function RootLayout() {
             <BusManagementProvider>
               <TripGroupProvider>
                 <DailyProgramProvider>
-                  <GeneralAlarmNotificationsProvider>
-                    <TripGuidanceProvider>
-                      <GroupCheckProvider>
-                        <QuestionRoundProvider>
-                          <RootNavigation />
-                        </QuestionRoundProvider>
-                      </GroupCheckProvider>
-                    </TripGuidanceProvider>
-                  </GeneralAlarmNotificationsProvider>
+                  <WakeUpCallProvider>
+                    <GeneralAlarmNotificationsProvider>
+                      <TripGuidanceProvider>
+                        <GroupCheckProvider>
+                          <QuestionRoundProvider>
+                            <RootNavigation />
+                          </QuestionRoundProvider>
+                        </GroupCheckProvider>
+                      </TripGuidanceProvider>
+                    </GeneralAlarmNotificationsProvider>
+                  </WakeUpCallProvider>
                 </DailyProgramProvider>
               </TripGroupProvider>
             </BusManagementProvider>
@@ -135,6 +138,7 @@ function RootNavigation() {
             <Stack.Screen name="reader/[slug]" options={{ title: t('nav.reader') }} />
             <Stack.Screen name="about" options={{ title: t('nav.about') }} />
             <Stack.Screen name="account" options={{ title: t('nav.account') }} />
+            <Stack.Screen name="alarm" options={{ title: t('wakeUp.title') }} />
             <Stack.Screen name="bus" options={{ title: t('bus.navTitle') }} />
             <Stack.Screen
               name="emergency-dashboard"

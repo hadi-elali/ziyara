@@ -1,3 +1,4 @@
+import { WakeUpCallPanel } from '@/features/wake-up-call/WakeUpCallPanel';
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,7 @@ export default function HomeScreen() {
   return (
     <>
     <Screen>
+      {session ? <WakeUpCallPanel compact /> : null}
       {session ? (
         <View
           style={[
@@ -179,7 +181,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session && ownTripGroups.length > 0 ? (
+      {session ? (
         <View
           style={[
             styles.notice,
@@ -209,6 +211,7 @@ export default function HomeScreen() {
               { count: ownTripGroups.length },
             )}
           </ThemedText>
+          <ThemedText type="smallBold">{ownTripGroups.map((group) => group.name).join(', ') || t('tripGroups.emptyTitle')}</ThemedText>
           <Button
             icon="people"
             label={t("tripGroups.open")}

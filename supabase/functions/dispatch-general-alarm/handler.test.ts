@@ -35,6 +35,7 @@ function dependencies(
 
 describe('dispatch general alarm handler', () => {
   it('weist Aufrufe ohne Admin- oder Scheduler-Berechtigung ab', async () => {
+    const dispatchWakeUpCalls = jest.fn(async () => undefined);
     const result = await handleDispatchGeneralAlarmRequest(
       {
         authorization: null,
@@ -42,13 +43,15 @@ describe('dispatch general alarm handler', () => {
         cronSecret: null,
         method: 'POST',
       },
-      dependencies(),
+      dependencies({ dispatchWakeUpCalls }),
     );
 
     expect(result).toMatchObject({ body: { code: 'unauthorized' }, status: 401 });
+    expect(dispatchWakeUpCalls).not.toHaveBeenCalled();
   });
 
-  it('akzeptiert den Scheduler und beendet leere Läufe ohne Versand', async () => {
+  it('führt geplante Weckrufe auch ohne aktives Boarding aus', async () => {
+    const dispatchWakeUpCalls = jest.fn(async () => undefined);
     const sendNotifications = jest.fn(async () => []);
     const result = await handleDispatchGeneralAlarmRequest(
       {
@@ -57,7 +60,7 @@ describe('dispatch general alarm handler', () => {
         cronSecret: 'secret',
         method: 'POST',
       },
-      dependencies({ sendNotifications }),
+      dependencies({ sendNotifications, dispatchWakeUpCalls }),
     );
 
     expect(result).toMatchObject({
@@ -65,6 +68,7 @@ describe('dispatch general alarm handler', () => {
       status: 200,
     });
     expect(sendNotifications).not.toHaveBeenCalled();
+    expect(dispatchWakeUpCalls).toHaveBeenCalledTimes(1);
   });
 
   it('prüft einen Nutzer-Token serverseitig und protokolliert das Expo-Ergebnis', async () => {

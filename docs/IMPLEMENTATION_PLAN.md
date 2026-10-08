@@ -417,8 +417,9 @@ Acceptance criteria:
 - Assigned participants report `on_way`, `almost_there`, `at_meeting_point`, `problem`, `lost` or `medical_help` for their account-backed assignment.
 - An admin explicitly accepts a problem report, and the participant sees the accepting leader’s captured display name.
 - Place links, external meeting-point navigation and a one-shot distance check work without continuous tracking or backend location storage.
-- The admin dashboard exposes trip destinations and navigation as its own section, separate from trip-guidance editing. Admins can create and edit multiple named destinations, place each on a platform-specific map, drag the native marker or use their current location, preview navigation and archive obsolete entries.
-- Signed-in trip members see every active destination as a distinct marker on the native and web maps. A “Trip destinations” button exposes the full list on both platforms; native selections focus the corresponding marker, and every destination remains reachable through external navigation.
+- The admin dashboard exposes trip destinations and navigation as its own section, separate from trip-guidance editing. Admins can create and edit multiple named destinations without an active intermediate trip, place each on a platform-specific map, drag the native marker or use their current location, preview navigation and archive obsolete entries.
+- All signed-in users, including those without a trip or bus assignment, see every active destination as a distinct marker on the native and web maps. A “Trip destinations” button exposes the full list on both platforms; native selections focus the corresponding marker, and every destination remains reachable through external navigation.
+- Destinations remain visible and editable when an intermediate trip ends or is deleted. Existing markers are preserved, and new markers have no trip dependency.
 - The last successful destination list is cached locally with strict validation and a user ID. It remains visible after an app restart when the initial read fails, while a successful server response, including an empty list, replaces the cache authoritatively.
 - Realtime, app focus and staggered fallback refreshes keep guidance and reports current.
 - Clear network failures queue reports in a validated, user-scoped AsyncStorage outbox. Pending UI never claims the leader received the report, and retries remain idempotent.
@@ -449,7 +450,7 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- The admin area exposes Generalalarm inside the shared `Trip organization` area under the distinct `Live support` step, separate from bus setup. An admin explicitly configures and enables it there, sees its active/inactive state and can end it there.
+- Since 8 October 2026, the standalone `Wake-up call` dashboard section sends immediately or schedules multiple messages by date and time in `Asia/Baghdad`, without a trip, bus or group dependency. Future calls can be edited or cancelled. The authenticated server scheduler activates due calls and captures recipients at activation. Users acknowledge once; admins see acknowledgement totals and close the call. The former departure alarm remains a separate boarding workflow under `Intermediate trips & buses`.
 - Participants confirm `read`, `on_way` and `boarded` in sequence for their account-backed assignment; `problem` remains available as an exception path.
 - A missing next stage becomes due after five minutes. Native clients reconcile bounded local reminders, while an idempotent server dispatcher claims at most one Expo push attempt per device, participant, stage and reminder window.
 - Push tokens are never client-readable. Registration is profile-bound, dispatch requires a verified admin or scheduler secret, and privileged claims/completions are limited to `service_role`.
@@ -516,11 +517,11 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- In the shared admin `Trip organization` area, admins create, edit and delete named subgroups from people assigned to the active intermediate trip. One person belongs to at most one subgroup.
-- Every subgroup has exactly one registered leader who is also a member.
-- Any app role, including an admin, can be a member or leader through its account-backed trip assignment. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.
-- Admins can issue one current location request to the group leader. Re-requesting clears previously shared coordinates.
-- Only the current leader sees and answers the request. The leader can decline without granting device permission or explicitly share one foreground location.
+- Admin `Trip organization` creates, edits and deletes independent account groups without requiring an intermediate trip or bus. Admins add individuals or whole account families; family expansion and conflict detection are atomic. One account belongs to at most one group.
+- Every group has one or more registered leaders who are also members. Group leadership does not grant global admin access.
+- Any app role, including an admin, can be a member or leader directly through its registered account. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.
+- Admins can request only a selected group leader’s location. Each leader sees only their own request; ordinary members cannot be targeted. Re-requesting creates a fresh request ID and clears previously shared coordinates.
+- Only the addressed current leader sees and answers the request. The leader can decline without granting device permission or explicitly share one foreground location.
 - There is no background or continuous tracking. Shared coordinates are readable only by the leader and admins, expire from client access after fifteen minutes, and are removed when the group changes or is deleted.
 - Group members can see their group and its member list but cannot read location requests or coordinates.
 - Home highlights a pending request for the leader, and `/group` remains session-protected with a validated login return route.
@@ -595,3 +596,20 @@ Tests/checks:
 - Playwright smoke from first start through language selection, registration screen, guest entry and reload persistence.
 - TypeScript, lint, Expo dependency alignment, Expo Doctor and web export.
 - Manual iOS/Android/Web checks for fullscreen cropping, muted autoplay, small widths, themes, languages and Arabic text direction.
+
+## 8 October 2026: Independent groups and wake-up calls
+
+- Migration `20261008000000_independent_groups_and_wake_up_calls.sql` preserves legacy data and imports active group assignments without old location consent.
+- `organization_group*` tables reference accounts directly. Family selections resolve current family accounts on save; later family edits do not silently change saved group memberships.
+- The independent `wake_up_call*` tables persist recipients and acknowledgements. `dispatch-wake-up-call` verifies admin authorization and claims each registered device once. Notification taps open `/alarm`.
+- The client retains boarding under `Zwischenreisen & Busse`; its former alarm component is now `AdminBoardingPanel`.
+- Validation is deliberately focused: TypeScript, lint, SDK checks, web export, existing group-state assertions and the new database authorization/lifecycle checks. No full coverage or end-to-end suite is required for this request.
+- Migration is applied locally. Remote migration/function deployment and physical-device delivery verification remain pending.
+
+### Scheduled wake-up calls
+
+- `20261008010000_schedule_wake_up_calls.sql` adds absolute scheduled/activation timestamps, keeps existing calls and permits several planned or active calls. Normal users cannot see or acknowledge future calls.
+- The existing minutely scheduler authenticates through `dispatch-general-alarm` and executes the shared wake-up dispatcher even without an active boarding or open app. No new secret or client background task is required.
+- Due activation locks the same call row as edit/cancel operations. Cancelled and future calls are excluded. Each recipient/device is claimed once; accounts created after planning are included at activation.
+- The admin form offers Now/Schedule, Iraqi date/time, an editable planned list and separate active calls. The user panel acknowledges each active call independently.
+- Only focused date/time, authorization and scheduling lifecycle checks are added. Both Functions must be deployed with the new migration; existing cron configuration must remain enabled.

@@ -13,7 +13,7 @@ const destination: TripNavigationDestination = {
   longitude: 44.032,
   name: 'Hotel',
   sort_order: 0,
-  trip_id: 10,
+  trip_id: null,
   updated_at: '2026-08-30T10:00:00Z',
 };
 
@@ -21,7 +21,6 @@ describe('parseTripNavigationCache', () => {
   it('übernimmt einen validen benutzerspezifischen Kartenort-Cache', () => {
     const cached = {
       destinations: [destination],
-      tripId: 10,
       userId: 'guidance-user',
     };
 
@@ -31,19 +30,29 @@ describe('parseTripNavigationCache', () => {
   it.each([
     undefined,
     [],
-    { destinations: [destination], tripId: 10, userId: '' },
+    { destinations: [destination], userId: '' },
     {
       destinations: [{ ...destination, latitude: 91 }],
-      tripId: 10,
       userId: 'guidance-user',
     },
     {
-      destinations: [{ ...destination, trip_id: 11 }],
-      tripId: 10,
+      destinations: [{ ...destination, trip_id: "invalid" }],
       userId: 'guidance-user',
     },
   ])('verwirft einen ungültigen Cache %#', (value) => {
     expect(parseTripNavigationCache(value)).toBeUndefined();
+  });
+
+  it('behält bestehende Orte mit historischem Reisebezug', () => {
+    const cached = { destinations: [{ ...destination, trip_id: 10 }], userId: 'guidance-user' };
+    expect(parseTripNavigationCache(cached)).toEqual(cached);
+  });
+
+  it('verwirft archivierte Orte im aktiven Karten-Cache', () => {
+    expect(parseTripNavigationCache({
+      destinations: [{ ...destination, archived_at: '2026-10-07T10:00:00Z' }],
+      userId: 'guidance-user',
+    })).toBeUndefined();
   });
 
   it('akzeptiert einen bewusst geleerten Cache', () => {
