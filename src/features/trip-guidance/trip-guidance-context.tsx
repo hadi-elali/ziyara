@@ -1,4 +1,4 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 import {
   createContext,
   type PropsWithChildren,
@@ -84,6 +84,10 @@ const emptySnapshot: Snapshot = {
 const fallbackRefreshIntervalMs = 60_000;
 const fallbackRefreshJitterMs = 30_000;
 
+function outboxEntryKey(entry: PendingTripGuidanceStatus) {
+  return `${entry.userId}:${entry.guidanceId}:${entry.participantId}:${entry.queuedAt}:${entry.status}`;
+}
+
 export function TripGuidanceProvider({ children }: PropsWithChildren) {
   const { isLoading: isAuthLoading, session } = useAuth();
   const userId = session?.user.id ?? null;
@@ -94,6 +98,8 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
   const outboxRef = useRef<PendingTripGuidanceStatus[]>([]);
   const flushInProgressRef = useRef(false);
   const attemptedOutboxEntriesRef = useRef(new Set<string>());
+  const statusWritesRef = useRef(new Map<string, Promise<unknown>>());
+  const lastQueuedAtRef = useRef(0);
   const [outbox, setOutbox, outboxLoaded] = useTripGuidanceOutbox();
   const [navigationCache, setNavigationCache] = useTripNavigationCache();
   const [snapshot, setSnapshot] = useState<Snapshot>(emptySnapshot);
@@ -263,6 +269,17 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
 
   const submitStatusRpc = useCallback(
     async (guidanceId: number, participantId: number, status: TripGuidanceStatus) => {
+      if (!userId || userIdRef.current !== userId) {
+        return {
+          data: null,
+          error: new PostgrestError({
+            code: '42501',
+            details: '',
+            hint: '',
+            message: 'Authentication required.',
+          }),
+        };
+      }
       const submit = () =>
         supabase.rpc('respond_to_trip_guidance', {
           p_guidance_id: guidanceId,
@@ -278,7 +295,11 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       ) {
         try {
           const refreshedSession = await supabase.auth.refreshSession();
-          if (!refreshedSession.error && refreshedSession.data.session?.user.id === userId) {
+          if (
+            !refreshedSession.error &&
+            refreshedSession.data.session?.user.id === userId &&
+            userIdRef.current === userId
+          ) {
             result = await submit();
           }
         } catch {
@@ -291,16 +312,32 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
     [userId],
   );
 
+  // Manual updates and background retries for one participant share one queue.
+  // Keep the acknowledgement/cleanup inside the queue as well as the RPC.
+  const runStatusWrite = useCallback(
+    <T,>(guidanceId: number, participantId: number, action: () => Promise<T>): Promise<T> => {
+      const key = `${userId}:${guidanceId}:${participantId}`;
+      const previous = statusWritesRef.current.get(key) ?? Promise.resolve();
+      const pending = previous.catch(() => undefined).then(action);
+      statusWritesRef.current.set(key, pending);
+      const cleanup = () => {
+        if (statusWritesRef.current.get(key) === pending) statusWritesRef.current.delete(key);
+      };
+      void pending.then(cleanup, cleanup);
+      return pending;
+    },
+    [userId],
+  );
+
   const removeOutboxEntry = useCallback(
-    (entry: Pick<PendingTripGuidanceStatus, 'guidanceId' | 'participantId' | 'userId'>) => {
-      setOutbox((current) =>
-        current.filter(
-          (candidate) =>
-            candidate.userId !== entry.userId ||
-            candidate.guidanceId !== entry.guidanceId ||
-            candidate.participantId !== entry.participantId,
-        ),
-      );
+    (entry: PendingTripGuidanceStatus) => {
+      const key = outboxEntryKey(entry);
+      setOutbox((current) => {
+        const next = current.filter((candidate) => outboxEntryKey(candidate) !== key);
+        outboxRef.current = next;
+        return next;
+      });
+      attemptedOutboxEntriesRef.current.delete(key);
     },
     [setOutbox],
   );
@@ -315,7 +352,8 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       try {
         const currentEntries = outboxRef.current.filter((entry) => entry.userId === userId);
         for (const entry of currentEntries) {
-          const entryKey = `${entry.userId}:${entry.guidanceId}:${entry.participantId}:${entry.queuedAt}`;
+          if (userIdRef.current !== userId) break;
+          const entryKey = outboxEntryKey(entry);
           if (entry.guidanceId !== activeGuidance.id) {
             removeOutboxEntry(entry);
             continue;
@@ -323,34 +361,33 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
           if (!force && attemptedOutboxEntriesRef.current.has(entryKey)) continue;
           attemptedOutboxEntriesRef.current.add(entryKey);
 
-          const { error } = await submitStatusRpc(
-            entry.guidanceId,
-            entry.participantId,
-            entry.status,
-          );
-          if (!error) {
-            removeOutboxEntry(entry);
-            continue;
-          }
-
-          const kind = getTripGuidanceSubmitFailureKind(error);
-          if (kind === 'closed' || kind === 'not_linked') {
-            removeOutboxEntry(entry);
-          }
-          if (kind === 'offline') break;
+          const failure = await runStatusWrite(entry.guidanceId, entry.participantId, async () => {
+            // A manual update may have replaced this entry while it waited.
+            if (
+              userIdRef.current !== userId ||
+              !outboxRef.current.some((candidate) => outboxEntryKey(candidate) === entryKey)
+            ) {
+              return null;
+            }
+            const { error } = await submitStatusRpc(entry.guidanceId, entry.participantId, entry.status);
+            const kind = error ? getTripGuidanceSubmitFailureKind(error) : null;
+            if (!error || kind === 'closed' || kind === 'not_linked') removeOutboxEntry(entry);
+            return kind;
+          });
+          if (failure === 'offline') break;
         }
       } finally {
         flushInProgressRef.current = false;
       }
     },
-    [outboxLoaded, removeOutboxEntry, submitStatusRpc, userId],
+    [outboxLoaded, removeOutboxEntry, runStatusWrite, submitStatusRpc, userId],
   );
 
   const retryPending = useCallback(async () => {
     attemptedOutboxEntriesRef.current.clear();
     await flushPending(true);
-    await refresh();
-  }, [flushPending, refresh]);
+    if (userIdRef.current === userId) await refresh();
+  }, [flushPending, refresh, userId]);
 
   useEffect(() => {
     if (!outboxLoaded || !snapshot.activeGuidance || !userId) return;
@@ -410,58 +447,76 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
   }, [isAuthLoading, refresh, retryPending, userId]);
 
   const setStatus = useCallback(
-    async (guidanceId: number, participantId: number, status: TripGuidanceStatus) => {
-      if (!userId) return { error: null, queued: false };
-      const result = await submitStatusRpc(guidanceId, participantId, status);
-
-      if (result.error && shouldQueueTripGuidanceStatus(result.error)) {
-        const pending: PendingTripGuidanceStatus = {
-          guidanceId,
-          participantId,
-          queuedAt: new Date().toISOString(),
-          status,
-          userId,
-        };
-        attemptedOutboxEntriesRef.current.add(
-          `${pending.userId}:${pending.guidanceId}:${pending.participantId}:${pending.queuedAt}`,
+    (guidanceId: number, participantId: number, status: TripGuidanceStatus) =>
+      runStatusWrite(guidanceId, participantId, async (): Promise<TripGuidanceActionResult> => {
+        if (!userId) return { error: null, queued: false };
+        const previousPending = outboxRef.current.find(
+          (entry) =>
+            entry.userId === userId &&
+            entry.guidanceId === guidanceId &&
+            entry.participantId === participantId,
         );
-        setOutbox((current) => [
-          ...current.filter(
-            (entry) =>
-              entry.userId !== userId ||
-              entry.guidanceId !== guidanceId ||
-              entry.participantId !== participantId,
-          ),
-          pending,
-        ]);
-        return { error: null, queued: true };
-      }
+        const result = await submitStatusRpc(guidanceId, participantId, status);
+        if (userIdRef.current !== userId) return { error: result.error, queued: false };
 
-      if (result.error) {
+        if (result.error && shouldQueueTripGuidanceStatus(result.error)) {
+          // queuedAt is also the persisted revision; it must stay unique even if
+          // the clock moves backwards or two updates occur in one millisecond.
+          lastQueuedAtRef.current = Math.max(
+            Date.now(),
+            lastQueuedAtRef.current + 1,
+            ...outboxRef.current.map((entry) => (Date.parse(entry.queuedAt) || 0) + 1),
+          );
+          const pending: PendingTripGuidanceStatus = {
+            guidanceId,
+            participantId,
+            queuedAt: new Date(lastQueuedAtRef.current).toISOString(),
+            status,
+            userId,
+          };
+          if (previousPending) attemptedOutboxEntriesRef.current.delete(outboxEntryKey(previousPending));
+          attemptedOutboxEntriesRef.current.add(outboxEntryKey(pending));
+          setOutbox((current) => {
+            const next = [
+              ...current.filter(
+                (entry) =>
+                  entry.userId !== userId ||
+                  entry.guidanceId !== guidanceId ||
+                  entry.participantId !== participantId,
+              ),
+              pending,
+            ];
+            outboxRef.current = next;
+            return next;
+          });
+          return { error: null, queued: true };
+        }
+
+        if (result.error) {
+          await refresh();
+          return { error: result.error, queued: false };
+        }
+
+        if (previousPending) removeOutboxEntry(previousPending);
+        if (result.data) {
+          stateVersion.current += 1;
+          setSnapshot((current) => ({
+            ...current,
+            responses: [
+              ...current.responses.filter(
+                (response) => response.participant_id !== participantId,
+              ),
+              result.data,
+            ],
+          }));
+          setSyncErrorMessage(null);
+          setSyncErrorKind(null);
+          setSyncState('ready');
+        }
         await refresh();
-        return { error: result.error, queued: false };
-      }
-
-      removeOutboxEntry({ guidanceId, participantId, userId });
-      if (result.data && userIdRef.current === userId) {
-        stateVersion.current += 1;
-        setSnapshot((current) => ({
-          ...current,
-          responses: [
-            ...current.responses.filter(
-              (response) => response.participant_id !== participantId,
-            ),
-            result.data,
-          ],
-        }));
-        setSyncErrorMessage(null);
-        setSyncErrorKind(null);
-        setSyncState('ready');
-      }
-      await refresh();
-      return { error: null, queued: false };
-    },
-    [refresh, removeOutboxEntry, setOutbox, submitStatusRpc, userId],
+        return { error: null, queued: false };
+      }),
+    [refresh, removeOutboxEntry, runStatusWrite, setOutbox, submitStatusRpc, userId],
   );
 
   const acknowledgeProblem = useCallback(

@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRootNavigationState, useRouter } from 'expo-router';
 import {
   createContext,
   type PropsWithChildren,
@@ -27,7 +27,7 @@ import type { GeneralAlarmNotificationState } from '@/features/general-alarm/gen
 import { buildGeneralAlarmReminderPlans } from '@/features/general-alarm/general-alarm-reminders';
 import { useNotificationsDisabled } from '@/features/general-alarm/useNotificationPreference';
 import { useI18n } from '@/features/i18n/i18n';
-import { alarmRoute, emergencyDashboardRoute, emergencyRoute } from '@/features/navigation/routes';
+import type { ProtectedRoutePath } from '@/features/navigation/routes';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 
 type GeneralAlarmNotificationsContextValue = GeneralAlarmNotificationState & {
@@ -53,25 +53,29 @@ const GeneralAlarmNotificationsContext =
 
 export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildren) {
   const router = useRouter();
-  const { isAdmin, session } = useAuth();
+  const rootNavigationState = useRootNavigationState();
+  const { isAdmin, isLoading: isAuthLoading, session } = useAuth();
   const { activeBoarding, participants } = useBusManagement();
   const { language, t } = useI18n();
   const [notificationsDisabled, setNotificationsDisabled, preferenceLoaded] =
     useNotificationsDisabled();
   const [notificationState, setNotificationState] = useState(initialState);
   const [isWorking, setIsWorking] = useState(false);
+  const [pendingRoute, setPendingRoute] = useState<ProtectedRoutePath | null>(null);
 
   useEffect(() => {
-    const wakeUpSubscription = subscribeToWakeUpCallNotificationResponses(() => router.push(alarmRoute()));
+    const wakeUpSubscription = subscribeToWakeUpCallNotificationResponses(() => {
+      setPendingRoute('/alarm');
+    });
     const busSubscription = subscribeToGeneralAlarmNotificationResponses(() => {
-      router.push('/bus');
+      setPendingRoute('/bus');
     });
     const emergencySubscription = subscribeToEmergencyNotificationResponses(() => {
-      router.push(emergencyRoute());
+      setPendingRoute('/emergency');
     });
     const emergencyDashboardSubscription =
       subscribeToEmergencyDashboardNotificationResponses(() => {
-        router.push(emergencyDashboardRoute());
+        setPendingRoute('/emergency-dashboard');
       });
     return () => {
       wakeUpSubscription.remove();
@@ -79,7 +83,13 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
       emergencyDashboardSubscription.remove();
       emergencySubscription.remove();
     };
-  }, [router]);
+  }, []);
+
+  useEffect(() => {
+    if (!rootNavigationState?.key || isAuthLoading || !pendingRoute) return;
+    router.push(pendingRoute);
+    setPendingRoute(null);
+  }, [isAuthLoading, pendingRoute, rootNavigationState?.key, router]);
 
   useEffect(() => {
     let isActive = true;
@@ -208,7 +218,9 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
       disable,
       enable,
       enabled:
-        Boolean(session?.user.id) && effectiveNotificationState.permissionGranted,
+        Boolean(session?.user.id) &&
+        effectiveNotificationState.availability === 'registered' &&
+        effectiveNotificationState.permissionGranted,
       isWorking,
       openSettings: openGeneralAlarmNotificationSettings,
       unregisterDevice,

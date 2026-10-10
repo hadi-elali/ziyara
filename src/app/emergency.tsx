@@ -265,17 +265,14 @@ function EmergencyContent() {
 
       const result = data[0];
       let pushAccepted = false;
-      let pushErrorMessage: string | null = null;
       if (result.recipient_count > 0) {
         try {
           const dispatch = await dispatchEmergencyPush(result.request_id);
-          pushErrorMessage = dispatch?.error?.message ?? null;
           pushAccepted = Boolean(
             dispatch && !dispatch.error && (dispatch.data?.accepted ?? 0) > 0,
           );
-        } catch (error) {
+        } catch {
           // The durable inbox message is already stored. Push remains best effort.
-          pushErrorMessage = getOriginalErrorMessage(error);
           pushAccepted = false;
         }
       }
@@ -286,9 +283,7 @@ function EmergencyContent() {
       setLocationFeedback(null);
       setTeam(null);
       setSubmitFeedback(
-        pushErrorMessage
-          ? { kind: "error", message: pushErrorMessage }
-          : result.recipient_count === 0
+        result.recipient_count === 0
           ? { kind: "no_recipients" }
           : {
               count: result.recipient_count,

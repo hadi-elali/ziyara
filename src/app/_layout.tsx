@@ -140,10 +140,6 @@ function RootNavigation() {
             <Stack.Screen name="account" options={{ title: t('nav.account') }} />
             <Stack.Screen name="alarm" options={{ title: t('wakeUp.title') }} />
             <Stack.Screen name="bus" options={{ title: t('bus.navTitle') }} />
-            <Stack.Screen
-              name="emergency-dashboard"
-              options={{ title: t('emergencyDashboard.navTitle') }}
-            />
             <Stack.Screen name="group" options={{ title: t('tripGroups.navTitle') }} />
             <Stack.Screen name="guide" options={{ title: t('guide.navTitle') }} />
             <Stack.Screen name="program" options={{ title: t('dailyProgram.weekTitle') }} />
@@ -155,6 +151,10 @@ function RootNavigation() {
           </Stack.Protected>
 
           <Stack.Screen name="emergency" options={{ title: t('emergency.navTitle') }} />
+          <Stack.Screen
+            name="emergency-dashboard"
+            options={{ title: t('emergencyDashboard.navTitle') }}
+          />
           <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
         </Stack>
       </NavigationThemeProvider>

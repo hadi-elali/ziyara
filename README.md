@@ -167,9 +167,9 @@ npm run test:e2e
 
 ## Remote-Backend-Stand
 
-Am 22. September 2026 wurden lokale und verknüpfte Remote-Migrationsliste erneut gelesen. Alle 36 Migrationen stimmen bis einschließlich `20260922000000` überein; auch `20260921000000_make_emergency_teams_always_on_duty.sql` ist remote angewandt. Keine bestehende Migration wurde verändert, gelöscht oder zusammengefasst.
+Am 9. Oktober 2026 wurden lokale und verknüpfte Remote-Migrationsliste erneut gelesen. Alle 39 Migrationen stimmen bis einschließlich `20261008010000` überein; damit sind auch die unabhängigen Kartenorte, Gruppen und geplanten Weckrufe remote bereitgestellt. Keine bestehende Migration wurde verändert, gelöscht oder zusammengefasst.
 
-Die Edge Functions `delete-account`, `dispatch-general-alarm`, `dispatch-emergency-alert` und `dispatch-emergency-duty` sind remote aktiv. Der aktuelle Client verwendet `dispatch-emergency-duty` nicht mehr. `verify_jwt = false` schaltet nur die vorgeschaltete Legacy-JWT-Prüfung aus; die Functions prüfen ihre jeweilige Berechtigung weiterhin selbst.
+Die Edge Functions `delete-account`, `dispatch-general-alarm`, `dispatch-wake-up-call`, `dispatch-emergency-alert` und `dispatch-emergency-duty` sind remote aktiv. `dispatch-general-alarm` v4 und `dispatch-wake-up-call` v2 stimmen einschließlich des gemeinsamen Dispatchers mit dem Repository überein; der minütliche Scheduler läuft erfolgreich. Der aktuelle Client verwendet `dispatch-emergency-duty` nicht mehr. `verify_jwt = false` schaltet nur die vorgeschaltete Legacy-JWT-Prüfung aus; die Functions prüfen ihre jeweilige Berechtigung weiterhin selbst.
 
 Für Push ist das EAS-Projekt `@hadi_ea/al-batoul` mit dem nativen Identifier `de.albatoul.ziyara` verbunden. APNs und FCM V1 sind hinterlegt. Das Generalalarm-Scheduler-Secret liegt als Function-Secret und geschützt im Supabase Vault; `dispatch-general-alarm-every-minute` läuft jede Minute und antwortete bei der Einrichtung mehrfach mit HTTP 200. Die vier Edge Functions sind am 21. September 2026 remote als `ACTIVE` bestätigt. iOS- und Android-Preview-Build vom 14. September 2026 sind erfolgreich abgeschlossen, enthalten aber nur Commit `2df176f`; der geprüfte Stand `aabf955` liegt acht Commits weiter und benötigt neue native Builds. Ein realer Push ist weiterhin nicht nachgewiesen. Die Remote-Auth-Redirect-Allowlist wurde im Rahmen dieser Prüfung nicht verändert.
 
@@ -183,7 +183,7 @@ Die CI startet automatisch für jeden Pull Request und nach jedem Push auf `main
 
 Die Kernarchitektur und die automatisierten lokalen Prüfungen sind stabil, die App ist aber noch nicht vollständig store-releasefähig. Verbleibende Release-Blocker:
 
-- `ziyara:///reset-password` in der Remote-Supabase-Redirect-Allowlist freigeben und Recovery auf signierten iOS-/Android-Builds testen
+- `ziyara:///reset-password` und `ziyara://reset-password` unter [Supabase → Authentication → URL Configuration](https://supabase.com/dashboard/project/nqaptsodtvqtonkwuizl/auth/url-configuration) in **Redirect URLs** ergänzen, bestehende URLs beibehalten und Recovery auf signierten iOS-/Android-Builds testen. Der aktuelle CLI-Zugang erhält beim Lesen der Auth-Konfiguration HTTP 403 wegen fehlender Rechte; eine Remote-Änderung konnte deshalb am 9. Oktober nicht erfolgen.
 - Account-Löschung auf einem signierten Build mit einem freigegebenen Testkonto end-to-end prüfen
 - konfigurierte Bundle-Identifier und Markenassets in aktuellen signierten iOS-/Android-Builds visuell prüfen
 - veröffentlichungsfertige Datenschutz-, Support- und Store-Metadaten erstellen

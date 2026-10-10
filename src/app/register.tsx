@@ -3,7 +3,7 @@ import { Redirect, type Href, useLocalSearchParams } from 'expo-router';
 import { AuthFormScreen } from '@/features/auth/AuthFormScreen';
 import { useAuth } from '@/features/auth/auth-context';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
-import { checkInRoute, getProtectedReturnRoute } from '@/features/navigation/routes';
+import { bypassesGroupCheck, checkInRoute, getProtectedReturnRoute } from '@/features/navigation/routes';
 
 export default function RegisterScreen() {
   const { returnTo } = useLocalSearchParams<{ returnTo?: string | string[] }>();
@@ -12,7 +12,7 @@ export default function RegisterScreen() {
   const safeReturnTo = getProtectedReturnRoute(returnTo);
 
   if (session) {
-    if (isBlocking) {
+    if (isBlocking && !bypassesGroupCheck(safeReturnTo)) {
       return (
         <Redirect
           href={checkInRoute(safeReturnTo === '/check-in' ? '/' : safeReturnTo)}

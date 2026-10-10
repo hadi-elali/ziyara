@@ -16,6 +16,10 @@ export const protectedRoutePaths = [
 
 export type ProtectedRoutePath = (typeof protectedRoutePaths)[number];
 
+export function bypassesGroupCheck(route: ProtectedRoutePath | '/') {
+  return route === '/emergency' || route === '/emergency-dashboard';
+}
+
 function routeSegment(value: string) {
   return encodeURIComponent(value);
 }

@@ -7,6 +7,7 @@ import {
 } from '@/features/auth/protected-route-policy';
 import {
   busRoute,
+  bypassesGroupCheck,
   dailyProgramRoute,
   guideRoute,
   getProtectedReturnRoute,
@@ -142,6 +143,26 @@ describe('protected navigation', () => {
         isGroupCheckBlocking: false,
       }),
     ).toBe(false);
+  });
+
+  it('lässt Notfallziele trotz Pflichtabfrage zu und behält die Anmeldung bei', () => {
+    const state = {
+      hasProfileError: false,
+      hasSession: true,
+      isAdmin: false,
+      isAuthLoading: false,
+      isGroupCheckBlocking: true,
+      isGroupCheckLoading: true,
+    };
+    for (const route of ['/emergency', '/emergency-dashboard'] as const) {
+      const bypassGroupCheck = bypassesGroupCheck(route);
+      expect(bypassGroupCheck).toBe(true);
+      expect(getLoginScreenDecision({ ...state, bypassGroupCheck })).toBe('return');
+      expect(getLoginScreenDecision({ ...state, bypassGroupCheck, hasSession: false })).toBe('form');
+      expect(getLoginScreenDecision({ ...state, bypassGroupCheck, isAuthLoading: true })).toBe('loading');
+    }
+    expect(bypassesGroupCheck('/bus')).toBe(false);
+    expect(getLoginScreenDecision({ ...state, bypassGroupCheck: bypassesGroupCheck('/bus') })).toBe('loading');
   });
 
   it('führt das Busmanagement als geschützte interne Route', () => {

@@ -90,7 +90,8 @@ export async function inspectGeneralAlarmNotificationState(): Promise<GeneralAla
       return { availability: 'missing_project_id', permissionGranted: true };
     }
 
-    return { availability: 'registered', permissionGranted: true };
+    // Device permission alone does not confirm server registration.
+    return { availability: 'checking', permissionGranted: true };
   } catch (error) {
     return {
       availability: 'error',

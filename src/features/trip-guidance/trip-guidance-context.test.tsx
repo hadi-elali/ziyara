@@ -289,6 +289,78 @@ describe('TripGuidanceProvider', () => {
     expect(context().participants[0]?.isPending).toBe(false);
   });
 
+  it('ordnet einen langsamen Offline-Retry vor einer neueren Meldung und erhält diese bei Netzfehlern', async () => {
+    const offline = { data: null, error: { code: '', details: '', hint: '', message: 'Failed to fetch' } };
+    queueSnapshot();
+    mockSupabase.rpc.mockImplementation(() => Promise.resolve(offline));
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => !context().isLoading);
+    await act(async () => { await context().setStatus(guidance.id, participant.id, 'almost_there'); });
+
+    let finishRetry!: (value: QueryResult<TripGuidanceResponse>) => void;
+    mockSupabase.rpc.mockImplementationOnce(() => new Promise((resolve) => { finishRetry = resolve; }));
+    queueSnapshot([transmittedResponse]);
+    let retry!: Promise<void>;
+    await act(async () => { retry = context().retryPending(); await flush(); });
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(2);
+
+    let newer!: ReturnType<ReturnType<typeof useTripGuidance>['setStatus']>;
+    await act(async () => {
+      newer = context().setStatus(guidance.id, participant.id, 'medical_help');
+      await flush();
+    });
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      finishRetry({ data: transmittedResponse, error: null });
+      await retry;
+      expect(await newer).toEqual({ error: null, queued: true });
+    });
+    expect(context().pendingCount).toBe(1);
+    expect(context().participants[0]).toMatchObject({ status: 'medical_help', isPending: true });
+
+    const medicalResponse: TripGuidanceResponse = { ...transmittedResponse, status: 'medical_help' };
+    mockSupabase.rpc.mockImplementation(() => Promise.resolve({ data: medicalResponse, error: null }));
+    queueSnapshot([medicalResponse]);
+    await act(async () => { await context().retryPending(); });
+    expect(context().pendingCount).toBe(0);
+    expect(context().participants[0]?.status).toBe('medical_help');
+  });
+
+  it('verwirft einen bereits wartenden alten Retry nach erfolgreicher neuer Statusmeldung', async () => {
+    queueSnapshot();
+    mockSupabase.rpc.mockImplementation(() => Promise.resolve({ data: null, error: { message: 'Failed to fetch' } }));
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => !context().isLoading);
+    await act(async () => { await context().setStatus(guidance.id, participant.id, 'almost_there'); });
+
+    const latest: TripGuidanceResponse = { ...transmittedResponse, status: 'at_meeting_point' };
+    let finishWrite!: (value: QueryResult<TripGuidanceResponse>) => void;
+    mockSupabase.rpc.mockImplementationOnce(() => new Promise((resolve) => { finishWrite = resolve; }));
+    queueSnapshot([latest]);
+    queueSnapshot([latest]);
+    let write!: ReturnType<ReturnType<typeof useTripGuidance>['setStatus']>;
+    let retry!: Promise<void>;
+    await act(async () => {
+      write = context().setStatus(guidance.id, participant.id, 'at_meeting_point');
+      await flush();
+      retry = context().retryPending();
+      await flush();
+    });
+    await act(async () => {
+      finishWrite({ data: latest, error: null });
+      await write;
+      await retry;
+    });
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(2);
+    expect(context().pendingCount).toBe(0);
+    expect(context().participants[0]?.status).toBe('at_meeting_point');
+  });
+
   it('speichert einen Problemstatus und übernimmt ihn mit dem Leiternamen', async () => {
     const problemResponse: TripGuidanceResponse = {
       ...transmittedResponse,

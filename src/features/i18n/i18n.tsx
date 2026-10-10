@@ -185,7 +185,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.feedback.success":
       "Der Notfall wurde für {count} Teammitglied(er) gespeichert. Der Pushdienst hat mindestens eine Benachrichtigung angenommen.",
     "emergency.feedback.success_no_push":
-      "Der Notfall wurde für {count} Teammitglied(er) im Postfach gespeichert. Push konnte aktuell kein registriertes Gerät erreichen.",
+      "Der Notfall wurde für {count} Teammitglied(er) im Postfach gespeichert. Die Übergabe an den Pushdienst konnte nicht bestätigt werden. Nutze bei dringender Hilfe zusätzlich einen direkten Kontaktweg.",
     "emergency.notificationsTitle": "Push für Notfallmeldungen",
     "emergency.notifications.checking": "Benachrichtigungsstatus wird geprüft …",
     "emergency.notifications.denied":
@@ -1421,7 +1421,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.feedback.success":
       "The emergency was saved for {count} team member(s). The push service accepted at least one notification.",
     "emergency.feedback.success_no_push":
-      "The emergency was saved in the inbox for {count} team member(s). Push could not currently reach a registered device.",
+      "The emergency was saved in the inbox for {count} team member(s). Handoff to the push service could not be confirmed. If you need urgent help, also use a direct contact method.",
     "emergency.notificationsTitle": "Emergency push notifications",
     "emergency.notifications.checking": "Checking notification status …",
     "emergency.notifications.denied":
@@ -2638,7 +2638,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.feedback.success":
       "تم حفظ البلاغ لـ {count} من أعضاء الفريق. قبلت خدمة الإشعارات إشعاراً واحداً على الأقل.",
     "emergency.feedback.success_no_push":
-      "تم حفظ البلاغ في صندوق رسائل {count} من أعضاء الفريق. تعذر حالياً وصول الإشعار إلى جهاز مسجل.",
+      "تم حفظ البلاغ في صندوق رسائل {count} من أعضاء الفريق. تعذر تأكيد تسليم الإشعار إلى خدمة الإشعارات. إذا كنت بحاجة إلى مساعدة عاجلة، فاستخدم وسيلة اتصال مباشرة أيضاً.",
     "emergency.notificationsTitle": "إشعارات بلاغات الطوارئ",
     "emergency.notifications.checking": "جارٍ فحص حالة الإشعارات …",
     "emergency.notifications.denied":

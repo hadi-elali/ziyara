@@ -6,7 +6,7 @@ import { AuthFormScreen } from '@/features/auth/AuthFormScreen';
 import { useAuth } from '@/features/auth/auth-context';
 import { getLoginScreenDecision } from '@/features/auth/protected-route-policy';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
-import { checkInRoute, getProtectedReturnRoute } from '@/features/navigation/routes';
+import { bypassesGroupCheck, checkInRoute, getProtectedReturnRoute } from '@/features/navigation/routes';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function LoginScreen() {
@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const { isBlocking, isLoading: isGroupCheckLoading } = useGroupCheck();
   const safeReturnTo = getProtectedReturnRoute(returnTo);
   const decision = getLoginScreenDecision({
+    bypassGroupCheck: bypassesGroupCheck(safeReturnTo),
     hasProfileError,
     hasSession: Boolean(session),
     isAdmin,

@@ -24,6 +24,7 @@ export function getProtectedRouteDecision({
 }
 
 export function getLoginScreenDecision({
+  bypassGroupCheck = false,
   hasProfileError,
   hasSession,
   isAdmin,
@@ -31,6 +32,7 @@ export function getLoginScreenDecision({
   isGroupCheckBlocking,
   isGroupCheckLoading,
 }: {
+  bypassGroupCheck?: boolean;
   hasProfileError: boolean;
   hasSession: boolean;
   isAdmin: boolean;
@@ -49,6 +51,8 @@ export function getLoginScreenDecision({
   if (hasProfileError) {
     return 'check-in';
   }
+
+  if (bypassGroupCheck) return 'return';
 
   if (!isAdmin && isGroupCheckLoading) {
     return 'loading';
