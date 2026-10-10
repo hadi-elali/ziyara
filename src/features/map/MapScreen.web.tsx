@@ -228,6 +228,12 @@ export function MapExperience() {
               label={t('common.navigate')}
               onPress={() => void openNavigation(selectedDestination)}
             />
+            <Button
+              icon="close"
+              label={t('map.backToOverview')}
+              onPress={() => setSelectedDestination(null)}
+              variant="secondary"
+            />
           </Card>
         ) : null}
       </Section>

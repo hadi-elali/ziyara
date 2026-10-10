@@ -1,7 +1,8 @@
 import * as Location from "expo-location";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  BackHandler,
   Modal,
   Pressable,
   ScrollView,
@@ -40,9 +41,7 @@ export function MapExperience() {
   const { language, t } = useI18n();
   const { navigationDestinations } = useTripGuidance();
   const mapRef = useRef<MapCanvasHandle>(null);
-  const [selectedPlace, setSelectedPlace] = useState<Place | null>(
-    allPlaces[0],
-  );
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [selectedDestination, setSelectedDestination] =
     useState<TripNavigationDestination | null>(null);
   const [showDestinations, setShowDestinations] = useState(false);
@@ -53,6 +52,27 @@ export function MapExperience() {
   const localizedSelectedPlace = selectedPlace
     ? localizePlace(selectedPlace, language)
     : null;
+  const hasSelection = Boolean(selectedPlace || selectedDestination);
+
+  const returnToOverview = useCallback(() => {
+    setSelectedPlace(null);
+    setSelectedDestination(null);
+    setShowDestinations(false);
+    mapRef.current?.animateToRegion(IRAQ_REGION, 650);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasSelection) return;
+
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        returnToOverview();
+        return true;
+      });
+
+      return () => subscription.remove();
+    }, [hasSelection, returnToOverview]),
+  );
 
   const centerOnLocation = useCallback((location: Location.LocationObject) => {
     mapRef.current?.animateToRegion(
@@ -209,16 +229,27 @@ export function MapExperience() {
         zoomOutLabel={t("map.zoomOut")}
       />
 
-      {navigationDestinations.length > 0 ? (
+      {hasSelection || navigationDestinations.length > 0 ? (
         <View style={styles.topBar}>
-          <Button
-            accessibilityState={{ expanded: showDestinations }}
-            icon="map"
-            label={t("map.tripDestinationsButton")}
-            onPress={() => setShowDestinations(true)}
-            style={styles.destinationButton}
-            variant="secondary"
-          />
+          {hasSelection ? (
+            <Button
+              icon="map"
+              label={t("map.backToOverview")}
+              onPress={returnToOverview}
+              style={styles.destinationButton}
+              variant="secondary"
+            />
+          ) : null}
+          {navigationDestinations.length > 0 ? (
+            <Button
+              accessibilityState={{ expanded: showDestinations }}
+              icon="map"
+              label={t("map.tripDestinationsButton")}
+              onPress={() => setShowDestinations(true)}
+              style={styles.destinationButton}
+              variant="secondary"
+            />
+          ) : null}
         </View>
       ) : null}
 
@@ -263,6 +294,19 @@ export function MapExperience() {
                     : ""}
               </ThemedText>
             </View>
+            <Pressable
+              accessibilityLabel={t("map.backToOverview")}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={returnToOverview}
+              style={({ pressed }) => [
+                styles.closeButton,
+                { backgroundColor: theme.backgroundElement },
+                pressed && styles.pressed,
+              ]}
+            >
+              <SymbolIcon color={theme.text} name="close" size={22} />
+            </Pressable>
           </View>
 
           <View style={styles.sheetActions}>

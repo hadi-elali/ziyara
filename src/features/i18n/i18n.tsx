@@ -1138,6 +1138,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "labels.status.needs_review": "Zu prüfen",
     "labels.status.rejected": "Abgelehnt",
     "labels.status.verified": "Geprüft",
+    "map.backToOverview": "Zur Kartenübersicht",
     "map.browserDenied":
       "Standortfreigabe wurde abgelehnt oder ist im Browser nicht verfügbar.",
     "map.browserUnsupported":
@@ -2359,6 +2360,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "labels.status.needs_review": "Needs review",
     "labels.status.rejected": "Rejected",
     "labels.status.verified": "Verified",
+    "map.backToOverview": "Back to map overview",
     "map.browserDenied":
       "Location access was denied or is not available in the browser.",
     "map.browserUnsupported": "This browser does not support location sharing.",
@@ -3566,6 +3568,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "labels.status.needs_review": "بحاجة إلى مراجعة",
     "labels.status.rejected": "مرفوض",
     "labels.status.verified": "موثق",
+    "map.backToOverview": "العودة إلى عرض الخريطة العام",
     "map.browserDenied": "تم رفض مشاركة الموقع أو أنها غير متاحة في المتصفح.",
     "map.browserUnsupported": "هذا المتصفح لا يدعم مشاركة الموقع.",
     "map.description":

@@ -1,6 +1,6 @@
 # Ziyarah – verbindlicher Projektkontext für LLMs
 
-Stand: 9. Oktober 2026
+Stand: 10. Oktober 2026
 
 ## Zweck und Pflege
 
@@ -57,6 +57,7 @@ Ziyarah ist eine produktionsorientierte Expo-App für eine schiitische Ziyarah-R
 - Stadtseiten mit lokal gefilterten Orten.
 - iOS-Karte mit Apple Maps über `react-native-maps` und Android-Karte mit Leaflet/OpenStreetMap direkt in `react-native-webview`; beide zeigen Marker, eine optionale Standortfreigabe über einen schwebenden blauen Standortpfeil, eine über „Reiseziele“ aufrufbare hohe Liste veröffentlichter Gruppenziele und die Übergabe an eine externe Navigation. Android benötigt weder Expo DOM noch einen Google-Maps-Schlüssel und begrenzt Kartenbewegung sowie Tile-Anfragen auf den Irak.
 - Web-Fallback als schematische Irak-Karte plus Ortsliste und über „Reiseziele“ einblendbarer Gruppenziel-Liste; Web importiert kein `react-native-maps`.
+- Die native Karte startet ohne ausgewählten Ort. Nach Auswahl eines Ortes oder Reiseziels schließen „Zur Kartenübersicht“ und das Schließen-Symbol die Vorschau und stellen den Irak-Ausschnitt wieder her. Android-Zurück führt bei ausgewähltem Ziel auf dem aktiven Karten-Tab ebenfalls zur Übersicht; die offene Reiseziel-Liste schließt zunächst separat. Im Web lässt sich die Reiseziel-Vorschau ebenfalls schließen.
 - Ortssuche, Inhaltssuche und Suche nach empfohlenen Handlungen.
 - Ortsdetails mit Bildern, Quellen, Hinweisen, empfohlenen Handlungen und Merkliste.
 - Reader mit fest zusammengehörenden Absatzblöcken aus Arabisch, Transliteration und deutscher Übersetzung, RTL für Arabisch, getrennten persistenten Sichtbarkeits- und Schriftgrößeneinstellungen, Kopieren, Teilen und Merkliste.
@@ -483,6 +484,8 @@ Für Push ist das EAS-Projekt `@hadi_ea/al-batoul` mit der Projekt-ID aus `app.j
 11. Prüfungen ausführen und im Handoff exakte Ergebnisse, geänderte Dateien, Migrationsbedarf und bekannte Risiken nennen.
 
 ## Qualitätsprüfungen
+
+Karten-Rückweg vom 10. Oktober 2026: TypeScript sowie Web-, iOS- und Android-JavaScript-Export bestanden. Lint ohne Fehler mit neun bestehenden Warnungen. `expo install --check` meldet weiterhin die neun bereits dokumentierten SDK-57-Patchabweichungen. Expo Doctor scheiterte vor der Prüfung am Netzwerkzugriff (`ENOTFOUND registry.npmjs.org`); ein erneuter Aufruf mit Netzwerkzugriff wurde abgelehnt. Auf Wunsch des Auftraggebers keine weiteren Tests. Der Rückweg wurde noch nicht durch einen vollständigen Bedienablauf auf einem Gerät geprüft. Geändert wurden die native und Web-Kartenansicht sowie die UI-Übersetzungen; keine Migration oder Änderung nativer Abhängigkeiten erforderlich.
 
 Terminplanung vom 8. Oktober: 16 zusätzliche gezielte Datenbankprüfungen für Zeitgrenze, Bearbeiten, Stornieren, RLS, Empfänger bei Aktivierung und idempotenten Versand sowie sieben fokussierte Zeit-/Scheduler-Tests sind erfolgreich. Beide Edge Functions bestehen die Deno-Typprüfung. Abhängigkeiten und native Konfiguration wurden nicht verändert; die zuvor gemeldeten Expo-Patchstände werden für diese Erweiterung nicht erneut umfassend geprüft.
 
