@@ -35,6 +35,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/with-compact-android-tabs",
       [
         "expo-notifications",
         {

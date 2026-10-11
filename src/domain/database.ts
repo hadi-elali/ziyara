@@ -204,6 +204,17 @@ export type WakeUpCallRecipient = {
   acknowledged_at: string | null;
 };
 
+export type WakeUpNotificationAttempt = {
+  id: number;
+  call_id: number;
+  device_id: number;
+  accepted: boolean | null;
+  completed_at: string | null;
+  error_code: string | null;
+  expo_http_status: number | null;
+  expo_ticket_id: string | null;
+};
+
 export type TripGroup = {
   created_at: string;
   created_by_profile_id: number | null;
@@ -465,6 +476,7 @@ export type Database = {
       organization_group_location_requests: { Row: OrganizationGroupLocationRequest; Insert: never; Update: never; Relationships: [] };
       wake_up_calls: { Row: WakeUpCall; Insert: never; Update: never; Relationships: [] };
       wake_up_call_recipients: { Row: WakeUpCallRecipient; Insert: never; Update: never; Relationships: [] };
+      wake_up_notification_attempts: { Row: WakeUpNotificationAttempt; Insert: never; Update: never; Relationships: [] };
       account_families: {
         Insert: {
           created_at?: string;
