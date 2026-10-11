@@ -1,9 +1,11 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
+import { runInNewContext } from 'node:vm';
 
 import {
   createLeafletFocusScript,
   createLeafletMapHtml,
   createLeafletMapUpdateScript,
+  type LeafletFocusRequest,
   type LeafletMapConfiguration,
   type LeafletMapData,
 } from './leaflet-map-html';
@@ -45,6 +47,43 @@ const data: LeafletMapData = {
   selectedCoordinate: null,
 };
 
+function createMapRuntime() {
+  const emptyData: LeafletMapData = { ...data, points: [] };
+  const html = createLeafletMapHtml(configuration, emptyData);
+  const script = html.slice(html.lastIndexOf('<script>') + '<script>'.length, html.lastIndexOf('</script>'));
+  const map = { invalidateSize: jest.fn(), setView: jest.fn().mockReturnThis() };
+  const layer = {
+    addTo: jest.fn().mockReturnThis(),
+    clearLayers: jest.fn(),
+    on: jest.fn().mockReturnThis(),
+  };
+  const element = { setAttribute: jest.fn(), style: { setProperty: jest.fn() } };
+  const bridgeWindow = {} as {
+    __ZIYARA_MAP__: {
+      focus: (request: LeafletFocusRequest | null) => void;
+      update: (nextData: LeafletMapData) => void;
+    };
+  };
+
+  runInNewContext(script, {
+    L: {
+      control: {
+        attribution: () => ({ addTo() { return this; }, getContainer: () => null }),
+        zoom: () => ({ addTo: jest.fn() }),
+      },
+      latLngBounds: jest.fn(),
+      layerGroup: () => layer,
+      map: () => map,
+      tileLayer: () => layer,
+    },
+    ResizeObserver: class { observe() {} },
+    document: { documentElement: element, getElementById: () => element },
+    window: bridgeWindow,
+  });
+
+  return { bridge: bridgeWindow.__ZIYARA_MAP__, emptyData, map };
+}
+
 describe('Leaflet WebView HTML', () => {
   it('bundles Leaflet locally and only references OSM for map tiles', () => {
     const html = createLeafletMapHtml(configuration, data);
@@ -73,5 +112,32 @@ describe('Leaflet WebView HTML', () => {
     expect(createLeafletFocusScript()).toBe(
       'window.__ZIYARA_MAP__?.focus(null); true;',
     );
+  });
+
+  it('preserves a manual zoom when the last destination focus is synchronized again', () => {
+    const { bridge, emptyData, map } = createMapRuntime();
+    const destination = { key: 'destination:1', latitude: 32.6, longitude: 44, zoom: 12 };
+    bridge.focus(destination);
+    map.setView.mockClear();
+
+    map.setView([32.6, 44], 11.75);
+    bridge.update(emptyData);
+    bridge.focus({ ...destination });
+    bridge.focus(null);
+
+    expect(map.setView).toHaveBeenCalledTimes(1);
+    expect(map.setView).toHaveBeenLastCalledWith([32.6, 44], 11.75);
+  });
+
+  it('allows another explicit focus on the same destination and a return to overview', () => {
+    const { bridge, map } = createMapRuntime();
+    bridge.focus({ key: 'destination:1', latitude: 32.6, longitude: 44, zoom: 12 });
+    map.setView.mockClear();
+
+    bridge.focus({ key: 'destination:2', latitude: 32.6, longitude: 44, zoom: 12 });
+    bridge.focus({ key: 'overview:3', ...configuration.center, zoom: 6 });
+
+    expect(map.setView).toHaveBeenCalledTimes(2);
+    expect(map.setView).toHaveBeenLastCalledWith([33.1, 43.9], 6, { animate: true });
   });
 });

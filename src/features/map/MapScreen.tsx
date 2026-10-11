@@ -230,7 +230,7 @@ export function MapExperience() {
       />
 
       {hasSelection || navigationDestinations.length > 0 ? (
-        <View style={styles.topBar}>
+        <View pointerEvents="box-none" style={styles.topBar}>
           {hasSelection ? (
             <Button
               icon="map"
@@ -272,6 +272,7 @@ export function MapExperience() {
 
       {(selectedDestination || localizedSelectedPlace) && (
         <View
+          pointerEvents="box-none"
           style={[
             styles.sheet,
             {
@@ -281,8 +282,8 @@ export function MapExperience() {
             },
           ]}
         >
-          <View style={styles.sheetHeader}>
-            <View style={styles.sheetTitle}>
+          <View pointerEvents="box-none" style={styles.sheetHeader}>
+            <View pointerEvents="none" style={styles.sheetTitle}>
               <ThemedText type="heading">
                 {selectedDestination?.name ?? localizedSelectedPlace?.name}
               </ThemedText>
@@ -309,7 +310,7 @@ export function MapExperience() {
             </Pressable>
           </View>
 
-          <View style={styles.sheetActions}>
+          <View pointerEvents="box-none" style={styles.sheetActions}>
             {localizedSelectedPlace ? (
               <Button
                 icon="info"

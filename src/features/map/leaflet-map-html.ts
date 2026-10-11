@@ -109,13 +109,15 @@ export function createLeafletMapHtml(
         background: var(--map-surface);
         border-color: var(--map-border);
         color: var(--map-text);
+        max-width: min(280px, calc(100vw - 32px));
+        overflow-wrap: break-word;
         white-space: normal;
+        width: max-content;
       }
       .map-tooltip-description {
         display: block;
         font-size: 12px;
         margin-top: 2px;
-        max-width: 220px;
       }
       .leaflet-control-attribution,
       .leaflet-control-attribution a { color: #1b4f72; }
@@ -185,6 +187,7 @@ export function createLeafletMapHtml(
 
         const map = L.map('map', {
           attributionControl: false,
+          bounceAtZoomLimits: false,
           boxZoom: configuration.interactive,
           doubleClickZoom: configuration.interactive,
           dragging: configuration.interactive,
@@ -197,10 +200,13 @@ export function createLeafletMapHtml(
           scrollWheelZoom: configuration.interactive,
           touchZoom: configuration.interactive,
           zoomControl: false,
+          // Preserve small pinch gestures instead of snapping back to a whole zoom level.
+          zoomSnap: 0,
         }).setView(clamp(configuration.center), clampZoom(configuration.zoom));
 
         if (configuration.interactive) {
           L.control.zoom({
+            position: 'topright',
             zoomInTitle: configuration.zoomInLabel,
             zoomOutTitle: configuration.zoomOutLabel,
           }).addTo(map);
@@ -302,8 +308,10 @@ export function createLeafletMapHtml(
           }
         };
 
+        let lastFocusKey = null;
         const focus = (request) => {
-          if (!isCoordinate(request)) return;
+          if (!isCoordinate(request) || request.key === lastFocusKey) return;
+          lastFocusKey = request.key;
           map.setView(clamp(request), clampZoom(request.zoom), { animate: true });
         };
 

@@ -223,7 +223,10 @@ export function LeafletMapView({
         originWhitelist={['*']}
         overScrollMode="never"
         ref={webViewRef}
+        scalesPageToFit={false}
         scrollEnabled={false}
+        setBuiltInZoomControls={false}
+        setDisplayZoomControls={false}
         setSupportMultipleWindows={false}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
