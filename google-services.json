@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:313936118117:android:85182d29042f09a637618c",
+        "mobilesdk_app_id": "1:313936118117:android:5edcb84b778e104c37618c",
         "android_client_info": {
-          "package_name": "de.albatoul.ziyara"
+          "package_name": "de.albatoul.ziyara.app"
         }
       },
       "oauth_client": [],

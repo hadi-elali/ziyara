@@ -91,6 +91,8 @@ export const MediaBackdrop = {
   textSecondary: '#DDE8E1',
 } as const;
 
+export const SplashBackgroundColor = '#798F7A';
+
 export const OnboardingPalette = {
   background: '#032D26',
   border: 'rgba(244, 248, 255, 0.7)',

@@ -4,16 +4,14 @@ import {
   Stack,
   ThemeProvider as NavigationThemeProvider,
   usePathname,
-  useRouter,
 } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
-import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { BottomTabInset, Colors, Spacing } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
 import { canAccessNonBlockingRoutes } from '@/features/auth/protected-route-policy';
@@ -23,7 +21,7 @@ import { AppErrorBoundary } from '@/features/errors/AppErrorBoundary';
 import { GroupCheckProvider, useGroupCheck } from '@/features/group-check/group-check-context';
 import { GeneralAlarmNotificationsProvider } from '@/features/general-alarm/general-alarm-notifications-context';
 import { AppI18nProvider, useI18n } from '@/features/i18n/i18n';
-import { emergencyRoute } from '@/features/navigation/routes';
+import { isStartupNavigationPending, isStartupRouteReady } from '@/features/navigation/startup-state';
 import { useOnboarding } from '@/features/onboarding/onboarding-state';
 import { QuestionRoundProvider } from '@/features/question-round/question-round-context';
 import { AppThemeProvider, useThemeMode } from '@/features/theme/theme-mode';
@@ -65,20 +63,42 @@ export default function RootLayout() {
 
 function RootNavigation() {
   const pathname = usePathname();
-  const router = useRouter();
   const { loaded: isThemeLoaded, resolvedTheme: scheme } = useThemeMode();
   const colors = Colors[scheme];
   const { loaded: isLanguageLoaded, t } = useI18n();
-  const { loaded: isOnboardingLoaded } = useOnboarding();
+  const { hasCompletedOnboarding, loaded: isOnboardingLoaded } = useOnboarding();
   const {
     hasProfileError,
+    isAdmin,
     isLoading: isAuthLoading,
     profileRefreshError,
     refreshProfile,
     session,
   } = useAuth();
-  const { isBlocking } = useGroupCheck();
-  const canAccessAppRoutes = canAccessNonBlockingRoutes({
+  const { activeCheck, hasSyncError, isBlocking, isLoading: isGroupCheckLoading } = useGroupCheck();
+  const [hasNavigationLayout, setHasNavigationLayout] = useState(false);
+  const hasHiddenSplash = useRef(false);
+  const isLocalStateLoaded = isLanguageLoaded && isOnboardingLoaded && isThemeLoaded;
+  const isStartupReady = isStartupRouteReady({
+    hasActiveCheck: Boolean(activeCheck),
+    hasCompletedOnboarding,
+    hasGroupCheckError: hasSyncError,
+    hasProfileError,
+    hasSession: Boolean(session),
+    isAdmin,
+    isAuthLoading,
+    isGroupCheckBlocking: isBlocking,
+    isGroupCheckLoading,
+    pathname,
+  });
+  const isStartupPending = isStartupNavigationPending({
+    hasProfileError,
+    hasSession: Boolean(session),
+    isAdmin,
+    isAuthLoading,
+    isGroupCheckLoading,
+  });
+  const canAccessAppRoutes = !isStartupPending && canAccessNonBlockingRoutes({
     hasProfileError,
     hasSession: Boolean(session),
     isAuthLoading,
@@ -86,17 +106,18 @@ function RootNavigation() {
   });
 
   useEffect(() => {
-    if (isLanguageLoaded && isOnboardingLoaded && isThemeLoaded) {
+    if (!hasHiddenSplash.current && hasNavigationLayout && isLocalStateLoaded && isStartupReady) {
+      hasHiddenSplash.current = true;
       SplashScreen.hideAsync().catch(() => undefined);
     }
-  }, [isLanguageLoaded, isOnboardingLoaded, isThemeLoaded]);
+  }, [hasNavigationLayout, isLocalStateLoaded, isStartupReady]);
 
   if (!isLanguageLoaded || !isOnboardingLoaded || !isThemeLoaded) {
     return null;
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView onLayout={() => setHasNavigationLayout(true)} style={{ flex: 1 }}>
       <NavigationThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack
           screenOptions={{
@@ -106,10 +127,38 @@ function RootNavigation() {
             headerShadowVisible: false,
             contentStyle: { backgroundColor: colors.background },
           }}>
-          <Stack.Screen
-            name="check-in"
-            options={{ headerShown: !isBlocking, title: t('groupCheck.navTitle') }}
-          />
+          <Stack.Protected guard={isStartupPending}>
+            <Stack.Screen name="startup" options={{ animation: 'none', headerShown: false }} />
+          </Stack.Protected>
+
+          <Stack.Protected guard={canAccessAppRoutes}>
+            <Stack.Screen
+              name="(tabs)"
+              options={{ animation: 'none', headerShown: false, title: t('nav.home') }}
+            />
+            <Stack.Screen name="city/[city]" options={{ title: t('nav.city') }} />
+            <Stack.Screen name="place/[slug]" options={{ title: t('nav.placeDetails') }} />
+            <Stack.Screen name="reader/[slug]" options={{ title: t('nav.reader') }} />
+            <Stack.Screen name="about" options={{ title: t('nav.about') }} />
+            <Stack.Screen name="account" options={{ title: t('nav.account') }} />
+            <Stack.Screen name="alarm" options={{ title: t('wakeUp.title') }} />
+            <Stack.Screen name="bus" options={{ title: t('bus.navTitle') }} />
+            <Stack.Screen name="group" options={{ title: t('tripGroups.navTitle') }} />
+            <Stack.Screen name="guide" options={{ title: t('guide.navTitle') }} />
+            <Stack.Screen name="program" options={{ title: t('dailyProgram.weekTitle') }} />
+            <Stack.Screen name="sources" options={{ title: t('nav.sources') }} />
+            <Stack.Screen
+              name="question-round"
+              options={{ title: t('questionRound.navTitle') }}
+            />
+          </Stack.Protected>
+
+          <Stack.Protected guard={!isStartupPending}>
+            <Stack.Screen
+              name="check-in"
+              options={{ animation: 'none', headerShown: !isBlocking, title: t('groupCheck.navTitle') }}
+            />
+          </Stack.Protected>
           <Stack.Screen
             name="onboarding"
             options={{ headerShown: false, title: t('onboarding.title') }}
@@ -130,26 +179,6 @@ function RootNavigation() {
             name="reset-password"
             options={{ title: t('nav.resetPassword') }}
           />
-
-          <Stack.Protected guard={canAccessAppRoutes}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('nav.home') }} />
-            <Stack.Screen name="city/[city]" options={{ title: t('nav.city') }} />
-            <Stack.Screen name="place/[slug]" options={{ title: t('nav.placeDetails') }} />
-            <Stack.Screen name="reader/[slug]" options={{ title: t('nav.reader') }} />
-            <Stack.Screen name="about" options={{ title: t('nav.about') }} />
-            <Stack.Screen name="account" options={{ title: t('nav.account') }} />
-            <Stack.Screen name="alarm" options={{ title: t('wakeUp.title') }} />
-            <Stack.Screen name="bus" options={{ title: t('bus.navTitle') }} />
-            <Stack.Screen name="group" options={{ title: t('tripGroups.navTitle') }} />
-            <Stack.Screen name="guide" options={{ title: t('guide.navTitle') }} />
-            <Stack.Screen name="program" options={{ title: t('dailyProgram.weekTitle') }} />
-            <Stack.Screen name="sources" options={{ title: t('nav.sources') }} />
-            <Stack.Screen
-              name="question-round"
-              options={{ title: t('questionRound.navTitle') }}
-            />
-          </Stack.Protected>
-
           <Stack.Screen name="emergency" options={{ title: t('emergency.navTitle') }} />
           <Stack.Screen
             name="emergency-dashboard"
@@ -158,27 +187,6 @@ function RootNavigation() {
           <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
         </Stack>
       </NavigationThemeProvider>
-
-      {/* //!Geoutsourced to index in (tabs) to enhance UI/UX */}
-
-      {/* {session && pathname === '/' ? (
-        <Pressable
-          accessibilityLabel={t('emergency.homeButton')}
-          accessibilityRole="button"
-          onPress={() => router.push(emergencyRoute())}
-          style={({ pressed }) => [
-            styles.emergencyButton,
-            {
-              backgroundColor: colors.danger,
-              borderColor: colors.surface,
-              shadowColor: colors.text,
-            },
-            pressed && styles.emergencyButtonPressed,
-          ]}>
-          <SymbolIcon color={colors.surface} name="alarm" size={25} />
-        </Pressable>
-      ) : null} */}
-
 
       {profileRefreshError && !isBlocking ? (
         <View
@@ -204,27 +212,6 @@ function RootNavigation() {
 }
 
 const styles = StyleSheet.create({
-  emergencyButton: {
-    alignItems: 'center',
-    borderRadius: 26,
-    borderWidth: 2,
-    elevation: 6,
-    height: 52,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: Spacing.three,
-    shadowOffset: { height: 2, width: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 5,
-    top: '50%',
-    transform: [{ translateY: -26 }],
-    width: 52,
-    zIndex: 20,
-  },
-  emergencyButtonPressed: {
-    opacity: 0.72,
-    transform: [{ translateY: -26 }, { scale: 0.96 }],
-  },
   profileRefreshError: {
     alignItems: 'center',
     borderRadius: 12,
