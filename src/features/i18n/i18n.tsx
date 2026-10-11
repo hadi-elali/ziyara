@@ -38,7 +38,8 @@ const useLanguageState = createPersistentState<Language>(
 
 const dictionaries: Record<Language, Record<string, string>> = {
   de: {
-    "wakeUp.alreadyDue": "Dieser Weckruf ist bereits fällig und kann nicht mehr geändert werden. Die Liste wird aktualisiert.",
+    "wakeUp.alreadyDue":
+      "Dieser Weckruf ist bereits fällig und kann nicht mehr geändert werden. Die Liste wird aktualisiert.",
     "wakeUp.now": "Jetzt",
     "wakeUp.plan": "Planen",
     "wakeUp.date": "Datum (JJJJ-MM-TT)",
@@ -53,12 +54,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.cancelScheduled": "Weckruf stornieren",
     "wakeUp.saved": "Der Weckruf ist geplant.",
     "wakeUp.cancelled": "Der geplante Weckruf wurde storniert.",
-    "wakeUp.invalidTime": "Wähle ein gültiges Datum und eine Uhrzeit in der Zukunft, höchstens ein Jahr im Voraus.",
-    "wakeUp.scheduleHint": "Der Weckruf wird automatisch ab dieser Uhrzeit ausgelöst, auch bei geschlossener App. Die Prüfung erfolgt minütlich.",
+    "wakeUp.invalidTime":
+      "Wähle ein gültiges Datum und eine Uhrzeit in der Zukunft, höchstens ein Jahr im Voraus.",
+    "wakeUp.scheduleHint":
+      "Der Weckruf wird automatisch ab dieser Uhrzeit ausgelöst, auch bei geschlossener App. Die Prüfung erfolgt minütlich.",
     "wakeUp.title": "Weckruf",
-    "wakeUp.description": "Sende allen registrierten Personen einen Weckruf. Jede Person bestätigt ihn einmal.",
+    "wakeUp.description":
+      "Sende allen registrierten Personen einen Weckruf. Jede Person bestätigt ihn einmal.",
     "wakeUp.message": "Nachricht",
-    "wakeUp.placeholder": "Zum Beispiel: Guten Morgen! Bitte macht euch bereit.",
+    "wakeUp.placeholder":
+      "Zum Beispiel: Guten Morgen! Bitte macht euch bereit.",
     "wakeUp.send": "Weckruf jetzt senden",
     "wakeUp.active": "Weckruf aktiv",
     "wakeUp.inactive": "Kein aktiver Weckruf",
@@ -66,16 +71,21 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.acknowledge": "Ich bin wach",
     "wakeUp.acknowledged": "Du hast den Weckruf bestätigt.",
     "wakeUp.confirmations": "{confirmed} von {total} Konten haben bestätigt.",
-    "wakeUp.pushFailed": "Der Weckruf ist in der App sichtbar. Push konnte nicht an alle Geräte versendet werden.",
-    "wakeUp.notificationHint": "Aktiviere Mitteilungen, um Weckrufe auch außerhalb der App zu erhalten. Der Ton richtet sich nach deinen Geräteeinstellungen.",
+    "wakeUp.pushFailed":
+      "Der Weckruf ist in der App sichtbar. Push konnte nicht an alle Geräte versendet werden.",
+    "wakeUp.notificationHint":
+      "Aktiviere Mitteilungen, um Weckrufe auch außerhalb der App zu erhalten. Der Ton richtet sich nach deinen Geräteeinstellungen.",
     "wakeUp.enableNotifications": "Mitteilungen aktivieren",
     "admin.transport.title": "Zwischenreisen & Busse",
-    "admin.transport.description": "Buszuordnung und Live-Begleitung für einzelne Fahrten.",
+    "admin.transport.description":
+      "Buszuordnung und Live-Begleitung für einzelne Fahrten.",
     "tripGroups.groupCount": "{count} Gruppen",
     "tripGroups.admin.families": "Familien hinzufügen",
-    "tripGroups.admin.familiesBody": "Eine Familienauswahl fügt alle zugehörigen Konten hinzu. Angehörige ohne eigenes Telefon sind über die Personenzahl des Kontos eingeschlossen.",
+    "tripGroups.admin.familiesBody":
+      "Eine Familienauswahl fügt alle zugehörigen Konten hinzu. Angehörige ohne eigenes Telefon sind über die Personenzahl des Kontos eingeschlossen.",
     "tripGroups.admin.familySearch": "Familie suchen …",
-    "tripGroups.admin.familyUnavailable": "Keine Mitglieder vorhanden oder bereits einer anderen Gruppe zugeordnet.",
+    "tripGroups.admin.familyUnavailable":
+      "Keine Mitglieder vorhanden oder bereits einer anderen Gruppe zugeordnet.",
     "account.changeEmail": "E-Mail-Adresse ändern",
     "account.changePassword": "Passwort ändern",
     "account.deleteAction": "Konto endgültig löschen",
@@ -91,7 +101,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "account.deleteLastAdmin":
       "Der letzte Administrator kann sein Konto nicht löschen. Weise zuerst einer weiteren Person die Adminrolle zu.",
     "account.deleteTitle": "Gefahrenbereich",
-    "account.deleteWarning": "Unwiderruflich: Gelöschte Kontodaten können nicht wiederhergestellt werden.",
+    "account.deleteWarning":
+      "Unwiderruflich: Gelöschte Kontodaten können nicht wiederhergestellt werden.",
     "account.currentPassword": "Aktuelles Passwort",
     "account.description":
       "Ändere deine Anmeldedaten. Zur Sicherheit wird dein aktuelles Passwort geprüft.",
@@ -142,7 +153,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Kontaktiere schnell das medizinische Team oder das Reiseteam und sende bei Bedarf deinen Standort mit.",
     "emergency.homeButton": "Notfall melden",
     "emergency.staffHomeTitle": "Notfall-Postfach",
-    "emergency.staffHomeBody": "Öffne die Hilfeanfragen, die an dein Team gesendet wurden.",
+    "emergency.staffHomeBody":
+      "Öffne die Hilfeanfragen, die an dein Team gesendet wurden.",
     "emergency.staffOpen": "Postfach öffnen",
     "emergency.title": "Notfall melden",
     "emergency.body":
@@ -153,11 +165,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.formTitle": "Neue Hilfeanfrage",
     "emergency.teamLabel": "Welches Team soll benachrichtigt werden?",
     "emergency.team.medical": "Medizinisches Team",
-    "emergency.team.medicalBody": "Bei Verletzung, Krankheit oder medizinischer Unterstützung.",
+    "emergency.team.medicalBody":
+      "Bei Verletzung, Krankheit oder medizinischer Unterstützung.",
     "emergency.team.travel": "Reiseteam",
-    "emergency.team.travelBody": "Bei Orientierung, Transport oder organisatorischer Hilfe.",
+    "emergency.team.travelBody":
+      "Bei Orientierung, Transport oder organisatorischer Hilfe.",
     "emergency.locationLabel": "Wo bist du?",
-    "emergency.locationPlaceholder": "Zum Beispiel: Hotel-Lobby, Bus 2 oder Tor 3",
+    "emergency.locationPlaceholder":
+      "Zum Beispiel: Hotel-Lobby, Bus 2 oder Tor 3",
     "emergency.locationPrivacy":
       "Deine Geräteposition wird nur nach Tippen auf den Standortknopf einmalig ermittelt und mit dieser Nachricht gespeichert. Es gibt kein Live-Tracking.",
     "emergency.locationShare": "Aktuellen Standort mitsenden",
@@ -171,13 +186,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.locationPrefix": "Ort: {location}",
     "emergency.locationOpen": "Auf Karte öffnen",
     "emergency.messageLabel": "Was ist passiert?",
-    "emergency.messagePlaceholder": "Beschreibe kurz, was du brauchst und wie dringend es ist.",
+    "emergency.messagePlaceholder":
+      "Beschreibe kurz, was du brauchst und wie dringend es ist.",
     "emergency.submit": "Notfall jetzt senden",
     "emergency.submitting": "Notfall wird gesendet …",
-    "emergency.feedback.validation_team": "Wähle zuerst das medizinische Team oder das Reiseteam.",
+    "emergency.feedback.validation_team":
+      "Wähle zuerst das medizinische Team oder das Reiseteam.",
     "emergency.feedback.validation_location":
       "Gib an, wo du dich befindest, zum Beispiel Hotel-Lobby, Bus oder Tor.",
-    "emergency.feedback.validation_message": "Beschreibe dein Anliegen mit mindestens 5 Zeichen.",
+    "emergency.feedback.validation_message":
+      "Beschreibe dein Anliegen mit mindestens 5 Zeichen.",
     "emergency.feedback.error":
       "Der Notfall konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es sofort erneut.",
     "emergency.feedback.no_recipients":
@@ -187,7 +205,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.feedback.success_no_push":
       "Der Notfall wurde für {count} Teammitglied(er) im Postfach gespeichert. Die Übergabe an den Pushdienst konnte nicht bestätigt werden. Nutze bei dringender Hilfe zusätzlich einen direkten Kontaktweg.",
     "emergency.notificationsTitle": "Push für Notfallmeldungen",
-    "emergency.notifications.checking": "Benachrichtigungsstatus wird geprüft …",
+    "emergency.notifications.checking":
+      "Benachrichtigungsstatus wird geprüft …",
     "emergency.notifications.denied":
       "Push ist nicht freigegeben. Neue Meldungen bleiben trotzdem im Postfach lesbar.",
     "emergency.notifications.disabled":
@@ -209,14 +228,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.syncErrorTitle": "Nachrichten nicht aktuell",
     "emergency.retry": "Erneut laden",
     "emergency.inboxTitle": "Nachrichten an mein Team",
-    "emergency.inboxBody": "Neue Meldungen erscheinen hier und werden zusätzlich per Push versucht.",
+    "emergency.inboxBody":
+      "Neue Meldungen erscheinen hier und werden zusätzlich per Push verschickt.",
     "emergency.inboxEmpty": "Noch keine Notfallmeldungen für dein Team",
     "emergency.sentTitle": "Meine gesendeten Notfälle",
     "emergency.sentEmpty": "Du hast noch keinen Notfall gesendet.",
     "emergency.new": "NEU",
     "emergency.read": "Gelesen",
     "emergency.markRead": "Als gelesen markieren",
-    "emergency.markReadError": "Der Lesestatus konnte nicht gespeichert werden.",
+    "emergency.markReadError":
+      "Der Lesestatus konnte nicht gespeichert werden.",
     "emergencyDashboard.navTitle": "Notfall-Dashboard",
     "emergencyDashboard.title": "Notfall-Dashboard",
     "emergencyDashboard.body.admin":
@@ -248,8 +269,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "luggage.count": "Anzahl der Koffer",
     "luggage.countBody":
       "Zähle alle Koffer der Personen, die dieses Konto vertritt. Handgepäck nicht mitzählen.",
-    "luggage.countLimit":
-      "Mindestens {minimum}, höchstens {maximum} Koffer.",
+    "luggage.countLimit": "Mindestens {minimum}, höchstens {maximum} Koffer.",
     "luggage.decrease": "Kofferanzahl verringern",
     "luggage.increase": "Kofferanzahl erhöhen",
     "luggage.validation.count": "Gib eine gültige Kofferanzahl ein.",
@@ -264,7 +284,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "accountFamilies.cancel": "Abbrechen",
     "accountFamilies.create": "Familie anlegen",
     "accountFamilies.createTitle": "Neue Familie",
-    "accountFamilies.currentFamily": "Aktuell in: {name}. Die Auswahl verschiebt das Konto.",
+    "accountFamilies.currentFamily":
+      "Aktuell in: {name}. Die Auswahl verschiebt das Konto.",
     "accountFamilies.delete": "Löschen",
     "accountFamilies.deleteBody":
       "Die Benutzerkonten bleiben erhalten und sind danach keiner Familie zugeordnet.",
@@ -278,15 +299,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Lege eine Familie an und wähle die zugehörigen Benutzerkonten aus.",
     "accountFamilies.emptyTitle": "Noch keine Familien",
     "accountFamilies.feedback.deleted": "Die Familie wurde gelöscht.",
-    "accountFamilies.feedback.duplicate": "Dieser Familienname wird bereits verwendet.",
+    "accountFamilies.feedback.duplicate":
+      "Dieser Familienname wird bereits verwendet.",
     "accountFamilies.feedback.error":
       "Die Familie konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
-    "accountFamilies.feedback.saved": "Die Familie und ihre Mitglieder wurden gespeichert.",
+    "accountFamilies.feedback.saved":
+      "Die Familie und ihre Mitglieder wurden gespeichert.",
     "accountFamilies.loading": "Familien werden geladen …",
     "accountFamilies.memberCount": "{count} Konten",
     "accountFamilies.name": "Familienname",
     "accountFamilies.namePlaceholder": "Zum Beispiel: Familie Ali",
-    "accountFamilies.noMembers": "Dieser Familie ist derzeit kein Konto zugeordnet.",
+    "accountFamilies.noMembers":
+      "Dieser Familie ist derzeit kein Konto zugeordnet.",
     "accountFamilies.noUsers": "Es sind noch keine Benutzerkonten verfügbar.",
     "accountFamilies.save": "Änderungen speichern",
     "accountFamilies.selectMembers": "Benutzerkonten auswählen",
@@ -334,8 +358,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.noParticipantsBody":
       "Wähle oben eine registrierte Person oder eine ganze Familie aus.",
     "bus.admin.noParticipantsTitle": "Noch keine Zuordnungen",
-    "bus.admin.noFamiliesAvailable": "Es sind noch keine Kontofamilien verfügbar.",
-    "bus.admin.noPeopleAvailable": "Keine einzelne Person passt zur Auswahl. Mitglieder bereits zugeordneter Familien werden hier ausgeblendet.",
+    "bus.admin.noFamiliesAvailable":
+      "Es sind noch keine Kontofamilien verfügbar.",
+    "bus.admin.noPeopleAvailable":
+      "Keine einzelne Person passt zur Auswahl. Mitglieder bereits zugeordneter Familien werden hier ausgeblendet.",
     "bus.admin.person": "Einzelne Person",
     "bus.admin.personSearch": "Person suchen",
     "bus.admin.personSearchPlaceholder": "Nach registriertem Namen suchen …",
@@ -362,7 +388,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.noAssignmentBody":
       "Dein Konto ist noch keinem Bus zugeordnet. Wende dich an die Reiseleitung.",
     "bus.noAssignmentTitle": "Keine Buszuordnung",
-    "bus.noBoardingBody": "Deine Zuordnung ist sichtbar. Aktuell läuft keine Abfrage.",
+    "bus.noBoardingBody":
+      "Deine Zuordnung ist sichtbar. Aktuell läuft keine Abfrage.",
     "bus.noBoardingTitle": "Kein aktives Boarding",
     "bus.open": "Busstatus öffnen",
     "bus.retry": "Erneut versuchen",
@@ -388,8 +415,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Der Boarding konnte nicht geändert werden. Prüfe die Verbindung und versuche es erneut.",
     "generalAlarm.admin.active": "Boarding läuft",
     "generalAlarm.admin.busCanClose": "Alle im Bus – kann geschlossen werden.",
-    "generalAlarm.admin.busCannotClose": "Kann noch nicht geschlossen werden: {count} fehlen.",
-    "generalAlarm.admin.confirmedSummary": "{confirmed} von {total} Teilnehmern haben bestätigt.",
+    "generalAlarm.admin.busCannotClose":
+      "Kann noch nicht geschlossen werden: {count} fehlen.",
+    "generalAlarm.admin.confirmedSummary":
+      "{confirmed} von {total} Teilnehmern haben bestätigt.",
     "generalAlarm.admin.customDepartureMinutes": "Eigene Minutenanzahl",
     "generalAlarm.admin.customDepartureMinutesPlaceholder": "Zum Beispiel: 25",
     "generalAlarm.admin.departureOverdue": "Abfahrtszeit überschritten",
@@ -410,13 +439,19 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.admin.messagePlaceholder": "Zum Beispiel: Abfahrt vom Hotel",
     "generalAlarm.admin.noParticipantsBody":
       "Ordne zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ mindestens eine Person oder Familie zu.",
-    "generalAlarm.admin.outstandingBody": "{count} Teilnehmer sind noch nicht im Bus bestätigt.",
+    "generalAlarm.admin.outstandingBody":
+      "{count} Teilnehmer sind noch nicht im Bus bestätigt.",
     "generalAlarm.admin.outstandingTitle": "Ausstehende Teilnehmer",
-    "generalAlarm.admin.participantReminderDue": "{name}: Der nächste Status ist seit mindestens fünf Minuten offen.",
-    "generalAlarm.admin.push.error": "Push-Versand nicht erreichbar. Die In-App-Anzeige bleibt aktiv.",
-    "generalAlarm.admin.push.idle": "Push-Erinnerungen werden serverseitig ausgelöst.",
-    "generalAlarm.admin.push.running": "Fällige Push-Erinnerungen werden geprüft …",
-    "generalAlarm.admin.push.success": "Fällige Push-Erinnerungen wurden an den Expo-Dienst übergeben.",
+    "generalAlarm.admin.participantReminderDue":
+      "{name}: Der nächste Status ist seit mindestens fünf Minuten offen.",
+    "generalAlarm.admin.push.error":
+      "Push-Versand nicht erreichbar. Die In-App-Anzeige bleibt aktiv.",
+    "generalAlarm.admin.push.idle":
+      "Push-Erinnerungen werden serverseitig ausgelöst.",
+    "generalAlarm.admin.push.running":
+      "Fällige Push-Erinnerungen werden geprüft …",
+    "generalAlarm.admin.push.success":
+      "Fällige Push-Erinnerungen wurden an den Expo-Dienst übergeben.",
     "generalAlarm.admin.pushNow": "Push jetzt prüfen",
     "generalAlarm.admin.tripRequiredBody":
       "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise und Busse an und ordne Personen oder Familien zu.",
@@ -425,34 +460,54 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.departureCountdown": "Noch {count} Minuten bis zur Abfahrt",
     "generalAlarm.departureOverdue": "Abfahrt seit {count} Minuten fällig",
     "generalAlarm.enableNotifications": "Benachrichtigungen aktivieren",
-    "generalAlarm.notification.reminder.boarded": "{name}: Bitte bestätige jetzt „Im Bus“.",
-    "generalAlarm.notification.reminder.on_way": "{name}: Bitte bestätige jetzt „Ich bin unterwegs“.",
-    "generalAlarm.notification.reminder.read": "{name}: Bitte bestätige „Gelesen“.",
+    "generalAlarm.notification.reminder.boarded":
+      "{name}: Bitte bestätige jetzt „Im Bus“.",
+    "generalAlarm.notification.reminder.on_way":
+      "{name}: Bitte bestätige jetzt „Ich bin unterwegs“.",
+    "generalAlarm.notification.reminder.read":
+      "{name}: Bitte bestätige „Gelesen“.",
     "generalAlarm.notification.title": "Boarding",
-    "generalAlarm.notifications.checking": "Benachrichtigungsstatus wird geprüft …",
-    "generalAlarm.notifications.denied": "Benachrichtigungen sind nicht freigegeben.",
-    "generalAlarm.notifications.disabled": "Mitteilungen sind in den Einstellungen ausgeschaltet.",
-    "generalAlarm.notifications.error": "Push konnte nicht eingerichtet werden. Lokale Hinweise können eingeschränkt sein.",
-    "generalAlarm.notifications.expo_go": "Benachrichtigungen sind in Expo Go für diese App deaktiviert. Bitte verwende einen Development Build.",
-    "generalAlarm.notifications.missing_project_id": "Dieser Build ist noch nicht mit einer EAS-Projekt-ID für Push verbunden.",
-    "generalAlarm.notifications.registered": "Push und lokale Fünf-Minuten-Erinnerungen sind aktiviert.",
-    "generalAlarm.notifications.simulator": "Lokale Hinweise sind möglich; Remote-Push benötigt ein echtes Gerät.",
-    "generalAlarm.notifications.unsupported": "Push-Benachrichtigungen sind in der Webversion nicht verfügbar.",
+    "generalAlarm.notifications.checking":
+      "Benachrichtigungsstatus wird geprüft …",
+    "generalAlarm.notifications.denied":
+      "Benachrichtigungen sind nicht freigegeben.",
+    "generalAlarm.notifications.disabled":
+      "Mitteilungen sind in den Einstellungen ausgeschaltet.",
+    "generalAlarm.notifications.error":
+      "Push konnte nicht eingerichtet werden. Lokale Hinweise können eingeschränkt sein.",
+    "generalAlarm.notifications.expo_go":
+      "Benachrichtigungen sind in Expo Go für diese App deaktiviert. Bitte verwende einen Development Build.",
+    "generalAlarm.notifications.missing_project_id":
+      "Dieser Build ist noch nicht mit einer EAS-Projekt-ID für Push verbunden.",
+    "generalAlarm.notifications.registered":
+      "Push und lokale Fünf-Minuten-Erinnerungen sind aktiviert.",
+    "generalAlarm.notifications.simulator":
+      "Lokale Hinweise sind möglich; Remote-Push benötigt ein echtes Gerät.",
+    "generalAlarm.notifications.unsupported":
+      "Push-Benachrichtigungen sind in der Webversion nicht verfügbar.",
     "generalAlarm.notificationsTitle": "Boarding-Benachrichtigungen",
     "generalAlarm.openSettings": "Systemeinstellungen öffnen",
-    "generalAlarm.platformLimit": "Remote-Push benötigt einen nativen Development-/Produktionsbuild und funktioniert auf Android nicht vollständig in Expo Go. Die App kann Ton, Anzeige oder Aufwecken nicht garantieren; Gerät, System und Nutzer behalten die Kontrolle.",
+    "generalAlarm.platformLimit":
+      "Remote-Push benötigt einen nativen Development-/Produktionsbuild und funktioniert auf Android nicht vollständig in Expo Go. Die App kann Ton, Anzeige oder Aufwecken nicht garantieren; Gerät, System und Nutzer behalten die Kontrolle.",
     "generalAlarm.reminderDue.boarded": "Bitte bestätige jetzt „Im Bus“.",
-    "generalAlarm.reminderDue.on_way": "Bitte bestätige jetzt „Ich bin unterwegs“.",
-    "generalAlarm.reminderDue.problem": "Die Reiseleitung kümmert sich um deine Problemmeldung.",
+    "generalAlarm.reminderDue.on_way":
+      "Bitte bestätige jetzt „Ich bin unterwegs“.",
+    "generalAlarm.reminderDue.problem":
+      "Die Reiseleitung kümmert sich um deine Problemmeldung.",
     "generalAlarm.reminderDue.read": "Bitte bestätige jetzt „Gelesen“.",
-    "generalAlarm.sequenceBody": "Bestätige nacheinander: Gelesen → Ich bin unterwegs → Im Bus. Nach fünf Minuten ohne nächsten Status wird erneut erinnert.",
+    "generalAlarm.sequenceBody":
+      "Bestätige nacheinander: Gelesen → Ich bin unterwegs → Im Bus. Nach fünf Minuten ohne nächsten Status wird erneut erinnert.",
     "guide.acts": "Beschreibung und Handlungen",
-    "guide.admin.actionError": "Die Änderung konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
+    "guide.admin.actionError":
+      "Die Änderung konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
     "guide.admin.acts": "Hinweise und Handlungen",
-    "guide.admin.actsPlaceholder": "Nur geprüfte oder organisatorische Hinweise eintragen",
+    "guide.admin.actsPlaceholder":
+      "Nur geprüfte oder organisatorische Hinweise eintragen",
     "guide.admin.cancelNew": "Abbrechen",
-    "guide.admin.coordinateError": "Breiten- und Längengrad müssen jeweils gemeinsam und als gültige Zahlen eingetragen werden.",
-    "guide.admin.coordinatesHint": "Die Koordinaten des Besuchsorts sind optional und werden bei Auswahl eines Katalogorts automatisch eingetragen.",
+    "guide.admin.coordinateError":
+      "Breiten- und Längengrad müssen jeweils gemeinsam und als gültige Zahlen eingetragen werden.",
+    "guide.admin.coordinatesHint":
+      "Die Koordinaten des Besuchsorts sind optional und werden bei Auswahl eines Katalogorts automatisch eingetragen.",
     "guide.admin.currentLatitude": "Breitengrad des Besuchsorts",
     "guide.admin.currentLongitude": "Längengrad des Besuchsorts",
     "guide.admin.currentPlace": "Aktueller Besuchsort",
@@ -460,34 +515,43 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.admin.departureIn": "Abfahrt festlegen",
     "guide.admin.departurePreview": "Geplante Abfahrt: {date}",
     "guide.admin.description": "Beschreibung",
-    "guide.admin.descriptionPlaceholder": "Organisatorische Hinweise zum Programmpunkt",
+    "guide.admin.descriptionPlaceholder":
+      "Organisatorische Hinweise zum Programmpunkt",
     "guide.admin.distanceHint": "Entfernungshinweis",
     "guide.admin.distanceHintPlaceholder": "Zum Beispiel: etwa 300 m",
     "guide.admin.editTitle": "Veröffentlichten Programmpunkt ändern",
     "guide.admin.liveHint": "Gespeicherte Änderungen erscheinen über Realtime.",
-    "guide.admin.mapPickerAccessibilityLabel": "Karte zur Auswahl des Reiseziels",
-    "guide.admin.mapPickerBody": "Tippe auf die Karte oder verschiebe den Marker, um das Reiseziel festzulegen.",
+    "guide.admin.mapPickerAccessibilityLabel":
+      "Karte zur Auswahl des Reiseziels",
+    "guide.admin.mapPickerBody":
+      "Tippe auf die Karte oder verschiebe den Marker, um das Reiseziel festzulegen.",
     "guide.admin.mapPickerClear": "Standort entfernen",
-    "guide.admin.mapPickerDenied": "Der aktuelle Standort darf ohne Standortfreigabe nicht verwendet werden.",
+    "guide.admin.mapPickerDenied":
+      "Der aktuelle Standort darf ohne Standortfreigabe nicht verwendet werden.",
     "guide.admin.mapPickerEmpty": "Noch kein genauer Standort ausgewählt.",
-    "guide.admin.mapPickerError": "Der aktuelle Standort konnte nicht ermittelt werden.",
+    "guide.admin.mapPickerError":
+      "Der aktuelle Standort konnte nicht ermittelt werden.",
     "guide.admin.mapPickerIraqLabel": "Irak · Standort wählen",
     "guide.admin.mapPickerLocating": "Standort wird ermittelt …",
     "guide.admin.mapPickerMarkerLabel": "Ausgewähltes Reiseziel",
     "guide.admin.mapPickerSelected": "Ausgewählt: {latitude}, {longitude}",
     "guide.admin.mapPickerTitle": "Reiseziel auf der Karte setzen",
     "guide.admin.mapPickerUseCurrent": "Meinen Standort verwenden",
-    "guide.admin.mapPickerWebBody": "Tippe auf die Irak-Karte. Für eine sehr genaue Position verwende deinen aktuellen Standort oder passe die Koordinaten darunter an.",
+    "guide.admin.mapPickerWebBody":
+      "Tippe auf die Irak-Karte. Für eine sehr genaue Position verwende deinen aktuellen Standort oder passe die Koordinaten darunter an.",
     "guide.admin.meetingLatitude": "Breitengrad des Treffpunkts",
     "guide.admin.meetingLongitude": "Längengrad des Treffpunkts",
     "guide.admin.meetingPoint": "Treffpunkt",
-    "guide.admin.meetingPointPlaceholder": "Genaue Beschreibung des Treffpunkts",
+    "guide.admin.meetingPointPlaceholder":
+      "Genaue Beschreibung des Treffpunkts",
     "guide.admin.minutes": "in {count} Minuten",
-    "guide.admin.newPointBody": "Beim Veröffentlichen wird der bisherige Programmpunkt beendet. Die Statusmeldungen beginnen neu.",
+    "guide.admin.newPointBody":
+      "Beim Veröffentlichen wird der bisherige Programmpunkt beendet. Die Statusmeldungen beginnen neu.",
     "guide.admin.newPointTitle": "Neuen Programmpunkt vorbereiten",
     "guide.admin.nextProgram": "Nächster Programmpunkt",
     "guide.admin.nextProgramPlaceholder": "Was folgt als Nächstes?",
-    "guide.admin.noParticipants": "Der aktiven Zwischenreise sind noch keine Personen oder Familien zugeordnet.",
+    "guide.admin.noParticipants":
+      "Der aktiven Zwischenreise sind noch keine Personen oder Familien zugeordnet.",
     "guide.admin.placeCatalog": "Optionalen Ort aus dem Offline-Katalog wählen",
     "guide.admin.placeSearchPlaceholder": "Ort oder Stadt suchen …",
     "guide.admin.placeSelected": "Ausgewählter Katalogort",
@@ -498,39 +562,49 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.admin.published": "Live veröffentlicht",
     "guide.admin.relevantGate": "Relevante Tür / Eingang",
     "guide.admin.relevantGatePlaceholder": "Zum Beispiel: Tor 3",
-    "guide.admin.responsesBody": "Statusmeldungen werden live aktualisiert. Problemfälle müssen ausdrücklich übernommen werden.",
+    "guide.admin.responsesBody":
+      "Statusmeldungen werden live aktualisiert. Problemfälle müssen ausdrücklich übernommen werden.",
     "guide.admin.responsesTitle": "Teilnehmerstatus",
     "guide.admin.saveChanges": "Änderungen live speichern",
     "guide.admin.saved": "Der Programmpunkt wurde gespeichert.",
     "guide.admin.takeProblem": "Problem übernehmen",
     "guide.admin.takenBy": "Übernommen von {name}",
-    "guide.admin.tripRequiredBody": "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise an und ordne Personen oder Familien zu.",
+    "guide.admin.tripRequiredBody":
+      "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise an und ordne Personen oder Familien zu.",
     "guide.admin.tripRequiredTitle": "Aktive Zwischenreise erforderlich",
     "guide.calculateDistance": "Entfernung einmalig ermitteln",
     "guide.currentLabel": "Wo sind wir?",
     "guide.departure": "Abfahrtszeit",
     "guide.description": "Beschreibung",
     "guide.distance": "Entfernung zum Treffpunkt",
-    "guide.distanceDenied": "Ohne Standortfreigabe kann die Entfernung nicht berechnet werden.",
-    "guide.distanceError": "Der aktuelle Standort konnte nicht bestimmt werden.",
+    "guide.distanceDenied":
+      "Ohne Standortfreigabe kann die Entfernung nicht berechnet werden.",
+    "guide.distanceError":
+      "Der aktuelle Standort konnte nicht bestimmt werden.",
     "guide.distanceLoading": "Standort wird ermittelt …",
-    "guide.homeBody": "Aktuell: {place}. Treffpunkt und Abfahrt sind live verfügbar.",
+    "guide.homeBody":
+      "Aktuell: {place}. Treffpunkt und Abfahrt sind live verfügbar.",
     "guide.homeTitle": "Aktueller Programmpunkt",
     "guide.loading": "Reiseführung wird geladen …",
     "guide.meetingPoint": "Treffpunkt",
     "guide.navTitle": "Wo sind wir?",
     "guide.nextProgram": "Als Nächstes",
-    "guide.noAssignmentBody": "Dein Konto ist noch keiner aktiven Zwischenreise zugeordnet. Wende dich an die Reiseleitung.",
+    "guide.noAssignmentBody":
+      "Dein Konto ist noch keiner aktiven Zwischenreise zugeordnet. Wende dich an die Reiseleitung.",
     "guide.noAssignmentTitle": "Keine Reisezuordnung",
-    "guide.noCoordinatesDistance": "Ohne genaue Treffpunktkoordinaten kann nur die Kartensuche, aber keine Entfernung genutzt werden.",
-    "guide.noTracking": "Der Standort wird nur auf deinen Klick einmalig abgefragt und nicht dauerhaft verfolgt.",
-    "guide.noUpdateBody": "Die Reiseleitung hat noch keinen aktuellen Programmpunkt veröffentlicht.",
+    "guide.noCoordinatesDistance":
+      "Ohne genaue Treffpunktkoordinaten kann nur die Kartensuche, aber keine Entfernung genutzt werden.",
+    "guide.noTracking":
+      "Der Standort wird nur auf deinen Klick einmalig abgefragt und nicht dauerhaft verfolgt.",
+    "guide.noUpdateBody":
+      "Die Reiseleitung hat noch keinen aktuellen Programmpunkt veröffentlicht.",
     "guide.noUpdateTitle": "Noch kein Programmpunkt",
     "guide.notSpecified": "Nicht angegeben",
     "guide.open": "Programmpunkt öffnen",
     "guide.openNavigation": "Externe Navigation öffnen",
     "guide.openPlace": "Ort öffnen",
-    "guide.pendingBody": "Mindestens eine Meldung ist nur auf diesem Gerät gespeichert und beim Reiseleiter noch nicht angekommen.",
+    "guide.pendingBody":
+      "Mindestens eine Meldung ist nur auf diesem Gerät gespeichert und beim Reiseleiter noch nicht angekommen.",
     "guide.pendingRetry": "Übertragung erneut versuchen",
     "guide.pendingTitle": "Noch nicht übertragen",
     "guide.problemAcknowledged": "Deine Meldung wurde von {name} gesehen.",
@@ -545,14 +619,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.status.problem": "Problem",
     "guide.statusBody": "Wähle deinen aktuellen Stand.",
     "guide.statusPending": "Nur lokal vorgemerkt – noch nicht übertragen",
-    "guide.statusPendingBody": "Die Reiseleitung kann diese Meldung erst sehen, wenn die Übertragung erfolgreich war.",
+    "guide.statusPendingBody":
+      "Die Reiseleitung kann diese Meldung erst sehen, wenn die Übertragung erfolgreich war.",
     "guide.statusSaved": "Dein Status wurde übertragen.",
     "guide.statusTitle": "Wie ist dein Status?",
-    "guide.submitError.auth": "Deine Sitzung ist abgelaufen. Melde dich erneut an.",
+    "guide.submitError.auth":
+      "Deine Sitzung ist abgelaufen. Melde dich erneut an.",
     "guide.submitError.closed": "Der Programmpunkt wurde inzwischen geändert.",
-    "guide.submitError.not_linked": "Deine Teilnehmer-Zuordnung wurde geändert. Wende dich an die Reiseleitung.",
+    "guide.submitError.not_linked":
+      "Deine Teilnehmer-Zuordnung wurde geändert. Wende dich an die Reiseleitung.",
     "guide.submitError.offline": "Die Meldung wurde lokal vorgemerkt.",
-    "guide.submitError.server": "Der Status konnte wegen eines Serverfehlers nicht gespeichert werden.",
+    "guide.submitError.server":
+      "Der Status konnte wegen eines Serverfehlers nicht gespeichert werden.",
     "guide.syncErrorTitle": "Reiseführung nicht verfügbar",
     "guide.title": "Reiseführung",
     "groupCheck.actionError":
@@ -652,83 +730,113 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.loading": "Gruppen werden geladen …",
     "tripGroups.retry": "Erneut versuchen",
     "tripGroups.emptyTitle": "Noch keiner Gruppe zugeordnet",
-    "tripGroups.emptyBody": "Sobald die Reiseleitung dich oder deine Familie einer Gruppe zuordnet, erscheint sie hier.",
+    "tripGroups.emptyBody":
+      "Sobald die Reiseleitung dich oder deine Familie einer Gruppe zuordnet, erscheint sie hier.",
     "tripGroups.leader": "Gruppenleitung",
     "tripGroups.youAreLeader": "Du bist Gruppenadmin",
     "tripGroups.memberCount": "{count} Personen",
     "tripGroups.homeTitle": "Deine Reisegruppe",
-    "tripGroups.homeBody": "Deine Gruppenzuordnung und deine Gruppenleiter auf einen Blick.",
+    "tripGroups.homeBody":
+      "Deine Gruppenzuordnung und deine Gruppenleiter auf einen Blick.",
     "tripGroups.homeRequestTitle": "Standortanfrage für deine Gruppe",
-    "tripGroups.homeRequestBody": "Die Reiseleitung fragt als Gruppenanführer nach deinem aktuellen Standort.",
+    "tripGroups.homeRequestBody":
+      "Die Reiseleitung fragt als Gruppenanführer nach deinem aktuellen Standort.",
     "tripGroups.open": "Gruppe öffnen",
     "tripGroups.request.title": "Aktueller Standort angefragt",
-    "tripGroups.request.body": "Die Reiseleitung hat am {date} nach deinem Standort gefragt.",
-    "tripGroups.request.privacy": "Nur wenn du zustimmst, wird dein Standort einmalig ermittelt. Es gibt kein Live-Tracking. Der geteilte Standort ist für die Reiseleitung 15 Minuten sichtbar.",
+    "tripGroups.request.body":
+      "Die Reiseleitung hat am {date} nach deinem Standort gefragt.",
+    "tripGroups.request.privacy":
+      "Nur wenn du zustimmst, wird dein Standort einmalig ermittelt. Es gibt kein Live-Tracking. Der geteilte Standort ist für die Reiseleitung 15 Minuten sichtbar.",
     "tripGroups.request.share": "Standort einmalig teilen",
     "tripGroups.request.decline": "Nicht teilen",
     "tripGroups.request.locating": "Standort wird ermittelt …",
     "tripGroups.request.shared":
       "Dein Standort wurde einmalig geteilt und ist ab sofort 15 Minuten lang sichtbar.",
     "tripGroups.request.declined": "Du hast die Standortfreigabe abgelehnt.",
-    "tripGroups.request.permissionDenied": "Ohne Standortberechtigung kann kein Standort geteilt werden.",
-    "tripGroups.request.locationError": "Dein Standort konnte nicht ermittelt werden. Prüfe GPS und Berechtigung.",
-    "tripGroups.error.auth": "Deine Sitzung ist abgelaufen. Melde dich erneut an.",
-    "tripGroups.error.conflict": "Mindestens ein Teilnehmer gehört bereits zu einer anderen Gruppe oder der Gruppenname ist vergeben.",
-    "tripGroups.error.not_found": "Die Gruppe oder Standortanfrage ist nicht mehr aktuell. Lade die Ansicht neu.",
-    "tripGroups.error.offline": "Die Aktion konnte ohne Internetverbindung nicht gespeichert werden.",
-    "tripGroups.error.server": "Die Gruppenaktion konnte wegen eines Serverfehlers nicht gespeichert werden.",
+    "tripGroups.request.permissionDenied":
+      "Ohne Standortberechtigung kann kein Standort geteilt werden.",
+    "tripGroups.request.locationError":
+      "Dein Standort konnte nicht ermittelt werden. Prüfe GPS und Berechtigung.",
+    "tripGroups.error.auth":
+      "Deine Sitzung ist abgelaufen. Melde dich erneut an.",
+    "tripGroups.error.conflict":
+      "Mindestens ein Teilnehmer gehört bereits zu einer anderen Gruppe oder der Gruppenname ist vergeben.",
+    "tripGroups.error.not_found":
+      "Die Gruppe oder Standortanfrage ist nicht mehr aktuell. Lade die Ansicht neu.",
+    "tripGroups.error.offline":
+      "Die Aktion konnte ohne Internetverbindung nicht gespeichert werden.",
+    "tripGroups.error.server":
+      "Die Gruppenaktion konnte wegen eines Serverfehlers nicht gespeichert werden.",
     "tripGroups.admin.tripRequiredTitle": "Aktive Zwischenreise erforderlich",
-    "tripGroups.admin.tripRequiredBody": "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise an und ordne Personen oder Familien zu.",
+    "tripGroups.admin.tripRequiredBody":
+      "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise an und ordne Personen oder Familien zu.",
     "tripGroups.admin.createTitle": "Neue Gruppe bilden",
     "tripGroups.admin.editTitle": "Gruppe bearbeiten",
-    "tripGroups.admin.editorBody": "Wähle einen oder mehrere Gruppenleiter und füge Personen oder ganze Familien hinzu.",
+    "tripGroups.admin.editorBody":
+      "Wähle einen oder mehrere Gruppenleiter und füge Personen oder ganze Familien hinzu.",
     "tripGroups.admin.name": "Gruppenname",
     "tripGroups.admin.namePlaceholder": "Zum Beispiel: Gruppe Abbas",
     "tripGroups.admin.selectLeader": "Gruppenleiter / Gruppenadmins",
-    "tripGroups.admin.selectLeaderBody": "Leiter gehören selbst zur Gruppe. Nur sie können nach ihrem Standort gefragt werden. Ihre App-Rolle bleibt unverändert.",
+    "tripGroups.admin.selectLeaderBody":
+      "Leiter gehören selbst zur Gruppe. Nur sie können nach ihrem Standort gefragt werden. Ihre App-Rolle bleibt unverändert.",
     "tripGroups.admin.leaderSearch": "Anführer suchen",
     "tripGroups.admin.memberSearch": "Gruppenmitglied suchen",
     "tripGroups.admin.searchPlaceholder": "Nach Namen suchen …",
-    "tripGroups.admin.selectedLeader": "Als Gruppenleiter ausgewählt · Tippen zum Entfernen",
+    "tripGroups.admin.selectedLeader":
+      "Als Gruppenleiter ausgewählt · Tippen zum Entfernen",
     "tripGroups.admin.selectedMembers": "Ausgewählt: {count}",
     "tripGroups.admin.removeMember": "{name} aus der Auswahl entfernen",
     "tripGroups.admin.noSearchResults": "Kein passender Name gefunden.",
-    "tripGroups.admin.noLeaderCandidates": "Keine freien registrierten Personen gefunden.",
+    "tripGroups.admin.noLeaderCandidates":
+      "Keine freien registrierten Personen gefunden.",
     "tripGroups.admin.selectMembers": "Gruppenmitglieder auswählen",
-    "tripGroups.admin.noParticipants": "Noch keine registrierten Personen vorhanden.",
-    "tripGroups.admin.alreadyAssigned": "Bereits einer anderen Gruppe zugeordnet",
-    "tripGroups.admin.leaderIsMember": "Der Anführer ist automatisch Gruppenmitglied",
+    "tripGroups.admin.noParticipants":
+      "Noch keine registrierten Personen vorhanden.",
+    "tripGroups.admin.alreadyAssigned":
+      "Bereits einer anderen Gruppe zugeordnet",
+    "tripGroups.admin.leaderIsMember":
+      "Der Anführer ist automatisch Gruppenmitglied",
     "tripGroups.admin.create": "Gruppe bilden",
     "tripGroups.admin.save": "Gruppe speichern",
     "tripGroups.admin.cancel": "Abbrechen",
     "tripGroups.admin.saved": "Die Gruppe wurde gespeichert.",
     "tripGroups.admin.emptyTitle": "Noch keine Gruppen",
-    "tripGroups.admin.emptyBody": "Bilde oben die erste Gruppe aus den zugeordneten Personen.",
+    "tripGroups.admin.emptyBody":
+      "Bilde oben die erste Gruppe aus den zugeordneten Personen.",
     "tripGroups.admin.memberCount": "{count} Personen",
     "tripGroups.admin.leaderUnavailable": "Anführer nicht verfügbar",
     "tripGroups.admin.edit": "Bearbeiten",
     "tripGroups.admin.delete": "Löschen",
     "tripGroups.admin.deleteTitle": "„{name}“ löschen?",
-    "tripGroups.admin.deleteBody": "Die Gruppenzuordnung und eine vorhandene Standortanfrage werden gelöscht. Teilnehmer und Zwischenreise bleiben erhalten.",
+    "tripGroups.admin.deleteBody":
+      "Die Gruppenzuordnung und eine vorhandene Standortanfrage werden gelöscht. Teilnehmer und Zwischenreise bleiben erhalten.",
     "tripGroups.admin.deleteConfirm": "Gruppe löschen",
     "tripGroups.admin.locationTitle": "Standort anfragen",
-    "tripGroups.admin.locationIdle": "Nur dieser Gruppenleiter erhält die Anfrage und entscheidet über die Freigabe.",
-    "tripGroups.admin.locationPending": "Standort am {date} angefragt – Antwort steht aus.",
-    "tripGroups.admin.locationShared": "Standort am {date} geteilt – 15 Minuten sichtbar.",
-    "tripGroups.admin.locationDeclined": "Der Anführer hat die Freigabe abgelehnt.",
+    "tripGroups.admin.locationIdle":
+      "Nur dieser Gruppenleiter erhält die Anfrage und entscheidet über die Freigabe.",
+    "tripGroups.admin.locationPending":
+      "Standort am {date} angefragt – Antwort steht aus.",
+    "tripGroups.admin.locationShared":
+      "Standort am {date} geteilt – 15 Minuten sichtbar.",
+    "tripGroups.admin.locationDeclined":
+      "Der Anführer hat die Freigabe abgelehnt.",
     "tripGroups.admin.requestLocation": "Standort anfragen",
     "tripGroups.admin.requestAgain": "Erneut anfragen",
     "tripGroups.admin.openLocation": "Standort öffnen",
     "tripGroups.admin.locationMapLabel": "Karte mit den Standorten der Gruppe",
     "tripGroups.admin.leaderMarker": "Gruppenanführer",
     "tripGroups.admin.adminMarker": "Mein Standort",
-    "tripGroups.admin.adminLocationPrivacy": "Dein eigener Standort wird nur auf diesem Gerät angezeigt und nicht gespeichert oder geteilt.",
+    "tripGroups.admin.adminLocationPrivacy":
+      "Dein eigener Standort wird nur auf diesem Gerät angezeigt und nicht gespeichert oder geteilt.",
     "tripGroups.admin.showAdminLocation": "Meinen Standort anzeigen",
     "tripGroups.admin.refreshAdminLocation": "Meinen Standort aktualisieren",
     "tripGroups.admin.locatingAdmin": "Standort wird ermittelt …",
-    "tripGroups.admin.adminLocationDenied": "Der Standortzugriff wurde nicht erlaubt.",
-    "tripGroups.admin.adminLocationError": "Der eigene Standort konnte nicht ermittelt werden.",
-    "tripGroups.admin.requested": "Die Standortanfrage wurde an den Gruppenanführer gesendet.",
+    "tripGroups.admin.adminLocationDenied":
+      "Der Standortzugriff wurde nicht erlaubt.",
+    "tripGroups.admin.adminLocationError":
+      "Der eigene Standort konnte nicht ermittelt werden.",
+    "tripGroups.admin.requested":
+      "Die Standortanfrage wurde an den Gruppenanführer gesendet.",
     "admin.description":
       "Verwalte Zwischenreisen, das davon unabhängige Tagesprogramm, Reiseziele, Statusabfragen, anonyme Fragen und Benutzer in klaren Arbeitsbereichen.",
     "admin.section.organization.active": "Aktive Zwischenreise",
@@ -747,7 +855,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.organization.live.description":
       "Programmpunkt, Teilnehmermeldungen und Generalalarm steuern.",
     "admin.organization.overview.activeTrip": "Aktive Zwischenreise",
-    "admin.organization.overview.noActiveTrip": "Noch keine aktive Zwischenreise",
+    "admin.organization.overview.noActiveTrip":
+      "Noch keine aktive Zwischenreise",
     "admin.organization.overview.buses": "Busse",
     "admin.organization.overview.participants": "Teilnehmer",
     "admin.organization.overview.groups": "Gruppen",
@@ -768,17 +877,20 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.bus.status": "Bereit",
     "admin.section.bus.title": "Busmanagement",
     "admin.section.groups.active": "{count} Gruppen",
-    "admin.section.groups.description": "Teilnehmer zu Gruppen zusammenstellen, Anführer bestimmen und einmalig deren Standort anfragen.",
+    "admin.section.groups.description":
+      "Teilnehmer zu Gruppen zusammenstellen, Anführer bestimmen und einmalig deren Standort anfragen.",
     "admin.section.groups.error": "Fehler",
     "admin.section.groups.inactive": "Noch keine Gruppen",
     "admin.section.groups.title": "Reisegruppen",
     "admin.section.guidance.active": "Live",
-    "admin.section.guidance.description": "Aktuellen Programmpunkt, Abfahrt und Teilnehmermeldungen live verwalten.",
+    "admin.section.guidance.description":
+      "Aktuellen Programmpunkt, Abfahrt und Teilnehmermeldungen live verwalten.",
     "admin.section.guidance.error": "Fehler",
     "admin.section.guidance.inactive": "Nicht veröffentlicht",
     "admin.section.guidance.title": "Reiseführung",
     "admin.section.navigation.active": "{count} Ziele",
-    "admin.section.navigation.description": "Mehrere Ziele auf der Karte anlegen, bearbeiten und zur Navigation veröffentlichen.",
+    "admin.section.navigation.description":
+      "Mehrere Ziele auf der Karte anlegen, bearbeiten und zur Navigation veröffentlichen.",
     "admin.section.navigation.error": "Fehler",
     "admin.section.navigation.inactive": "Nicht gesetzt",
     "admin.section.navigation.title": "Reiseziele & Navigation",
@@ -801,7 +913,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "dailyProgram.admin.editorBody":
       "Plane hier unabhängig von den Zwischenreisen das Programm für die gesamte Reise. Jeder Tag erhält sein eigenes Programm und wird gemeinsam gespeichert.",
     "dailyProgram.admin.editorTitle": "Tagesprogramm planen",
-    "dailyProgram.admin.empty": "Für heute und die kommenden Tage ist noch kein Programm veröffentlicht.",
+    "dailyProgram.admin.empty":
+      "Für heute und die kommenden Tage ist noch kein Programm veröffentlicht.",
     "dailyProgram.admin.numberOfDays": "Wie viele Tage?",
     "dailyProgram.admin.publishedTitle": "Veröffentlichte Programme",
     "dailyProgram.admin.saveMany": "{count} Tagesprogramme speichern",
@@ -828,30 +941,38 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Heute und die nächsten sechs Tage, übersichtlich nach Tagen gegliedert.",
     "dailyProgram.weekRange": "{start} – {end}",
     "dailyProgram.weekTitle": "Wochenprogramm",
-    "navigation.admin.actionError": "Das Reiseziel konnte nicht gespeichert oder entfernt werden. Prüfe die Verbindung und versuche es erneut.",
+    "navigation.admin.actionError":
+      "Das Reiseziel konnte nicht gespeichert oder entfernt werden. Prüfe die Verbindung und versuche es erneut.",
     "navigation.admin.addTitle": "Neues Reiseziel anlegen",
-    "navigation.admin.body": "Gib dem Ort einen Namen und setze den Marker auf der Karte – auch ohne aktive Zwischenreise. Alle angemeldeten Nutzer sehen ihn anschließend auf ihrer Karte.",
-    "navigation.admin.coordinatesHint": "Die Karte trägt die Koordinaten automatisch ein. Für eine Feinabstimmung können sie direkt geändert werden.",
+    "navigation.admin.body":
+      "Gib dem Ort einen Namen und setze den Marker auf der Karte – auch ohne aktive Zwischenreise. Alle angemeldeten Nutzer sehen ihn anschließend auf ihrer Karte.",
+    "navigation.admin.coordinatesHint":
+      "Die Karte trägt die Koordinaten automatisch ein. Für eine Feinabstimmung können sie direkt geändert werden.",
     "navigation.admin.count": "{count} aktive Reiseziele",
     "navigation.admin.create": "Reiseziel veröffentlichen",
     "navigation.admin.details": "Beschreibung / Orientierungshinweis",
-    "navigation.admin.detailsPlaceholder": "Zum Beispiel: Eingang neben dem Hotelparkplatz",
+    "navigation.admin.detailsPlaceholder":
+      "Zum Beispiel: Eingang neben dem Hotelparkplatz",
     "navigation.admin.edit": "Bearbeiten",
     "navigation.admin.editTitle": "Reiseziel bearbeiten",
-    "navigation.admin.emptyBody": "Noch keine Reiseziele angelegt. Das erste Ziel erscheint nach dem Speichern als roter Marker auf der Karte.",
+    "navigation.admin.emptyBody":
+      "Noch keine Reiseziele angelegt. Das erste Ziel erscheint nach dem Speichern als roter Marker auf der Karte.",
     "navigation.admin.listTitle": "Veröffentlichte Reiseziele",
     "navigation.admin.loading": "Reiseziele werden geladen …",
     "navigation.admin.name": "Name des Reiseziels",
-    "navigation.admin.namePlaceholder": "Zum Beispiel: Hotel, Busparkplatz oder Tor 3",
+    "navigation.admin.namePlaceholder":
+      "Zum Beispiel: Hotel, Busparkplatz oder Tor 3",
     "navigation.admin.preview": "Navigation prüfen",
     "navigation.admin.remove": "Entfernen",
     "navigation.admin.removeConfirm": "Ziel wirklich entfernen",
-    "navigation.admin.removeConfirmBody": "Das Ziel verschwindet für alle Teilnehmer von der Karte. Es kann später neu angelegt werden.",
+    "navigation.admin.removeConfirmBody":
+      "Das Ziel verschwindet für alle Teilnehmer von der Karte. Es kann später neu angelegt werden.",
     "navigation.admin.removeConfirmTitle": "„{name}“ entfernen?",
     "navigation.admin.removed": "„{name}“ wurde von der Karte entfernt.",
     "navigation.admin.save": "Änderungen speichern",
     "navigation.admin.saved": "„{name}“ wurde auf der Karte veröffentlicht.",
-    "navigation.admin.unavailableTitle": "Treffpunkt-Navigation nicht verfügbar",
+    "navigation.admin.unavailableTitle":
+      "Treffpunkt-Navigation nicht verfügbar",
     "admin.emptyBody":
       "Sobald sich Personen registrieren, erscheinen sie hier.",
     "admin.emptyTitle": "Noch keine Konten",
@@ -885,7 +1006,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.registeredAt": "Registriert: {date}",
     "admin.retry": "Erneut versuchen",
     "admin.searchA11y": "Personen oder Familien nach Namen suchen",
-    "admin.searchEmptyBody": "Versuche einen anderen Personen- oder Familiennamen.",
+    "admin.searchEmptyBody":
+      "Versuche einen anderen Personen- oder Familiennamen.",
     "admin.searchEmptyTitle": "Keine Person oder Familie gefunden",
     "admin.searchPlaceholder": "Person oder Familie suchen …",
     "admin.role.admin": "Admin",
@@ -982,6 +1104,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.memberTypeTitle": "Ich bin",
     "auth.noAccount": "Du hast noch kein Konto?",
     "auth.password": "Passwort",
+    "auth.showPassword": "Passwort anzeigen",
+    "auth.hidePassword": "Passwort verbergen",
     "auth.passwordConfirm": "Passwort wiederholen",
     "auth.passwordHint":
       "Mindestens 8 Zeichen sowie mindestens ein Buchstabe und eine Zahl.",
@@ -1014,8 +1138,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Wähle deine Sprache. Danach kannst du ein Konto erstellen, dich anmelden oder die App ohne Konto nutzen.",
     "onboarding.brandName": "Al Batoul",
     "onboarding.brandSubtitle": "Ziyara Reise-App",
-    "onboarding.languageHint":
-      "Öffnet die Registrierung in dieser Sprache.",
+    "onboarding.languageHint": "Öffnet die Registrierung in dieser Sprache.",
     "onboarding.tagline": "Gemeinsam reisen. Gemeinsam erleben.",
     "onboarding.title": "Sprache wählen",
     "onboarding.videoLabel": "Einführungsvideo zur Ziyara-App",
@@ -1082,6 +1205,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "city.placeCount.one": "{count} Ort",
     "city.titleFallback": "Stadt",
     "common.aboutApp": "Über die App",
+    "common.back": "Zurück",
     "common.currentLocation": "Dein aktueller Standort",
     "common.details": "Details",
     "common.disclaimer": "Inhaltlicher Hinweis",
@@ -1168,7 +1292,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "map.tripDestinationListBody":
       "Wähle ein Reiseziel aus, um es auf der Karte anzuzeigen.",
     "map.tripDestinationsButton": "Reiseziele",
-    "map.tripDestinationsBody": "Diese Ziele wurden von der Reiseleitung veröffentlicht. Tippe auf ein Ziel, um dorthin zu navigieren.",
+    "map.tripDestinationsBody":
+      "Diese Ziele wurden von der Reiseleitung veröffentlicht. Tippe auf ein Ziel, um dorthin zu navigieren.",
     "map.tripDestinationsTitle": "Ziele der Reisegruppe",
     "nav.about": "Über die App",
     "nav.account": "Kontodaten",
@@ -1278,7 +1403,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Quellenregel",
   },
   en: {
-    "wakeUp.alreadyDue": "This wake-up call is already due and can no longer be edited. Refreshing the list.",
+    "wakeUp.alreadyDue":
+      "This wake-up call is already due and can no longer be edited. Refreshing the list.",
     "wakeUp.now": "Now",
     "wakeUp.plan": "Schedule",
     "wakeUp.date": "Date (YYYY-MM-DD)",
@@ -1293,10 +1419,13 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.cancelScheduled": "Cancel scheduled call",
     "wakeUp.saved": "The wake-up call is scheduled.",
     "wakeUp.cancelled": "The scheduled wake-up call was cancelled.",
-    "wakeUp.invalidTime": "Choose a valid future date and time within the next year.",
-    "wakeUp.scheduleHint": "The wake-up call starts automatically from this time, even when the app is closed. Due calls are checked every minute.",
+    "wakeUp.invalidTime":
+      "Choose a valid future date and time within the next year.",
+    "wakeUp.scheduleHint":
+      "The wake-up call starts automatically from this time, even when the app is closed. Due calls are checked every minute.",
     "wakeUp.title": "Wake-up call",
-    "wakeUp.description": "Send a wake-up call to every registered account. Each person acknowledges it once.",
+    "wakeUp.description":
+      "Send a wake-up call to every registered account. Each person acknowledges it once.",
     "wakeUp.message": "Message",
     "wakeUp.placeholder": "For example: Good morning! Please get ready.",
     "wakeUp.send": "Send wake-up call now",
@@ -1305,17 +1434,23 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.close": "End wake-up call",
     "wakeUp.acknowledge": "I am awake",
     "wakeUp.acknowledged": "You acknowledged the wake-up call.",
-    "wakeUp.confirmations": "{confirmed} of {total} accounts have acknowledged.",
-    "wakeUp.pushFailed": "The wake-up call is visible in the app. Push could not be sent to every device.",
-    "wakeUp.notificationHint": "Enable notifications to receive wake-up calls outside the app. Sound depends on your device settings.",
+    "wakeUp.confirmations":
+      "{confirmed} of {total} accounts have acknowledged.",
+    "wakeUp.pushFailed":
+      "The wake-up call is visible in the app. Push could not be sent to every device.",
+    "wakeUp.notificationHint":
+      "Enable notifications to receive wake-up calls outside the app. Sound depends on your device settings.",
     "wakeUp.enableNotifications": "Enable notifications",
     "admin.transport.title": "Intermediate trips & buses",
-    "admin.transport.description": "Bus assignments and live guidance for individual journeys.",
+    "admin.transport.description":
+      "Bus assignments and live guidance for individual journeys.",
     "tripGroups.groupCount": "{count} groups",
     "tripGroups.admin.families": "Add families",
-    "tripGroups.admin.familiesBody": "Selecting a family adds all its accounts. Relatives without their own phone are included through the account’s party size.",
+    "tripGroups.admin.familiesBody":
+      "Selecting a family adds all its accounts. Relatives without their own phone are included through the account’s party size.",
     "tripGroups.admin.familySearch": "Search families …",
-    "tripGroups.admin.familyUnavailable": "No members, or a member already belongs to another group.",
+    "tripGroups.admin.familyUnavailable":
+      "No members, or a member already belongs to another group.",
     "account.changeEmail": "Change email address",
     "account.changePassword": "Change password",
     "account.deleteAction": "Delete account permanently",
@@ -1331,7 +1466,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "account.deleteLastAdmin":
       "The final administrator cannot delete their account. Assign the administrator role to another person first.",
     "account.deleteTitle": "Danger zone",
-    "account.deleteWarning": "Irreversible: deleted account data cannot be restored.",
+    "account.deleteWarning":
+      "Irreversible: deleted account data cannot be restored.",
     "account.currentPassword": "Current password",
     "account.description":
       "Update your sign-in details. Your current password is verified for security.",
@@ -1379,7 +1515,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Quickly contact the medical team or travel team and include your location if needed.",
     "emergency.homeButton": "Report an emergency",
     "emergency.staffHomeTitle": "Emergency inbox",
-    "emergency.staffHomeBody": "Open the assistance requests sent to your team.",
+    "emergency.staffHomeBody":
+      "Open the assistance requests sent to your team.",
     "emergency.staffOpen": "Open inbox",
     "emergency.title": "Report an emergency",
     "emergency.body":
@@ -1392,9 +1529,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.team.medical": "Medical team",
     "emergency.team.medicalBody": "For injury, illness, or medical assistance.",
     "emergency.team.travel": "Travel team",
-    "emergency.team.travelBody": "For directions, transport, or organizational help.",
+    "emergency.team.travelBody":
+      "For directions, transport, or organizational help.",
     "emergency.locationLabel": "Where are you?",
-    "emergency.locationPlaceholder": "For example: hotel lobby, bus 2, or gate 3",
+    "emergency.locationPlaceholder":
+      "For example: hotel lobby, bus 2, or gate 3",
     "emergency.locationPrivacy":
       "Your device position is obtained once only after you tap the location button and is stored with this message. There is no live tracking.",
     "emergency.locationShare": "Include current location",
@@ -1408,13 +1547,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.locationPrefix": "Location: {location}",
     "emergency.locationOpen": "Open on map",
     "emergency.messageLabel": "What happened?",
-    "emergency.messagePlaceholder": "Briefly describe what you need and how urgent it is.",
+    "emergency.messagePlaceholder":
+      "Briefly describe what you need and how urgent it is.",
     "emergency.submit": "Send emergency now",
     "emergency.submitting": "Sending emergency …",
-    "emergency.feedback.validation_team": "Choose the medical team or travel team first.",
+    "emergency.feedback.validation_team":
+      "Choose the medical team or travel team first.",
     "emergency.feedback.validation_location":
       "Enter where you are, for example the hotel lobby, a bus, or a gate.",
-    "emergency.feedback.validation_message": "Describe what you need using at least 5 characters.",
+    "emergency.feedback.validation_message":
+      "Describe what you need using at least 5 characters.",
     "emergency.feedback.error":
       "The emergency could not be saved. Check the connection and try again immediately.",
     "emergency.feedback.no_recipients":
@@ -1446,7 +1588,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.syncErrorTitle": "Messages are not current",
     "emergency.retry": "Reload",
     "emergency.inboxTitle": "Messages for my team",
-    "emergency.inboxBody": "New reports appear here, with an additional push attempt.",
+    "emergency.inboxBody":
+      "New reports appear here, with an additional push attempt.",
     "emergency.inboxEmpty": "No emergency reports for your team yet",
     "emergency.sentTitle": "My sent emergencies",
     "emergency.sentEmpty": "You have not sent an emergency yet.",
@@ -1484,23 +1627,22 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "luggage.count": "Number of suitcases",
     "luggage.countBody":
       "Count all suitcases for the people represented by this account. Do not include hand luggage.",
-    "luggage.countLimit":
-      "Minimum {minimum}, maximum {maximum} suitcases.",
+    "luggage.countLimit": "Minimum {minimum}, maximum {maximum} suitcases.",
     "luggage.decrease": "Decrease suitcase count",
     "luggage.increase": "Increase suitcase count",
     "luggage.validation.count": "Enter a valid suitcase count.",
     "simCards.count": "Number of SIM cards",
     "simCards.countBody":
       "Count all SIM cards needed for the people represented by this account.",
-    "simCards.countLimit":
-      "Minimum {minimum}, maximum {maximum} SIM cards.",
+    "simCards.countLimit": "Minimum {minimum}, maximum {maximum} SIM cards.",
     "simCards.decrease": "Decrease SIM-card count",
     "simCards.increase": "Increase SIM-card count",
     "simCards.validation.count": "Enter a valid SIM-card count.",
     "accountFamilies.cancel": "Cancel",
     "accountFamilies.create": "Create family",
     "accountFamilies.createTitle": "New family",
-    "accountFamilies.currentFamily": "Currently in: {name}. Selecting moves the account.",
+    "accountFamilies.currentFamily":
+      "Currently in: {name}. Selecting moves the account.",
     "accountFamilies.delete": "Delete",
     "accountFamilies.deleteBody":
       "The user accounts remain and will no longer be assigned to a family.",
@@ -1522,7 +1664,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "accountFamilies.memberCount": "{count} accounts",
     "accountFamilies.name": "Family name",
     "accountFamilies.namePlaceholder": "For example: Ali family",
-    "accountFamilies.noMembers": "No account is currently assigned to this family.",
+    "accountFamilies.noMembers":
+      "No account is currently assigned to this family.",
     "accountFamilies.noUsers": "No user accounts are available yet.",
     "accountFamilies.save": "Save changes",
     "accountFamilies.selectMembers": "Select user accounts",
@@ -1571,7 +1714,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Choose a registered person or an entire family above.",
     "bus.admin.noParticipantsTitle": "No assignments yet",
     "bus.admin.noFamiliesAvailable": "No account families are available yet.",
-    "bus.admin.noPeopleAvailable": "No individual person matches. Members of already assigned families are hidden here.",
+    "bus.admin.noPeopleAvailable":
+      "No individual person matches. Members of already assigned families are hidden here.",
     "bus.admin.person": "Individual person",
     "bus.admin.personSearch": "Search person",
     "bus.admin.personSearchPlaceholder": "Search by registered name …",
@@ -1591,14 +1735,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.tripSummary": "Buses: {buses} · Assignments: {assignments}",
     "bus.admin.unknownFamily": "Family",
     "bus.departureAt": "Departure: {date}",
-    "bus.homeBody": "A bus check is active for {count} of your bus assignments.",
+    "bus.homeBody":
+      "A bus check is active for {count} of your bus assignments.",
     "bus.homeTitle": "Bus boarding active",
     "bus.loading": "Loading bus assignment …",
     "bus.navTitle": "My bus",
     "bus.noAssignmentBody":
       "Your account has not been assigned to a bus yet. Contact your trip leader.",
     "bus.noAssignmentTitle": "No bus assignment",
-    "bus.noBoardingBody": "Your assignment is visible. There is no active check right now.",
+    "bus.noBoardingBody":
+      "Your assignment is visible. There is no active check right now.",
     "bus.noBoardingTitle": "No active boarding",
     "bus.open": "Open bus status",
     "bus.retry": "Try again",
@@ -1613,16 +1759,20 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.submitError.not_linked":
       "Your participant assignment changed. Please contact the trip leader.",
     "bus.submitError.offline": "You are offline. Reconnect and retry.",
-    "bus.submitError.server": "Your bus status could not be saved because of a server error.",
+    "bus.submitError.server":
+      "Your bus status could not be saved because of a server error.",
     "bus.syncErrorTitle": "Bus status unavailable",
     "bus.title": "Bus management",
     "bus.unassignedBus": "Not assigned to a bus yet",
     "generalAlarm.admin.actionError":
       "The boarding could not be changed. Check the connection and retry.",
     "generalAlarm.admin.active": "Boarding active",
-    "generalAlarm.admin.busCanClose": "Everyone is on board – this bus can close.",
-    "generalAlarm.admin.busCannotClose": "Cannot close yet: {count} still missing.",
-    "generalAlarm.admin.confirmedSummary": "{confirmed} of {total} participants have confirmed.",
+    "generalAlarm.admin.busCanClose":
+      "Everyone is on board – this bus can close.",
+    "generalAlarm.admin.busCannotClose":
+      "Cannot close yet: {count} still missing.",
+    "generalAlarm.admin.confirmedSummary":
+      "{confirmed} of {total} participants have confirmed.",
     "generalAlarm.admin.customDepartureMinutes": "Custom number of minutes",
     "generalAlarm.admin.customDepartureMinutesPlaceholder": "For example: 25",
     "generalAlarm.admin.departureOverdue": "Departure time has passed",
@@ -1638,18 +1788,25 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.admin.escalatedBy": "Manually escalated by {name}.",
     "generalAlarm.admin.invalidDepartureMinutes":
       "Enter a whole number between 1 and 1440 minutes.",
-    "generalAlarm.admin.missingSummary": "{count} participants are still missing.",
+    "generalAlarm.admin.missingSummary":
+      "{count} participants are still missing.",
     "generalAlarm.admin.messageLabel": "Departure message",
-    "generalAlarm.admin.messagePlaceholder": "For example: Departure from the hotel",
+    "generalAlarm.admin.messagePlaceholder":
+      "For example: Departure from the hotel",
     "generalAlarm.admin.noParticipantsBody":
       "First assign at least one person or family under Trip organization in the Intermediate trip & buses step.",
-    "generalAlarm.admin.outstandingBody": "{count} participants are not yet confirmed on the bus.",
+    "generalAlarm.admin.outstandingBody":
+      "{count} participants are not yet confirmed on the bus.",
     "generalAlarm.admin.outstandingTitle": "Outstanding participants",
-    "generalAlarm.admin.participantReminderDue": "{name}: The next status has been outstanding for at least five minutes.",
-    "generalAlarm.admin.push.error": "Push delivery is unavailable. The in-app overview remains active.",
-    "generalAlarm.admin.push.idle": "Push reminders are triggered on the server.",
+    "generalAlarm.admin.participantReminderDue":
+      "{name}: The next status has been outstanding for at least five minutes.",
+    "generalAlarm.admin.push.error":
+      "Push delivery is unavailable. The in-app overview remains active.",
+    "generalAlarm.admin.push.idle":
+      "Push reminders are triggered on the server.",
     "generalAlarm.admin.push.running": "Checking due push reminders …",
-    "generalAlarm.admin.push.success": "Due push reminders were accepted by the Expo service.",
+    "generalAlarm.admin.push.success":
+      "Due push reminders were accepted by the Expo service.",
     "generalAlarm.admin.pushNow": "Check push now",
     "generalAlarm.admin.tripRequiredBody":
       "First create an active intermediate trip and buses under Trip organization, then assign people or families.",
@@ -1658,34 +1815,50 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.departureCountdown": "{count} minutes until departure",
     "generalAlarm.departureOverdue": "Departure was due {count} minutes ago",
     "generalAlarm.enableNotifications": "Enable notifications",
-    "generalAlarm.notification.reminder.boarded": "{name}: Please confirm “On the bus” now.",
-    "generalAlarm.notification.reminder.on_way": "{name}: Please confirm “I am on my way” now.",
+    "generalAlarm.notification.reminder.boarded":
+      "{name}: Please confirm “On the bus” now.",
+    "generalAlarm.notification.reminder.on_way":
+      "{name}: Please confirm “I am on my way” now.",
     "generalAlarm.notification.reminder.read": "{name}: Please confirm “Read”.",
     "generalAlarm.notification.title": "Boarding",
     "generalAlarm.notifications.checking": "Checking notification status …",
     "generalAlarm.notifications.denied": "Notifications have not been allowed.",
-    "generalAlarm.notifications.disabled": "Notifications are turned off in Settings.",
-    "generalAlarm.notifications.error": "Push could not be configured. Local reminders may be limited.",
-    "generalAlarm.notifications.expo_go": "Notifications are disabled in Expo Go for this app. Please use a development build.",
-    "generalAlarm.notifications.missing_project_id": "This build is not yet linked to an EAS project ID for push.",
-    "generalAlarm.notifications.registered": "Push and local five-minute reminders are enabled.",
-    "generalAlarm.notifications.simulator": "Local reminders may work; remote push requires a physical device.",
-    "generalAlarm.notifications.unsupported": "Push notifications are unavailable on the web version.",
+    "generalAlarm.notifications.disabled":
+      "Notifications are turned off in Settings.",
+    "generalAlarm.notifications.error":
+      "Push could not be configured. Local reminders may be limited.",
+    "generalAlarm.notifications.expo_go":
+      "Notifications are disabled in Expo Go for this app. Please use a development build.",
+    "generalAlarm.notifications.missing_project_id":
+      "This build is not yet linked to an EAS project ID for push.",
+    "generalAlarm.notifications.registered":
+      "Push and local five-minute reminders are enabled.",
+    "generalAlarm.notifications.simulator":
+      "Local reminders may work; remote push requires a physical device.",
+    "generalAlarm.notifications.unsupported":
+      "Push notifications are unavailable on the web version.",
     "generalAlarm.notificationsTitle": "Boarding notifications",
     "generalAlarm.openSettings": "Open system settings",
-    "generalAlarm.platformLimit": "Remote push requires a native development/production build and is not fully available in Expo Go on Android. The app cannot guarantee sound, display, or waking; the device, operating system, and user remain in control.",
+    "generalAlarm.platformLimit":
+      "Remote push requires a native development/production build and is not fully available in Expo Go on Android. The app cannot guarantee sound, display, or waking; the device, operating system, and user remain in control.",
     "generalAlarm.reminderDue.boarded": "Please confirm “On the bus” now.",
     "generalAlarm.reminderDue.on_way": "Please confirm “I am on my way” now.",
-    "generalAlarm.reminderDue.problem": "The trip team is handling your problem report.",
+    "generalAlarm.reminderDue.problem":
+      "The trip team is handling your problem report.",
     "generalAlarm.reminderDue.read": "Please confirm “Read” now.",
-    "generalAlarm.sequenceBody": "Confirm in sequence: Read → I am on my way → On the bus. A missing next status is reminded after five minutes.",
+    "generalAlarm.sequenceBody":
+      "Confirm in sequence: Read → I am on my way → On the bus. A missing next status is reminded after five minutes.",
     "guide.acts": "Description and actions",
-    "guide.admin.actionError": "The change could not be saved. Check the connection and retry.",
+    "guide.admin.actionError":
+      "The change could not be saved. Check the connection and retry.",
     "guide.admin.acts": "Notes and actions",
-    "guide.admin.actsPlaceholder": "Enter only reviewed or organizational notes",
+    "guide.admin.actsPlaceholder":
+      "Enter only reviewed or organizational notes",
     "guide.admin.cancelNew": "Cancel",
-    "guide.admin.coordinateError": "Latitude and longitude must be entered together as valid numbers.",
-    "guide.admin.coordinatesHint": "Visit-place coordinates are optional and are entered automatically when a catalog place is selected.",
+    "guide.admin.coordinateError":
+      "Latitude and longitude must be entered together as valid numbers.",
+    "guide.admin.coordinatesHint":
+      "Visit-place coordinates are optional and are entered automatically when a catalog place is selected.",
     "guide.admin.currentLatitude": "Visit-place latitude",
     "guide.admin.currentLongitude": "Visit-place longitude",
     "guide.admin.currentPlace": "Current visit place",
@@ -1693,35 +1866,44 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.admin.departureIn": "Set departure",
     "guide.admin.departurePreview": "Planned departure: {date}",
     "guide.admin.description": "Description",
-    "guide.admin.descriptionPlaceholder": "Organizational notes for this itinerary point",
+    "guide.admin.descriptionPlaceholder":
+      "Organizational notes for this itinerary point",
     "guide.admin.distanceHint": "Distance hint",
     "guide.admin.distanceHintPlaceholder": "For example: about 300 m",
     "guide.admin.editTitle": "Edit published itinerary point",
     "guide.admin.liveHint": "Saved changes appear through Realtime.",
-    "guide.admin.mapPickerAccessibilityLabel": "Map for selecting the trip destination",
-    "guide.admin.mapPickerBody": "Tap the map or drag the marker to set the trip destination.",
+    "guide.admin.mapPickerAccessibilityLabel":
+      "Map for selecting the trip destination",
+    "guide.admin.mapPickerBody":
+      "Tap the map or drag the marker to set the trip destination.",
     "guide.admin.mapPickerClear": "Remove location",
-    "guide.admin.mapPickerDenied": "The current location cannot be used without location permission.",
+    "guide.admin.mapPickerDenied":
+      "The current location cannot be used without location permission.",
     "guide.admin.mapPickerEmpty": "No exact location selected yet.",
-    "guide.admin.mapPickerError": "The current location could not be determined.",
+    "guide.admin.mapPickerError":
+      "The current location could not be determined.",
     "guide.admin.mapPickerIraqLabel": "Iraq · Choose location",
     "guide.admin.mapPickerLocating": "Getting location …",
     "guide.admin.mapPickerMarkerLabel": "Selected trip destination",
     "guide.admin.mapPickerSelected": "Selected: {latitude}, {longitude}",
     "guide.admin.mapPickerTitle": "Set trip destination on the map",
     "guide.admin.mapPickerUseCurrent": "Use my current location",
-    "guide.admin.mapPickerWebBody": "Tap the Iraq map. For a very precise position, use your current location or adjust the coordinates below.",
+    "guide.admin.mapPickerWebBody":
+      "Tap the Iraq map. For a very precise position, use your current location or adjust the coordinates below.",
     "guide.admin.meetingLatitude": "Meeting-point latitude",
     "guide.admin.meetingLongitude": "Meeting-point longitude",
     "guide.admin.meetingPoint": "Meeting point",
     "guide.admin.meetingPointPlaceholder": "Exact meeting-point description",
     "guide.admin.minutes": "in {count} minutes",
-    "guide.admin.newPointBody": "Publishing ends the previous itinerary point and starts fresh status reports.",
+    "guide.admin.newPointBody":
+      "Publishing ends the previous itinerary point and starts fresh status reports.",
     "guide.admin.newPointTitle": "Prepare a new itinerary point",
     "guide.admin.nextProgram": "Next itinerary point",
     "guide.admin.nextProgramPlaceholder": "What comes next?",
-    "guide.admin.noParticipants": "No people or families are assigned to the active intermediate trip yet.",
-    "guide.admin.placeCatalog": "Optionally select a place from the offline catalog",
+    "guide.admin.noParticipants":
+      "No people or families are assigned to the active intermediate trip yet.",
+    "guide.admin.placeCatalog":
+      "Optionally select a place from the offline catalog",
     "guide.admin.placeSearchPlaceholder": "Search for a place or city …",
     "guide.admin.placeSelected": "Selected catalog place",
     "guide.admin.placeNoResults": "No matching place found.",
@@ -1731,20 +1913,23 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.admin.published": "Published live",
     "guide.admin.relevantGate": "Relevant door / entrance",
     "guide.admin.relevantGatePlaceholder": "For example: Gate 3",
-    "guide.admin.responsesBody": "Status reports update live. Problem reports must be accepted explicitly.",
+    "guide.admin.responsesBody":
+      "Status reports update live. Problem reports must be accepted explicitly.",
     "guide.admin.responsesTitle": "Participant status",
     "guide.admin.saveChanges": "Save changes live",
     "guide.admin.saved": "The itinerary point was saved.",
     "guide.admin.takeProblem": "Take problem",
     "guide.admin.takenBy": "Taken by {name}",
-    "guide.admin.tripRequiredBody": "First create an active intermediate trip under Trip organization and assign people or families.",
+    "guide.admin.tripRequiredBody":
+      "First create an active intermediate trip under Trip organization and assign people or families.",
     "guide.admin.tripRequiredTitle": "Active intermediate trip required",
     "guide.calculateDistance": "Check distance once",
     "guide.currentLabel": "Where are we?",
     "guide.departure": "Departure time",
     "guide.description": "Description",
     "guide.distance": "Distance to the meeting point",
-    "guide.distanceDenied": "Distance cannot be calculated without location permission.",
+    "guide.distanceDenied":
+      "Distance cannot be calculated without location permission.",
     "guide.distanceError": "The current location could not be determined.",
     "guide.distanceLoading": "Getting location …",
     "guide.homeBody": "Current: {place}. Meeting point and departure are live.",
@@ -1753,17 +1938,22 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.meetingPoint": "Meeting point",
     "guide.navTitle": "Where are we?",
     "guide.nextProgram": "Up next",
-    "guide.noAssignmentBody": "Your account is not assigned to an active intermediate trip yet. Contact the trip leader.",
+    "guide.noAssignmentBody":
+      "Your account is not assigned to an active intermediate trip yet. Contact the trip leader.",
     "guide.noAssignmentTitle": "No trip assignment",
-    "guide.noCoordinatesDistance": "Without exact meeting-point coordinates, map search is available but distance is not.",
-    "guide.noTracking": "Location is requested once only when you tap and is not tracked continuously.",
-    "guide.noUpdateBody": "The trip leader has not published a current itinerary point yet.",
+    "guide.noCoordinatesDistance":
+      "Without exact meeting-point coordinates, map search is available but distance is not.",
+    "guide.noTracking":
+      "Location is requested once only when you tap and is not tracked continuously.",
+    "guide.noUpdateBody":
+      "The trip leader has not published a current itinerary point yet.",
     "guide.noUpdateTitle": "No itinerary point yet",
     "guide.notSpecified": "Not specified",
     "guide.open": "Open itinerary point",
     "guide.openNavigation": "Open external navigation",
     "guide.openPlace": "Open place",
-    "guide.pendingBody": "At least one report is stored only on this device and has not reached the trip leader.",
+    "guide.pendingBody":
+      "At least one report is stored only on this device and has not reached the trip leader.",
     "guide.pendingRetry": "Retry transmission",
     "guide.pendingTitle": "Not transmitted yet",
     "guide.problemAcknowledged": "Your report was seen by {name}.",
@@ -1778,14 +1968,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.status.problem": "Problem",
     "guide.statusBody": "Choose your current state.",
     "guide.statusPending": "Queued locally — not transmitted yet",
-    "guide.statusPendingBody": "The trip leader can see this report only after transmission succeeds.",
+    "guide.statusPendingBody":
+      "The trip leader can see this report only after transmission succeeds.",
     "guide.statusSaved": "Your status was transmitted.",
     "guide.statusTitle": "What is your status?",
     "guide.submitError.auth": "Your session expired. Sign in again.",
-    "guide.submitError.closed": "The itinerary point has changed in the meantime.",
-    "guide.submitError.not_linked": "Your participant assignment changed. Contact the trip leader.",
+    "guide.submitError.closed":
+      "The itinerary point has changed in the meantime.",
+    "guide.submitError.not_linked":
+      "Your participant assignment changed. Contact the trip leader.",
     "guide.submitError.offline": "The report was queued locally.",
-    "guide.submitError.server": "The status could not be saved because of a server error.",
+    "guide.submitError.server":
+      "The status could not be saved because of a server error.",
     "guide.syncErrorTitle": "Trip guidance unavailable",
     "guide.title": "Trip guidance",
     "groupCheck.actionError":
@@ -1884,68 +2078,91 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.loading": "Loading groups…",
     "tripGroups.retry": "Try again",
     "tripGroups.emptyTitle": "Not assigned to a group yet",
-    "tripGroups.emptyBody": "Your group appears here once the travel team assigns you or your family.",
+    "tripGroups.emptyBody":
+      "Your group appears here once the travel team assigns you or your family.",
     "tripGroups.leader": "Group leaders",
     "tripGroups.youAreLeader": "You are a group leader",
     "tripGroups.memberCount": "{count} people",
     "tripGroups.homeTitle": "Your trip group",
-    "tripGroups.homeBody": "Your group assignment and group leaders at a glance.",
+    "tripGroups.homeBody":
+      "Your group assignment and group leaders at a glance.",
     "tripGroups.homeRequestTitle": "Location request for your group",
-    "tripGroups.homeRequestBody": "The trip team is asking you, as group leader, for your current location.",
+    "tripGroups.homeRequestBody":
+      "The trip team is asking you, as group leader, for your current location.",
     "tripGroups.open": "Open group",
     "tripGroups.request.title": "Current location requested",
-    "tripGroups.request.body": "The trip team requested your location on {date}.",
-    "tripGroups.request.privacy": "Your location is obtained once only if you agree. There is no live tracking. The shared location is visible to the trip team for 15 minutes.",
+    "tripGroups.request.body":
+      "The trip team requested your location on {date}.",
+    "tripGroups.request.privacy":
+      "Your location is obtained once only if you agree. There is no live tracking. The shared location is visible to the trip team for 15 minutes.",
     "tripGroups.request.share": "Share location once",
     "tripGroups.request.decline": "Do not share",
     "tripGroups.request.locating": "Getting location…",
-    "tripGroups.request.shared": "Your location was shared once and is visible for 15 minutes.",
+    "tripGroups.request.shared":
+      "Your location was shared once and is visible for 15 minutes.",
     "tripGroups.request.declined": "You declined the location request.",
-    "tripGroups.request.permissionDenied": "A location cannot be shared without location permission.",
-    "tripGroups.request.locationError": "Your location could not be determined. Check GPS and permission settings.",
+    "tripGroups.request.permissionDenied":
+      "A location cannot be shared without location permission.",
+    "tripGroups.request.locationError":
+      "Your location could not be determined. Check GPS and permission settings.",
     "tripGroups.error.auth": "Your session has expired. Sign in again.",
-    "tripGroups.error.conflict": "At least one participant is already in another group, or the group name is already used.",
-    "tripGroups.error.not_found": "The group or location request is no longer current. Refresh the screen.",
-    "tripGroups.error.offline": "The action could not be saved without an internet connection.",
-    "tripGroups.error.server": "The group action could not be saved because of a server error.",
+    "tripGroups.error.conflict":
+      "At least one participant is already in another group, or the group name is already used.",
+    "tripGroups.error.not_found":
+      "The group or location request is no longer current. Refresh the screen.",
+    "tripGroups.error.offline":
+      "The action could not be saved without an internet connection.",
+    "tripGroups.error.server":
+      "The group action could not be saved because of a server error.",
     "tripGroups.admin.tripRequiredTitle": "Active intermediate trip required",
-    "tripGroups.admin.tripRequiredBody": "First create an active intermediate trip under Trip organization and assign people or families.",
+    "tripGroups.admin.tripRequiredBody":
+      "First create an active intermediate trip under Trip organization and assign people or families.",
     "tripGroups.admin.createTitle": "Create a new group",
     "tripGroups.admin.editTitle": "Edit group",
-    "tripGroups.admin.editorBody": "Choose one or more group leaders and add people or whole families.",
+    "tripGroups.admin.editorBody":
+      "Choose one or more group leaders and add people or whole families.",
     "tripGroups.admin.name": "Group name",
     "tripGroups.admin.namePlaceholder": "For example: Abbas group",
     "tripGroups.admin.selectLeader": "Group leaders",
-    "tripGroups.admin.selectLeaderBody": "Leaders are group members. Only they can be asked for their location. Their app role stays unchanged.",
+    "tripGroups.admin.selectLeaderBody":
+      "Leaders are group members. Only they can be asked for their location. Their app role stays unchanged.",
     "tripGroups.admin.leaderSearch": "Search for a leader",
     "tripGroups.admin.memberSearch": "Search for a group member",
     "tripGroups.admin.searchPlaceholder": "Search by name …",
-    "tripGroups.admin.selectedLeader": "Selected as group leader · Tap to remove",
+    "tripGroups.admin.selectedLeader":
+      "Selected as group leader · Tap to remove",
     "tripGroups.admin.selectedMembers": "Selected: {count}",
     "tripGroups.admin.removeMember": "Remove {name} from the selection",
     "tripGroups.admin.noSearchResults": "No matching name found.",
-    "tripGroups.admin.noLeaderCandidates": "No available registered accounts found.",
+    "tripGroups.admin.noLeaderCandidates":
+      "No available registered accounts found.",
     "tripGroups.admin.selectMembers": "Select group members",
     "tripGroups.admin.noParticipants": "No registered accounts yet.",
     "tripGroups.admin.alreadyAssigned": "Already assigned to another group",
-    "tripGroups.admin.leaderIsMember": "The leader is automatically a group member",
+    "tripGroups.admin.leaderIsMember":
+      "The leader is automatically a group member",
     "tripGroups.admin.create": "Create group",
     "tripGroups.admin.save": "Save group",
     "tripGroups.admin.cancel": "Cancel",
     "tripGroups.admin.saved": "The group was saved.",
     "tripGroups.admin.emptyTitle": "No groups yet",
-    "tripGroups.admin.emptyBody": "Use the form above to create the first group from assigned people.",
+    "tripGroups.admin.emptyBody":
+      "Use the form above to create the first group from assigned people.",
     "tripGroups.admin.memberCount": "{count} people",
     "tripGroups.admin.leaderUnavailable": "Leader unavailable",
     "tripGroups.admin.edit": "Edit",
     "tripGroups.admin.delete": "Delete",
     "tripGroups.admin.deleteTitle": "Delete “{name}”?",
-    "tripGroups.admin.deleteBody": "The group assignment and any location request will be deleted. Participants and the intermediate trip remain.",
+    "tripGroups.admin.deleteBody":
+      "The group assignment and any location request will be deleted. Participants and the intermediate trip remain.",
     "tripGroups.admin.deleteConfirm": "Delete group",
     "tripGroups.admin.locationTitle": "Request location",
-    "tripGroups.admin.locationIdle": "Only this group leader receives the request and decides whether to share.",
-    "tripGroups.admin.locationPending": "Location requested on {date} — awaiting a response.",
-    "tripGroups.admin.locationShared": "Location shared on {date} — visible for 15 minutes.",
+    "tripGroups.admin.locationIdle":
+      "Only this group leader receives the request and decides whether to share.",
+    "tripGroups.admin.locationPending":
+      "Location requested on {date} — awaiting a response.",
+    "tripGroups.admin.locationShared":
+      "Location shared on {date} — visible for 15 minutes.",
     "tripGroups.admin.locationDeclined": "The leader declined the request.",
     "tripGroups.admin.requestLocation": "Request location",
     "tripGroups.admin.requestAgain": "Request again",
@@ -1953,13 +2170,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.locationMapLabel": "Map showing the group locations",
     "tripGroups.admin.leaderMarker": "Group leader",
     "tripGroups.admin.adminMarker": "My location",
-    "tripGroups.admin.adminLocationPrivacy": "Your own location is shown only on this device and is not stored or shared.",
+    "tripGroups.admin.adminLocationPrivacy":
+      "Your own location is shown only on this device and is not stored or shared.",
     "tripGroups.admin.showAdminLocation": "Show my location",
     "tripGroups.admin.refreshAdminLocation": "Update my location",
     "tripGroups.admin.locatingAdmin": "Locating …",
     "tripGroups.admin.adminLocationDenied": "Location access was not allowed.",
-    "tripGroups.admin.adminLocationError": "Your location could not be determined.",
-    "tripGroups.admin.requested": "The location request was sent to the group leader.",
+    "tripGroups.admin.adminLocationError":
+      "Your location could not be determined.",
+    "tripGroups.admin.requested":
+      "The location request was sent to the group leader.",
     "admin.description":
       "Manage intermediate trips, the independent whole-journey daily program, destinations, status checks, anonymous questions, and users in clear work areas.",
     "admin.section.organization.active": "Active intermediate trip",
@@ -1978,7 +2198,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.organization.live.description":
       "Manage the current itinerary point, participant reports, and general alarm.",
     "admin.organization.overview.activeTrip": "Active intermediate trip",
-    "admin.organization.overview.noActiveTrip": "No active intermediate trip yet",
+    "admin.organization.overview.noActiveTrip":
+      "No active intermediate trip yet",
     "admin.organization.overview.buses": "Buses",
     "admin.organization.overview.participants": "Participants",
     "admin.organization.overview.groups": "Groups",
@@ -1999,17 +2220,20 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.bus.status": "Ready",
     "admin.section.bus.title": "Bus management",
     "admin.section.groups.active": "{count} groups",
-    "admin.section.groups.description": "Arrange participants into groups, choose leaders and request their location once.",
+    "admin.section.groups.description":
+      "Arrange participants into groups, choose leaders and request their location once.",
     "admin.section.groups.error": "Error",
     "admin.section.groups.inactive": "No groups yet",
     "admin.section.groups.title": "Trip groups",
     "admin.section.guidance.active": "Live",
-    "admin.section.guidance.description": "Manage the current itinerary point, departure and participant reports live.",
+    "admin.section.guidance.description":
+      "Manage the current itinerary point, departure and participant reports live.",
     "admin.section.guidance.error": "Error",
     "admin.section.guidance.inactive": "Not published",
     "admin.section.guidance.title": "Trip guidance",
     "admin.section.navigation.active": "{count} destinations",
-    "admin.section.navigation.description": "Create and edit multiple map destinations and publish them for navigation.",
+    "admin.section.navigation.description":
+      "Create and edit multiple map destinations and publish them for navigation.",
     "admin.section.navigation.error": "Error",
     "admin.section.navigation.inactive": "Not set",
     "admin.section.navigation.title": "Trip destinations & navigation",
@@ -2032,7 +2256,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "dailyProgram.admin.editorBody":
       "Plan the program for the entire pilgrimage here, independently of intermediate trips. Each day has its own program and they are saved together.",
     "dailyProgram.admin.editorTitle": "Plan daily program",
-    "dailyProgram.admin.empty": "No program has been published for today or the coming days.",
+    "dailyProgram.admin.empty":
+      "No program has been published for today or the coming days.",
     "dailyProgram.admin.numberOfDays": "How many days?",
     "dailyProgram.admin.publishedTitle": "Published programs",
     "dailyProgram.admin.saveMany": "Save {count} daily programs",
@@ -2041,11 +2266,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "dailyProgram.admin.startDate": "First date (YYYY-MM-DD)",
     "dailyProgram.admin.title": "Heading (optional)",
     "dailyProgram.admin.titlePlaceholder": "For example: Karbala",
-    "dailyProgram.cachedNotice":
-      "Last saved version · Update failed",
+    "dailyProgram.cachedNotice": "Last saved version · Update failed",
     "dailyProgram.homeTitle": "Daily program",
     "dailyProgram.loading": "Loading daily program …",
-    "dailyProgram.noProgramForDay": "No program has been published for this day yet.",
+    "dailyProgram.noProgramForDay":
+      "No program has been published for this day yet.",
     "dailyProgram.openWeek": "View the full week",
     "dailyProgram.openWeekAccessibility": "Open weekly program",
     "dailyProgram.openWeekHint": "Shows today and the next six days.",
@@ -2057,25 +2282,32 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Today and the next six days, clearly organized by day.",
     "dailyProgram.weekRange": "{start} – {end}",
     "dailyProgram.weekTitle": "Weekly program",
-    "navigation.admin.actionError": "The trip destination could not be saved or removed. Check the connection and try again.",
+    "navigation.admin.actionError":
+      "The trip destination could not be saved or removed. Check the connection and try again.",
     "navigation.admin.addTitle": "Create a trip destination",
-    "navigation.admin.body": "Name the place and set its marker on the map, even without an active intermediate trip. All signed-in users will then see it on their map.",
-    "navigation.admin.coordinatesHint": "The map enters the coordinates automatically. They can be edited directly for fine adjustment.",
+    "navigation.admin.body":
+      "Name the place and set its marker on the map, even without an active intermediate trip. All signed-in users will then see it on their map.",
+    "navigation.admin.coordinatesHint":
+      "The map enters the coordinates automatically. They can be edited directly for fine adjustment.",
     "navigation.admin.count": "{count} active trip destinations",
     "navigation.admin.create": "Publish destination",
     "navigation.admin.details": "Description / orientation note",
-    "navigation.admin.detailsPlaceholder": "For example: entrance beside the hotel parking area",
+    "navigation.admin.detailsPlaceholder":
+      "For example: entrance beside the hotel parking area",
     "navigation.admin.edit": "Edit",
     "navigation.admin.editTitle": "Edit trip destination",
-    "navigation.admin.emptyBody": "No trip destinations yet. The first saved destination will appear as a red marker on the map.",
+    "navigation.admin.emptyBody":
+      "No trip destinations yet. The first saved destination will appear as a red marker on the map.",
     "navigation.admin.listTitle": "Published trip destinations",
     "navigation.admin.loading": "Loading trip destinations …",
     "navigation.admin.name": "Destination name",
-    "navigation.admin.namePlaceholder": "For example: hotel, bus parking or Gate 3",
+    "navigation.admin.namePlaceholder":
+      "For example: hotel, bus parking or Gate 3",
     "navigation.admin.preview": "Check navigation",
     "navigation.admin.remove": "Remove",
     "navigation.admin.removeConfirm": "Remove destination",
-    "navigation.admin.removeConfirmBody": "The destination will disappear from every participant's map. It can be created again later.",
+    "navigation.admin.removeConfirmBody":
+      "The destination will disappear from every participant's map. It can be created again later.",
     "navigation.admin.removeConfirmTitle": "Remove “{name}”?",
     "navigation.admin.removed": "“{name}” was removed from the map.",
     "navigation.admin.save": "Save changes",
@@ -2208,6 +2440,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.memberTypeTitle": "I am a",
     "auth.noAccount": "Do not have an account yet?",
     "auth.password": "Password",
+    "auth.showPassword": "Show password",
+    "auth.hidePassword": "Hide password",
     "auth.passwordConfirm": "Confirm password",
     "auth.passwordHint":
       "At least 8 characters with at least one letter and one number.",
@@ -2239,8 +2473,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Choose your language. You can then create an account, sign in, or use the app without an account.",
     "onboarding.brandName": "Al Batoul",
     "onboarding.brandSubtitle": "Ziyara Travel App",
-    "onboarding.languageHint":
-      "Opens registration in this language.",
+    "onboarding.languageHint": "Opens registration in this language.",
     "onboarding.tagline": "Travel together. Experience together.",
     "onboarding.title": "Choose your language",
     "onboarding.videoLabel": "Introduction video for the Ziyara app",
@@ -2306,6 +2539,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "city.placeCount.one": "{count} place",
     "city.titleFallback": "City",
     "common.aboutApp": "About the App",
+    "common.back": "Back",
     "common.currentLocation": "Your current location",
     "common.details": "Details",
     "common.disclaimer": "Content Notice",
@@ -2389,7 +2623,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "map.tripDestinationListBody":
       "Select a trip destination to show it on the map.",
     "map.tripDestinationsButton": "Trip destinations",
-    "map.tripDestinationsBody": "These destinations were published by the trip team. Select one to navigate there.",
+    "map.tripDestinationsBody":
+      "These destinations were published by the trip team. Select one to navigate there.",
     "map.tripDestinationsTitle": "Trip-group destinations",
     "nav.about": "About the App",
     "nav.account": "Account details",
@@ -2423,7 +2658,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "reader.displaySettings": "Display",
     "reader.findContent": "Search content",
     "reader.loading": "Loading text …",
-    "reader.noVisibleText": "Enable at least one text component in the display settings.",
+    "reader.noVisibleText":
+      "Enable at least one text component in the display settings.",
     "reader.notFound": "Reading entry not found",
     "reader.notes": "Notes",
     "reader.pendingReview": "Review pending",
@@ -2448,7 +2684,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "settings.accountGuestBody":
       "The guide and your local settings work without an account. Sign-in is required for account and group features.",
     "settings.accountEmail": "Signed in as",
-    "settings.manageAccount": "Change account details, people, suitcases, or SIM cards",
+    "settings.manageAccount":
+      "Change account details, people, suitcases, or SIM cards",
     "settings.appPrep": "App Preparation",
     "settings.arabicFontBody":
       "Applies to placeholders and reviewed Arabic content.",
@@ -2498,7 +2735,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Source Rule",
   },
   ar: {
-    "wakeUp.alreadyDue": "حان موعد هذا النداء ولا يمكن تعديله. جارٍ تحديث القائمة.",
+    "wakeUp.alreadyDue":
+      "حان موعد هذا النداء ولا يمكن تعديله. جارٍ تحديث القائمة.",
     "wakeUp.now": "الآن",
     "wakeUp.plan": "جدولة",
     "wakeUp.date": "التاريخ (YYYY-MM-DD)",
@@ -2513,10 +2751,13 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.cancelScheduled": "إلغاء النداء المجدول",
     "wakeUp.saved": "تمت جدولة نداء الإيقاظ.",
     "wakeUp.cancelled": "تم إلغاء نداء الإيقاظ المجدول.",
-    "wakeUp.invalidTime": "اختر تاريخاً ووقتاً صالحين في المستقبل خلال السنة القادمة.",
-    "wakeUp.scheduleHint": "يبدأ نداء الإيقاظ تلقائياً من هذا الوقت حتى إذا كان التطبيق مغلقاً. يتم التحقق كل دقيقة.",
+    "wakeUp.invalidTime":
+      "اختر تاريخاً ووقتاً صالحين في المستقبل خلال السنة القادمة.",
+    "wakeUp.scheduleHint":
+      "يبدأ نداء الإيقاظ تلقائياً من هذا الوقت حتى إذا كان التطبيق مغلقاً. يتم التحقق كل دقيقة.",
     "wakeUp.title": "نداء إيقاظ",
-    "wakeUp.description": "أرسل نداء إيقاظ إلى جميع الحسابات المسجلة. يؤكد كل شخص استلامه مرة واحدة.",
+    "wakeUp.description":
+      "أرسل نداء إيقاظ إلى جميع الحسابات المسجلة. يؤكد كل شخص استلامه مرة واحدة.",
     "wakeUp.message": "الرسالة",
     "wakeUp.placeholder": "مثلاً: صباح الخير! يرجى الاستعداد.",
     "wakeUp.send": "إرسال نداء الإيقاظ الآن",
@@ -2526,16 +2767,20 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.acknowledge": "أنا مستيقظ",
     "wakeUp.acknowledged": "لقد أكدت استلام نداء الإيقاظ.",
     "wakeUp.confirmations": "أكد {confirmed} من أصل {total} حساباً.",
-    "wakeUp.pushFailed": "نداء الإيقاظ ظاهر في التطبيق. تعذر إرسال الإشعار إلى جميع الأجهزة.",
-    "wakeUp.notificationHint": "فعّل الإشعارات لتلقي نداءات الإيقاظ خارج التطبيق. يعتمد الصوت على إعدادات جهازك.",
+    "wakeUp.pushFailed":
+      "نداء الإيقاظ ظاهر في التطبيق. تعذر إرسال الإشعار إلى جميع الأجهزة.",
+    "wakeUp.notificationHint":
+      "فعّل الإشعارات لتلقي نداءات الإيقاظ خارج التطبيق. يعتمد الصوت على إعدادات جهازك.",
     "wakeUp.enableNotifications": "تفعيل الإشعارات",
     "admin.transport.title": "التنقلات والحافلات",
     "admin.transport.description": "توزيع الحافلات والإرشاد المباشر للتنقلات.",
     "tripGroups.groupCount": "{count} مجموعات",
     "tripGroups.admin.families": "إضافة عائلات",
-    "tripGroups.admin.familiesBody": "يضيف اختيار العائلة جميع حساباتها. يشمل عدد أفراد الحساب الأقارب الذين ليس لديهم هاتف خاص.",
+    "tripGroups.admin.familiesBody":
+      "يضيف اختيار العائلة جميع حساباتها. يشمل عدد أفراد الحساب الأقارب الذين ليس لديهم هاتف خاص.",
     "tripGroups.admin.familySearch": "ابحث عن عائلة …",
-    "tripGroups.admin.familyUnavailable": "لا يوجد أعضاء أو أن أحدهم ينتمي إلى مجموعة أخرى.",
+    "tripGroups.admin.familyUnavailable":
+      "لا يوجد أعضاء أو أن أحدهم ينتمي إلى مجموعة أخرى.",
     "account.changeEmail": "تغيير البريد الإلكتروني",
     "account.changePassword": "تغيير كلمة المرور",
     "account.deleteAction": "حذف الحساب نهائيًا",
@@ -2546,12 +2791,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "account.deleteConfirmBody":
       "لا يمكن التراجع عن هذا الإجراء. سيتم تسجيل خروجك بالكامل من هذا الجهاز بعد ذلك.",
     "account.deleteConfirmTitle": "هل تريد حذف الحساب نهائيًا؟",
-    "account.deleteError":
-      "تعذر حذف الحساب. تحقق من الاتصال وحاول مرة أخرى.",
+    "account.deleteError": "تعذر حذف الحساب. تحقق من الاتصال وحاول مرة أخرى.",
     "account.deleteLastAdmin":
       "لا يمكن للمشرف الأخير حذف حسابه. امنح دور المشرف لشخص آخر أولًا.",
     "account.deleteTitle": "منطقة الخطر",
-    "account.deleteWarning": "إجراء نهائي: لا يمكن استعادة بيانات الحساب المحذوفة.",
+    "account.deleteWarning":
+      "إجراء نهائي: لا يمكن استعادة بيانات الحساب المحذوفة.",
     "account.currentPassword": "كلمة المرور الحالية",
     "account.description":
       "غيّر بيانات تسجيل الدخول. سيتم التحقق من كلمة المرور الحالية للحماية.",
@@ -2610,9 +2855,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.team.medical": "الفريق الطبي",
     "emergency.team.medicalBody": "للإصابة أو المرض أو الحاجة إلى مساعدة طبية.",
     "emergency.team.travel": "فريق الرحلة",
-    "emergency.team.travelBody": "للمساعدة في الاتجاهات أو النقل أو الأمور التنظيمية.",
+    "emergency.team.travelBody":
+      "للمساعدة في الاتجاهات أو النقل أو الأمور التنظيمية.",
     "emergency.locationLabel": "أين أنت؟",
-    "emergency.locationPlaceholder": "مثلاً: بهو الفندق أو الحافلة 2 أو البوابة 3",
+    "emergency.locationPlaceholder":
+      "مثلاً: بهو الفندق أو الحافلة 2 أو البوابة 3",
     "emergency.locationPrivacy":
       "لن يُحدَّد موقع جهازك إلا مرة واحدة بعد الضغط على زر الموقع، وسيُحفظ مع هذه الرسالة. لا يوجد تتبع مباشر.",
     "emergency.locationShare": "إرفاق الموقع الحالي",
@@ -2629,10 +2876,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.messagePlaceholder": "اشرح باختصار ما تحتاج إليه ومدى إلحاحه.",
     "emergency.submit": "إرسال البلاغ الآن",
     "emergency.submitting": "جارٍ إرسال البلاغ …",
-    "emergency.feedback.validation_team": "اختر أولاً الفريق الطبي أو فريق الرحلة.",
+    "emergency.feedback.validation_team":
+      "اختر أولاً الفريق الطبي أو فريق الرحلة.",
     "emergency.feedback.validation_location":
       "اكتب أين توجد، مثل بهو الفندق أو الحافلة أو البوابة.",
-    "emergency.feedback.validation_message": "اشرح ما تحتاج إليه بخمسة أحرف على الأقل.",
+    "emergency.feedback.validation_message":
+      "اشرح ما تحتاج إليه بخمسة أحرف على الأقل.",
     "emergency.feedback.error":
       "تعذر حفظ البلاغ الطارئ. تحقق من الاتصال وحاول مرة أخرى فوراً.",
     "emergency.feedback.no_recipients":
@@ -2664,7 +2913,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.syncErrorTitle": "الرسائل ليست محدثة",
     "emergency.retry": "إعادة التحميل",
     "emergency.inboxTitle": "رسائل فريقي",
-    "emergency.inboxBody": "تظهر البلاغات الجديدة هنا، مع محاولة إرسال إشعار إضافي.",
+    "emergency.inboxBody":
+      "تظهر البلاغات الجديدة هنا، مع محاولة إرسال إشعار إضافي.",
     "emergency.inboxEmpty": "لا توجد بلاغات طارئة لفريقك بعد",
     "emergency.sentTitle": "بلاغاتي الطارئة المرسلة",
     "emergency.sentEmpty": "لم ترسل أي بلاغ طارئ بعد.",
@@ -2686,8 +2936,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergencyDashboard.dutyOn": "دائماً في المناوبة",
     "emergencyDashboard.dutyOff": "خارج المناوبة",
     "emergencyDashboard.dutyMessageTitle": "تم تعيينك لمناوبة الطوارئ",
-    "emergencyDashboard.dutyMessageBody":
-      "عيّنك {admin} لمناوبة {team}.",
+    "emergencyDashboard.dutyMessageBody": "عيّنك {admin} لمناوبة {team}.",
     "emergencyDashboard.requestsTitle": "حالات الطوارئ الواردة",
     "emergencyDashboard.emptyTitle": "لا توجد بلاغات طارئة",
     "emergencyDashboard.emptyBody":
@@ -2703,8 +2952,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "luggage.count": "عدد الحقائب",
     "luggage.countBody":
       "احسب جميع حقائب الأشخاص الذين يمثلهم هذا الحساب، من دون حقائب اليد.",
-    "luggage.countLimit":
-      "الحد الأدنى {minimum} والحد الأقصى {maximum} حقيبة.",
+    "luggage.countLimit": "الحد الأدنى {minimum} والحد الأقصى {maximum} حقيبة.",
     "luggage.decrease": "تقليل عدد الحقائب",
     "luggage.increase": "زيادة عدد الحقائب",
     "luggage.validation.count": "أدخل عدداً صحيحاً للحقائب.",
@@ -2719,7 +2967,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "accountFamilies.cancel": "إلغاء",
     "accountFamilies.create": "إنشاء عائلة",
     "accountFamilies.createTitle": "عائلة جديدة",
-    "accountFamilies.currentFamily": "حالياً ضمن: {name}. يؤدي الاختيار إلى نقل الحساب.",
+    "accountFamilies.currentFamily":
+      "حالياً ضمن: {name}. يؤدي الاختيار إلى نقل الحساب.",
     "accountFamilies.delete": "حذف",
     "accountFamilies.deleteBody":
       "ستبقى حسابات المستخدمين، لكنها لن تعود مرتبطة بعائلة.",
@@ -2786,11 +3035,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.familySearch": "البحث عن عائلة",
     "bus.admin.familySearchPlaceholder": "البحث باسم العائلة …",
     "bus.admin.minutes": "{count} دقيقة",
-    "bus.admin.noParticipantsBody":
-      "اختر أعلاه شخصاً مسجلاً أو عائلة كاملة.",
+    "bus.admin.noParticipantsBody": "اختر أعلاه شخصاً مسجلاً أو عائلة كاملة.",
     "bus.admin.noParticipantsTitle": "لا توجد تعيينات بعد",
     "bus.admin.noFamiliesAvailable": "لا توجد عائلات حسابات متاحة بعد.",
-    "bus.admin.noPeopleAvailable": "لا يوجد شخص منفرد مطابق. أفراد العائلات المعيّنة مخفيون هنا.",
+    "bus.admin.noPeopleAvailable":
+      "لا يوجد شخص منفرد مطابق. أفراد العائلات المعيّنة مخفيون هنا.",
     "bus.admin.person": "شخص منفرد",
     "bus.admin.personSearch": "البحث عن شخص",
     "bus.admin.personSearchPlaceholder": "البحث بالاسم المسجل …",
@@ -2827,11 +3076,13 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.status.problem": "مشكلة",
     "bus.status.read": "تمت القراءة",
     "bus.statusSaved": "تم حفظ حالة الحافلة.",
-    "bus.submitError.auth": "انتهت جلستك. سجّل الدخول مرة أخرى ثم أعد المحاولة.",
+    "bus.submitError.auth":
+      "انتهت جلستك. سجّل الدخول مرة أخرى ثم أعد المحاولة.",
     "bus.submitError.closed": "تم إنهاء هذا الصعود بالفعل.",
     "bus.submitError.not_linked":
       "تم تغيير تعيين المشارك الخاص بك. يرجى التواصل مع مسؤول الرحلة.",
-    "bus.submitError.offline": "أنت غير متصل بالإنترنت. اتصل مجدداً ثم أعد المحاولة.",
+    "bus.submitError.offline":
+      "أنت غير متصل بالإنترنت. اتصل مجدداً ثم أعد المحاولة.",
     "bus.submitError.server": "تعذر حفظ حالة الحافلة بسبب خطأ في الخادم.",
     "bus.syncErrorTitle": "حالة الحافلة غير متاحة",
     "bus.title": "إدارة الحافلات",
@@ -2841,7 +3092,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.admin.active": "صعود الحافلة نشط",
     "generalAlarm.admin.busCanClose": "الجميع في الحافلة – يمكن إغلاقها.",
     "generalAlarm.admin.busCannotClose": "لا يمكن إغلاقها بعد: يتبقى {count}.",
-    "generalAlarm.admin.confirmedSummary": "أكد {confirmed} من أصل {total} مشاركاً.",
+    "generalAlarm.admin.confirmedSummary":
+      "أكد {confirmed} من أصل {total} مشاركاً.",
     "generalAlarm.admin.customDepartureMinutes": "عدد دقائق مخصص",
     "generalAlarm.admin.customDepartureMinutesPlaceholder": "مثلاً: 25",
     "generalAlarm.admin.departureOverdue": "تجاوز وقت المغادرة",
@@ -2862,13 +3114,17 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.admin.messagePlaceholder": "مثلاً: المغادرة من الفندق",
     "generalAlarm.admin.noParticipantsBody":
       "عيّن أولاً شخصاً واحداً أو عائلة واحدة على الأقل في خطوة «الرحلة القصيرة والحافلات» ضمن «تنظيم الرحلة».",
-    "generalAlarm.admin.outstandingBody": "لم يُؤكد وجود {count} مشاركين في الحافلة بعد.",
+    "generalAlarm.admin.outstandingBody":
+      "لم يُؤكد وجود {count} مشاركين في الحافلة بعد.",
     "generalAlarm.admin.outstandingTitle": "المشاركون المعلّقون",
-    "generalAlarm.admin.participantReminderDue": "{name}: الحالة التالية معلّقة منذ خمس دقائق على الأقل.",
-    "generalAlarm.admin.push.error": "إرسال الإشعارات غير متاح. تبقى النظرة العامة داخل التطبيق نشطة.",
+    "generalAlarm.admin.participantReminderDue":
+      "{name}: الحالة التالية معلّقة منذ خمس دقائق على الأقل.",
+    "generalAlarm.admin.push.error":
+      "إرسال الإشعارات غير متاح. تبقى النظرة العامة داخل التطبيق نشطة.",
     "generalAlarm.admin.push.idle": "يتم تشغيل تذكيرات الإشعارات من الخادم.",
     "generalAlarm.admin.push.running": "جارٍ فحص تذكيرات الإشعارات المستحقة …",
-    "generalAlarm.admin.push.success": "قبلت خدمة Expo تذكيرات الإشعارات المستحقة.",
+    "generalAlarm.admin.push.success":
+      "قبلت خدمة Expo تذكيرات الإشعارات المستحقة.",
     "generalAlarm.admin.pushNow": "فحص الإشعارات الآن",
     "generalAlarm.admin.tripRequiredBody":
       "أنشئ أولاً رحلة قصيرة نشطة وحافلات ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
@@ -2877,34 +3133,50 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.departureCountdown": "بقي {count} دقيقة على المغادرة",
     "generalAlarm.departureOverdue": "تأخرت المغادرة {count} دقيقة",
     "generalAlarm.enableNotifications": "تفعيل الإشعارات",
-    "generalAlarm.notification.reminder.boarded": "{name}: يرجى تأكيد «في الحافلة» الآن.",
-    "generalAlarm.notification.reminder.on_way": "{name}: يرجى تأكيد «أنا في الطريق» الآن.",
-    "generalAlarm.notification.reminder.read": "{name}: يرجى تأكيد «تمت القراءة».",
+    "generalAlarm.notification.reminder.boarded":
+      "{name}: يرجى تأكيد «في الحافلة» الآن.",
+    "generalAlarm.notification.reminder.on_way":
+      "{name}: يرجى تأكيد «أنا في الطريق» الآن.",
+    "generalAlarm.notification.reminder.read":
+      "{name}: يرجى تأكيد «تمت القراءة».",
     "generalAlarm.notification.title": "صعود الحافلة",
     "generalAlarm.notifications.checking": "جارٍ فحص حالة الإشعارات …",
     "generalAlarm.notifications.denied": "لم يتم السماح بالإشعارات.",
     "generalAlarm.notifications.disabled": "تم إيقاف الإشعارات في الإعدادات.",
-    "generalAlarm.notifications.error": "تعذر إعداد الإشعارات. قد تكون التذكيرات المحلية محدودة.",
-    "generalAlarm.notifications.expo_go": "الإشعارات معطّلة في Expo Go لهذا التطبيق. يرجى استخدام نسخة تطوير.",
-    "generalAlarm.notifications.missing_project_id": "هذا الإصدار غير مرتبط بعد بمعرّف مشروع EAS للإشعارات.",
-    "generalAlarm.notifications.registered": "تم تفعيل الإشعارات والتذكيرات المحلية كل خمس دقائق.",
-    "generalAlarm.notifications.simulator": "قد تعمل التذكيرات المحلية؛ تتطلب الإشعارات البعيدة جهازاً حقيقياً.",
-    "generalAlarm.notifications.unsupported": "الإشعارات غير متاحة في إصدار الويب.",
+    "generalAlarm.notifications.error":
+      "تعذر إعداد الإشعارات. قد تكون التذكيرات المحلية محدودة.",
+    "generalAlarm.notifications.expo_go":
+      "الإشعارات معطّلة في Expo Go لهذا التطبيق. يرجى استخدام نسخة تطوير.",
+    "generalAlarm.notifications.missing_project_id":
+      "هذا الإصدار غير مرتبط بعد بمعرّف مشروع EAS للإشعارات.",
+    "generalAlarm.notifications.registered":
+      "تم تفعيل الإشعارات والتذكيرات المحلية كل خمس دقائق.",
+    "generalAlarm.notifications.simulator":
+      "قد تعمل التذكيرات المحلية؛ تتطلب الإشعارات البعيدة جهازاً حقيقياً.",
+    "generalAlarm.notifications.unsupported":
+      "الإشعارات غير متاحة في إصدار الويب.",
     "generalAlarm.notificationsTitle": "إشعارات صعود الحافلة",
     "generalAlarm.openSettings": "فتح إعدادات النظام",
-    "generalAlarm.platformLimit": "تتطلب الإشعارات البعيدة إصدار تطوير أو إنتاج أصلياً، ولا تعمل بالكامل في Expo Go على أندرويد. لا يضمن التطبيق الصوت أو العرض أو الإيقاظ؛ ويبقى التحكم للجهاز والنظام والمستخدم.",
+    "generalAlarm.platformLimit":
+      "تتطلب الإشعارات البعيدة إصدار تطوير أو إنتاج أصلياً، ولا تعمل بالكامل في Expo Go على أندرويد. لا يضمن التطبيق الصوت أو العرض أو الإيقاظ؛ ويبقى التحكم للجهاز والنظام والمستخدم.",
     "generalAlarm.reminderDue.boarded": "يرجى تأكيد «في الحافلة» الآن.",
     "generalAlarm.reminderDue.on_way": "يرجى تأكيد «أنا في الطريق» الآن.",
-    "generalAlarm.reminderDue.problem": "يتولى فريق الرحلة متابعة بلاغ المشكلة.",
+    "generalAlarm.reminderDue.problem":
+      "يتولى فريق الرحلة متابعة بلاغ المشكلة.",
     "generalAlarm.reminderDue.read": "يرجى تأكيد «تمت القراءة» الآن.",
-    "generalAlarm.sequenceBody": "أكد بالترتيب: تمت القراءة ← أنا في الطريق ← في الحافلة. يُعاد التذكير بعد خمس دقائق إذا غابت الحالة التالية.",
+    "generalAlarm.sequenceBody":
+      "أكد بالترتيب: تمت القراءة ← أنا في الطريق ← في الحافلة. يُعاد التذكير بعد خمس دقائق إذا غابت الحالة التالية.",
     "guide.acts": "الوصف والأعمال",
-    "guide.admin.actionError": "تعذر حفظ التغيير. تحقق من الاتصال وحاول مرة أخرى.",
+    "guide.admin.actionError":
+      "تعذر حفظ التغيير. تحقق من الاتصال وحاول مرة أخرى.",
     "guide.admin.acts": "ملاحظات وأعمال",
-    "guide.admin.actsPlaceholder": "أدخل فقط ملاحظات تنظيمية أو محتوى تمت مراجعته",
+    "guide.admin.actsPlaceholder":
+      "أدخل فقط ملاحظات تنظيمية أو محتوى تمت مراجعته",
     "guide.admin.cancelNew": "إلغاء",
-    "guide.admin.coordinateError": "يجب إدخال خط العرض وخط الطول معاً كرقمين صالحين.",
-    "guide.admin.coordinatesHint": "إحداثيات موقع الزيارة اختيارية، وتُدخل تلقائياً عند اختيار موقع من الدليل.",
+    "guide.admin.coordinateError":
+      "يجب إدخال خط العرض وخط الطول معاً كرقمين صالحين.",
+    "guide.admin.coordinatesHint":
+      "إحداثيات موقع الزيارة اختيارية، وتُدخل تلقائياً عند اختيار موقع من الدليل.",
     "guide.admin.currentLatitude": "خط عرض موقع الزيارة",
     "guide.admin.currentLongitude": "خط طول موقع الزيارة",
     "guide.admin.currentPlace": "موقع الزيارة الحالي",
@@ -2918,9 +3190,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.admin.editTitle": "تعديل نقطة البرنامج المنشورة",
     "guide.admin.liveHint": "تظهر التغييرات المحفوظة مباشرة عبر Realtime.",
     "guide.admin.mapPickerAccessibilityLabel": "خريطة لاختيار وجهة الرحلة",
-    "guide.admin.mapPickerBody": "اضغط على الخريطة أو اسحب العلامة لتحديد وجهة الرحلة.",
+    "guide.admin.mapPickerBody":
+      "اضغط على الخريطة أو اسحب العلامة لتحديد وجهة الرحلة.",
     "guide.admin.mapPickerClear": "إزالة الموقع",
-    "guide.admin.mapPickerDenied": "لا يمكن استخدام الموقع الحالي دون منح إذن الموقع.",
+    "guide.admin.mapPickerDenied":
+      "لا يمكن استخدام الموقع الحالي دون منح إذن الموقع.",
     "guide.admin.mapPickerEmpty": "لم يتم اختيار موقع دقيق بعد.",
     "guide.admin.mapPickerError": "تعذر تحديد الموقع الحالي.",
     "guide.admin.mapPickerIraqLabel": "العراق · اختر الموقع",
@@ -2929,18 +3203,22 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.admin.mapPickerSelected": "المحدد: {latitude}، {longitude}",
     "guide.admin.mapPickerTitle": "تحديد وجهة الرحلة على الخريطة",
     "guide.admin.mapPickerUseCurrent": "استخدام موقعي الحالي",
-    "guide.admin.mapPickerWebBody": "اضغط على خريطة العراق. للحصول على موقع دقيق جداً استخدم موقعك الحالي أو عدّل الإحداثيات أدناه.",
+    "guide.admin.mapPickerWebBody":
+      "اضغط على خريطة العراق. للحصول على موقع دقيق جداً استخدم موقعك الحالي أو عدّل الإحداثيات أدناه.",
     "guide.admin.meetingLatitude": "خط عرض نقطة اللقاء",
     "guide.admin.meetingLongitude": "خط طول نقطة اللقاء",
     "guide.admin.meetingPoint": "نقطة اللقاء",
     "guide.admin.meetingPointPlaceholder": "وصف دقيق لنقطة اللقاء",
     "guide.admin.minutes": "خلال {count} دقيقة",
-    "guide.admin.newPointBody": "عند النشر تنتهي نقطة البرنامج السابقة وتبدأ بلاغات حالة جديدة.",
+    "guide.admin.newPointBody":
+      "عند النشر تنتهي نقطة البرنامج السابقة وتبدأ بلاغات حالة جديدة.",
     "guide.admin.newPointTitle": "إعداد نقطة برنامج جديدة",
     "guide.admin.nextProgram": "نقطة البرنامج التالية",
     "guide.admin.nextProgramPlaceholder": "ما التالي؟",
-    "guide.admin.noParticipants": "لم يُعيّن أي أشخاص أو عائلات للرحلة القصيرة النشطة بعد.",
-    "guide.admin.placeCatalog": "اختر اختيارياً موقعاً من الدليل المتاح دون اتصال",
+    "guide.admin.noParticipants":
+      "لم يُعيّن أي أشخاص أو عائلات للرحلة القصيرة النشطة بعد.",
+    "guide.admin.placeCatalog":
+      "اختر اختيارياً موقعاً من الدليل المتاح دون اتصال",
     "guide.admin.placeSearchPlaceholder": "ابحث عن مكان أو مدينة …",
     "guide.admin.placeSelected": "المكان المختار من الدليل",
     "guide.admin.placeNoResults": "لم يتم العثور على مكان مطابق.",
@@ -2950,13 +3228,15 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.admin.published": "منشور مباشرة",
     "guide.admin.relevantGate": "الباب / المدخل المعني",
     "guide.admin.relevantGatePlaceholder": "مثلاً: الباب 3",
-    "guide.admin.responsesBody": "تُحدَّث البلاغات مباشرة، ويجب استلام بلاغات المشكلة صراحةً.",
+    "guide.admin.responsesBody":
+      "تُحدَّث البلاغات مباشرة، ويجب استلام بلاغات المشكلة صراحةً.",
     "guide.admin.responsesTitle": "حالة المشاركين",
     "guide.admin.saveChanges": "حفظ التغييرات مباشرة",
     "guide.admin.saved": "تم حفظ نقطة البرنامج.",
     "guide.admin.takeProblem": "استلام المشكلة",
     "guide.admin.takenBy": "استلمها {name}",
-    "guide.admin.tripRequiredBody": "أنشئ أولاً رحلة قصيرة نشطة ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
+    "guide.admin.tripRequiredBody":
+      "أنشئ أولاً رحلة قصيرة نشطة ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
     "guide.admin.tripRequiredTitle": "يلزم وجود رحلة قصيرة نشطة",
     "guide.calculateDistance": "حساب المسافة لمرة واحدة",
     "guide.currentLabel": "أين نحن؟",
@@ -2966,23 +3246,28 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.distanceDenied": "لا يمكن حساب المسافة دون إذن الموقع.",
     "guide.distanceError": "تعذر تحديد الموقع الحالي.",
     "guide.distanceLoading": "جار تحديد الموقع…",
-    "guide.homeBody": "الموقع الحالي: {place}. نقطة اللقاء والمغادرة محدثتان مباشرة.",
+    "guide.homeBody":
+      "الموقع الحالي: {place}. نقطة اللقاء والمغادرة محدثتان مباشرة.",
     "guide.homeTitle": "نقطة البرنامج الحالية",
     "guide.loading": "جار تحميل إرشاد الرحلة…",
     "guide.meetingPoint": "نقطة اللقاء",
     "guide.navTitle": "أين نحن؟",
     "guide.nextProgram": "التالي",
-    "guide.noAssignmentBody": "لم يُعيّن حسابك لرحلة قصيرة نشطة بعد. تواصل مع إدارة الرحلة.",
+    "guide.noAssignmentBody":
+      "لم يُعيّن حسابك لرحلة قصيرة نشطة بعد. تواصل مع إدارة الرحلة.",
     "guide.noAssignmentTitle": "لا يوجد تعيين للرحلة",
-    "guide.noCoordinatesDistance": "من دون إحداثيات دقيقة لنقطة اللقاء تتوفر خريطة البحث فقط، ولا يمكن حساب المسافة.",
-    "guide.noTracking": "يُطلب موقعك مرة واحدة فقط عند الضغط، ولا تتم متابعته باستمرار.",
+    "guide.noCoordinatesDistance":
+      "من دون إحداثيات دقيقة لنقطة اللقاء تتوفر خريطة البحث فقط، ولا يمكن حساب المسافة.",
+    "guide.noTracking":
+      "يُطلب موقعك مرة واحدة فقط عند الضغط، ولا تتم متابعته باستمرار.",
     "guide.noUpdateBody": "لم تنشر إدارة الرحلة نقطة برنامج حالية بعد.",
     "guide.noUpdateTitle": "لا توجد نقطة برنامج بعد",
     "guide.notSpecified": "غير محدد",
     "guide.open": "فتح نقطة البرنامج",
     "guide.openNavigation": "فتح الملاحة الخارجية",
     "guide.openPlace": "فتح الموقع",
-    "guide.pendingBody": "يوجد بلاغ واحد على الأقل محفوظ على هذا الجهاز فقط ولم يصل إلى إدارة الرحلة.",
+    "guide.pendingBody":
+      "يوجد بلاغ واحد على الأقل محفوظ على هذا الجهاز فقط ولم يصل إلى إدارة الرحلة.",
     "guide.pendingRetry": "إعادة محاولة الإرسال",
     "guide.pendingTitle": "لم يُرسل بعد",
     "guide.problemAcknowledged": "اطّلع {name} على بلاغك.",
@@ -2997,12 +3282,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "guide.status.problem": "مشكلة",
     "guide.statusBody": "اختر حالتك الحالية.",
     "guide.statusPending": "محفوظ محلياً فقط — لم يُرسل بعد",
-    "guide.statusPendingBody": "لن تتمكن إدارة الرحلة من رؤية هذا البلاغ حتى ينجح الإرسال.",
+    "guide.statusPendingBody":
+      "لن تتمكن إدارة الرحلة من رؤية هذا البلاغ حتى ينجح الإرسال.",
     "guide.statusSaved": "تم إرسال حالتك.",
     "guide.statusTitle": "ما حالتك؟",
     "guide.submitError.auth": "انتهت جلستك. سجّل الدخول مرة أخرى.",
     "guide.submitError.closed": "تم تغيير نقطة البرنامج في هذه الأثناء.",
-    "guide.submitError.not_linked": "تم تغيير تعيين المشارك. تواصل مع إدارة الرحلة.",
+    "guide.submitError.not_linked":
+      "تم تغيير تعيين المشارك. تواصل مع إدارة الرحلة.",
     "guide.submitError.offline": "تم حفظ البلاغ محلياً.",
     "guide.submitError.server": "تعذر حفظ الحالة بسبب خطأ في الخادم.",
     "guide.syncErrorTitle": "إرشاد الرحلة غير متاح",
@@ -3029,8 +3316,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.homeBody":
       "ما زال استطلاع الحالة مفتوحاً. يمكنك مراجعة إجابتك أو تغييرها في أي وقت.",
     "groupCheck.homeTitle": "استطلاع حالة نشط",
-    "groupCheck.lockedBody":
-      "أجب عن الاستطلاع لفتح بقية أقسام التطبيق.",
+    "groupCheck.lockedBody": "أجب عن الاستطلاع لفتح بقية أقسام التطبيق.",
     "groupCheck.navTitle": "استطلاع الحالة",
     "groupCheck.no": "رفض",
     "groupCheck.noConfirmed": "لا توجد تأكيدات بعد",
@@ -3099,39 +3385,50 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.loading": "جارٍ تحميل المجموعات…",
     "tripGroups.retry": "المحاولة مرة أخرى",
     "tripGroups.emptyTitle": "لم تُعيّن في مجموعة بعد",
-    "tripGroups.emptyBody": "ستظهر مجموعتك هنا عندما يضيفك فريق الرحلة أنت أو عائلتك.",
+    "tripGroups.emptyBody":
+      "ستظهر مجموعتك هنا عندما يضيفك فريق الرحلة أنت أو عائلتك.",
     "tripGroups.leader": "قيادة المجموعة",
     "tripGroups.youAreLeader": "أنت مشرف المجموعة",
     "tripGroups.memberCount": "{count} أشخاص",
     "tripGroups.homeTitle": "مجموعة رحلتك",
     "tripGroups.homeBody": "مجموعتك وقادتها في لمحة.",
     "tripGroups.homeRequestTitle": "طلب موقع لمجموعتك",
-    "tripGroups.homeRequestBody": "تطلب إدارة الرحلة موقعك الحالي بصفتك قائد المجموعة.",
+    "tripGroups.homeRequestBody":
+      "تطلب إدارة الرحلة موقعك الحالي بصفتك قائد المجموعة.",
     "tripGroups.open": "فتح المجموعة",
     "tripGroups.request.title": "طُلب موقعك الحالي",
     "tripGroups.request.body": "طلبت إدارة الرحلة موقعك في {date}.",
-    "tripGroups.request.privacy": "لن يُحدَّد موقعك إلا مرة واحدة وبعد موافقتك. لا يوجد تتبع مباشر، ويظهر الموقع المشترك لإدارة الرحلة لمدة 15 دقيقة.",
+    "tripGroups.request.privacy":
+      "لن يُحدَّد موقعك إلا مرة واحدة وبعد موافقتك. لا يوجد تتبع مباشر، ويظهر الموقع المشترك لإدارة الرحلة لمدة 15 دقيقة.",
     "tripGroups.request.share": "مشاركة الموقع مرة واحدة",
     "tripGroups.request.decline": "عدم المشاركة",
     "tripGroups.request.locating": "جارٍ تحديد الموقع…",
-    "tripGroups.request.shared": "تمت مشاركة موقعك مرة واحدة وسيبقى ظاهراً لمدة 15 دقيقة.",
+    "tripGroups.request.shared":
+      "تمت مشاركة موقعك مرة واحدة وسيبقى ظاهراً لمدة 15 دقيقة.",
     "tripGroups.request.declined": "لقد رفضت مشاركة الموقع.",
-    "tripGroups.request.permissionDenied": "لا يمكن مشاركة الموقع دون منح إذن الموقع.",
-    "tripGroups.request.locationError": "تعذر تحديد موقعك. تحقق من GPS وإذن الموقع.",
+    "tripGroups.request.permissionDenied":
+      "لا يمكن مشاركة الموقع دون منح إذن الموقع.",
+    "tripGroups.request.locationError":
+      "تعذر تحديد موقعك. تحقق من GPS وإذن الموقع.",
     "tripGroups.error.auth": "انتهت جلستك. سجّل الدخول مرة أخرى.",
-    "tripGroups.error.conflict": "هناك مشارك واحد على الأقل في مجموعة أخرى، أو أن اسم المجموعة مستخدم.",
-    "tripGroups.error.not_found": "لم تعد المجموعة أو مطالبة الموقع حالية. حدّث الشاشة.",
+    "tripGroups.error.conflict":
+      "هناك مشارك واحد على الأقل في مجموعة أخرى، أو أن اسم المجموعة مستخدم.",
+    "tripGroups.error.not_found":
+      "لم تعد المجموعة أو مطالبة الموقع حالية. حدّث الشاشة.",
     "tripGroups.error.offline": "تعذر حفظ الإجراء دون اتصال بالإنترنت.",
     "tripGroups.error.server": "تعذر حفظ إجراء المجموعة بسبب خطأ في الخادم.",
     "tripGroups.admin.tripRequiredTitle": "يلزم وجود رحلة قصيرة نشطة",
-    "tripGroups.admin.tripRequiredBody": "أنشئ أولاً رحلة قصيرة نشطة ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
+    "tripGroups.admin.tripRequiredBody":
+      "أنشئ أولاً رحلة قصيرة نشطة ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
     "tripGroups.admin.createTitle": "إنشاء مجموعة جديدة",
     "tripGroups.admin.editTitle": "تعديل المجموعة",
-    "tripGroups.admin.editorBody": "اختر قائداً أو أكثر وأضف أفراداً أو عائلات كاملة.",
+    "tripGroups.admin.editorBody":
+      "اختر قائداً أو أكثر وأضف أفراداً أو عائلات كاملة.",
     "tripGroups.admin.name": "اسم المجموعة",
     "tripGroups.admin.namePlaceholder": "مثلاً: مجموعة العباس",
     "tripGroups.admin.selectLeader": "قادة المجموعة / مشرفوها",
-    "tripGroups.admin.selectLeaderBody": "القادة أعضاء في المجموعة. يمكن طلب الموقع منهم فقط. لا يتغير دورهم في التطبيق.",
+    "tripGroups.admin.selectLeaderBody":
+      "القادة أعضاء في المجموعة. يمكن طلب الموقع منهم فقط. لا يتغير دورهم في التطبيق.",
     "tripGroups.admin.leaderSearch": "البحث عن قائد",
     "tripGroups.admin.memberSearch": "البحث عن عضو في المجموعة",
     "tripGroups.admin.searchPlaceholder": "البحث بالاسم …",
@@ -3149,18 +3446,23 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.cancel": "إلغاء",
     "tripGroups.admin.saved": "تم حفظ المجموعة.",
     "tripGroups.admin.emptyTitle": "لا توجد مجموعات بعد",
-    "tripGroups.admin.emptyBody": "استخدم النموذج أعلاه لإنشاء أول مجموعة من الأشخاص المعيّنين.",
+    "tripGroups.admin.emptyBody":
+      "استخدم النموذج أعلاه لإنشاء أول مجموعة من الأشخاص المعيّنين.",
     "tripGroups.admin.memberCount": "{count} أشخاص",
     "tripGroups.admin.leaderUnavailable": "قائد المجموعة غير متاح",
     "tripGroups.admin.edit": "تعديل",
     "tripGroups.admin.delete": "حذف",
     "tripGroups.admin.deleteTitle": "حذف «{name}»؟",
-    "tripGroups.admin.deleteBody": "سيُحذف تعيين المجموعة وأي طلب موقع موجود، بينما يبقى المشاركون والرحلة القصيرة.",
+    "tripGroups.admin.deleteBody":
+      "سيُحذف تعيين المجموعة وأي طلب موقع موجود، بينما يبقى المشاركون والرحلة القصيرة.",
     "tripGroups.admin.deleteConfirm": "حذف المجموعة",
     "tripGroups.admin.locationTitle": "طلب الموقع",
-    "tripGroups.admin.locationIdle": "يتلقى هذا القائد وحده الطلب ويقرر مشاركة موقعه.",
-    "tripGroups.admin.locationPending": "طُلب الموقع في {date} — في انتظار الرد.",
-    "tripGroups.admin.locationShared": "تمت مشاركة الموقع في {date} — ظاهر لمدة 15 دقيقة.",
+    "tripGroups.admin.locationIdle":
+      "يتلقى هذا القائد وحده الطلب ويقرر مشاركة موقعه.",
+    "tripGroups.admin.locationPending":
+      "طُلب الموقع في {date} — في انتظار الرد.",
+    "tripGroups.admin.locationShared":
+      "تمت مشاركة الموقع في {date} — ظاهر لمدة 15 دقيقة.",
     "tripGroups.admin.locationDeclined": "رفض قائد المجموعة مشاركة الموقع.",
     "tripGroups.admin.requestLocation": "طلب الموقع",
     "tripGroups.admin.requestAgain": "إعادة الطلب",
@@ -3168,7 +3470,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.locationMapLabel": "خريطة تعرض مواقع المجموعة",
     "tripGroups.admin.leaderMarker": "قائد المجموعة",
     "tripGroups.admin.adminMarker": "موقعي",
-    "tripGroups.admin.adminLocationPrivacy": "يُعرض موقعك على هذا الجهاز فقط ولا يتم حفظه أو مشاركته.",
+    "tripGroups.admin.adminLocationPrivacy":
+      "يُعرض موقعك على هذا الجهاز فقط ولا يتم حفظه أو مشاركته.",
     "tripGroups.admin.showAdminLocation": "عرض موقعي",
     "tripGroups.admin.refreshAdminLocation": "تحديث موقعي",
     "tripGroups.admin.locatingAdmin": "جارٍ تحديد الموقع …",
@@ -3214,17 +3517,20 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.bus.status": "جاهز",
     "admin.section.bus.title": "إدارة الحافلات",
     "admin.section.groups.active": "{count} مجموعات",
-    "admin.section.groups.description": "قسّم المشاركين إلى مجموعات وعيّن القادة واطلب موقعهم مرة واحدة.",
+    "admin.section.groups.description":
+      "قسّم المشاركين إلى مجموعات وعيّن القادة واطلب موقعهم مرة واحدة.",
     "admin.section.groups.error": "خطأ",
     "admin.section.groups.inactive": "لا توجد مجموعات بعد",
     "admin.section.groups.title": "مجموعات الرحلة",
     "admin.section.guidance.active": "مباشر",
-    "admin.section.guidance.description": "أدر نقطة البرنامج الحالية والمغادرة وبلاغات المشاركين مباشرة.",
+    "admin.section.guidance.description":
+      "أدر نقطة البرنامج الحالية والمغادرة وبلاغات المشاركين مباشرة.",
     "admin.section.guidance.error": "خطأ",
     "admin.section.guidance.inactive": "غير منشور",
     "admin.section.guidance.title": "إرشاد الرحلة",
     "admin.section.navigation.active": "{count} وجهات",
-    "admin.section.navigation.description": "أنشئ عدة وجهات على الخريطة وعدّلها وانشرها للملاحة.",
+    "admin.section.navigation.description":
+      "أنشئ عدة وجهات على الخريطة وعدّلها وانشرها للملاحة.",
     "admin.section.navigation.error": "خطأ",
     "admin.section.navigation.inactive": "غير محددة",
     "admin.section.navigation.title": "وجهات الرحلة والملاحة",
@@ -3256,8 +3562,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "dailyProgram.admin.startDate": "اليوم الأول (YYYY-MM-DD)",
     "dailyProgram.admin.title": "العنوان (اختياري)",
     "dailyProgram.admin.titlePlaceholder": "مثلاً: كربلاء",
-    "dailyProgram.cachedNotice":
-      "آخر نسخة محفوظة · تعذر التحديث",
+    "dailyProgram.cachedNotice": "آخر نسخة محفوظة · تعذر التحديث",
     "dailyProgram.homeTitle": "البرنامج اليومي",
     "dailyProgram.loading": "جارٍ تحميل البرنامج اليومي …",
     "dailyProgram.noProgramForDay": "لم يُنشر برنامج لهذا اليوم بعد.",
@@ -3272,25 +3577,31 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "اليوم والأيام الستة التالية، مرتبة بوضوح حسب اليوم.",
     "dailyProgram.weekRange": "{start} – {end}",
     "dailyProgram.weekTitle": "برنامج الأسبوع",
-    "navigation.admin.actionError": "تعذر حفظ وجهة الرحلة أو إزالتها. تحقق من الاتصال وحاول مرة أخرى.",
+    "navigation.admin.actionError":
+      "تعذر حفظ وجهة الرحلة أو إزالتها. تحقق من الاتصال وحاول مرة أخرى.",
     "navigation.admin.addTitle": "إنشاء وجهة رحلة جديدة",
-    "navigation.admin.body": "امنح المكان اسماً وضع علامته على الخريطة، حتى دون رحلة قصيرة نشطة. سيشاهده جميع المستخدمين المسجلين على خريطتهم.",
-    "navigation.admin.coordinatesHint": "تُدخل الخريطة الإحداثيات تلقائياً، ويمكن تعديلها مباشرةً لضبط الموقع.",
+    "navigation.admin.body":
+      "امنح المكان اسماً وضع علامته على الخريطة، حتى دون رحلة قصيرة نشطة. سيشاهده جميع المستخدمين المسجلين على خريطتهم.",
+    "navigation.admin.coordinatesHint":
+      "تُدخل الخريطة الإحداثيات تلقائياً، ويمكن تعديلها مباشرةً لضبط الموقع.",
     "navigation.admin.count": "{count} وجهات رحلة نشطة",
     "navigation.admin.create": "نشر وجهة الرحلة",
     "navigation.admin.details": "الوصف / إرشادات الوصول",
     "navigation.admin.detailsPlaceholder": "مثلاً: المدخل بجانب موقف الفندق",
     "navigation.admin.edit": "تعديل",
     "navigation.admin.editTitle": "تعديل وجهة الرحلة",
-    "navigation.admin.emptyBody": "لا توجد وجهات رحلة بعد. ستظهر أول وجهة محفوظة كعلامة حمراء على الخريطة.",
+    "navigation.admin.emptyBody":
+      "لا توجد وجهات رحلة بعد. ستظهر أول وجهة محفوظة كعلامة حمراء على الخريطة.",
     "navigation.admin.listTitle": "وجهات الرحلة المنشورة",
     "navigation.admin.loading": "جارٍ تحميل وجهات الرحلة …",
     "navigation.admin.name": "اسم وجهة الرحلة",
-    "navigation.admin.namePlaceholder": "مثلاً: الفندق أو موقف الحافلات أو الباب 3",
+    "navigation.admin.namePlaceholder":
+      "مثلاً: الفندق أو موقف الحافلات أو الباب 3",
     "navigation.admin.preview": "فحص الملاحة",
     "navigation.admin.remove": "إزالة",
     "navigation.admin.removeConfirm": "إزالة الوجهة فعلاً",
-    "navigation.admin.removeConfirmBody": "ستختفي الوجهة من خريطة جميع المشاركين، ويمكن إنشاؤها من جديد لاحقاً.",
+    "navigation.admin.removeConfirmBody":
+      "ستختفي الوجهة من خريطة جميع المشاركين، ويمكن إنشاؤها من جديد لاحقاً.",
     "navigation.admin.removeConfirmTitle": "إزالة «{name}»؟",
     "navigation.admin.removed": "تمت إزالة «{name}» من الخريطة.",
     "navigation.admin.save": "حفظ التغييرات",
@@ -3357,8 +3668,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.duty.success": "تم حفظ المناوبة.",
     "admin.duty.push-error":
       "تم حفظ التعيين كرسالة، لكن تعذر إرسال الإشعار إلى جهاز مسجل.",
-    "admin.duty.error":
-      "تعذر حفظ المناوبة. تحقق من الاتصال.",
+    "admin.duty.error": "تعذر حفظ المناوبة. تحقق من الاتصال.",
     "admin.section.questions.closed": "مغلقة",
     "admin.section.questions.description":
       "افتح جولة واقرأ الأسئلة وضع علامة على المنجز منها.",
@@ -3407,8 +3717,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.continueWithoutAccount": "المتابعة بدون حساب",
     "auth.continueWithoutAccountError":
       "تعذر حذف تسجيل الدخول المحلي. حاول مرة أخرى.",
-    "auth.signOutAndContinueWithoutAccount":
-      "تسجيل الخروج والمتابعة بدون حساب",
+    "auth.signOutAndContinueWithoutAccount": "تسجيل الخروج والمتابعة بدون حساب",
     "auth.loginBody":
       "سجل الدخول لاستخدام الحساب والميزات الجماعية والمحمية. يبقى الدليل المحلي متاحاً دون تسجيل الدخول.",
     "auth.loginTitle": "مرحبا بعودتك",
@@ -3420,6 +3729,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.memberTypeTitle": "أنا",
     "auth.noAccount": "ليس لديك حساب بعد؟",
     "auth.password": "كلمة المرور",
+    "auth.showPassword": "إظهار كلمة المرور",
+    "auth.hidePassword": "إخفاء كلمة المرور",
     "auth.passwordConfirm": "تأكيد كلمة المرور",
     "auth.passwordHint": "8 أحرف على الأقل، مع حرف واحد ورقم واحد على الأقل.",
     "auth.profileErrorBody":
@@ -3448,8 +3759,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "اختر لغتك. بعد ذلك يمكنك إنشاء حساب أو تسجيل الدخول أو استخدام التطبيق بدون حساب.",
     "onboarding.brandName": "Al Batoul",
     "onboarding.brandSubtitle": "تطبيق سفر الزيارة",
-    "onboarding.languageHint":
-      "يفتح التسجيل بهذه اللغة.",
+    "onboarding.languageHint": "يفتح التسجيل بهذه اللغة.",
     "onboarding.tagline": "نسافر معًا. نعيش التجربة معًا.",
     "onboarding.title": "اختر اللغة",
     "onboarding.videoLabel": "فيديو تعريفي بتطبيق Ziyara",
@@ -3514,6 +3824,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "city.placeCount.one": "مكان واحد",
     "city.titleFallback": "مدينة",
     "common.aboutApp": "حول التطبيق",
+    "common.back": "رجوع",
     "common.currentLocation": "موقعك الحالي",
     "common.details": "التفاصيل",
     "common.disclaimer": "تنبيه المحتوى",
@@ -3595,7 +3906,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "map.tripDestinationCount": "{count} وجهات رحلة على الخريطة",
     "map.tripDestinationListBody": "اختر وجهة رحلة لإظهارها على الخريطة.",
     "map.tripDestinationsButton": "وجهات الرحلة",
-    "map.tripDestinationsBody": "نشرت إدارة الرحلة هذه الوجهات. اختر وجهة لبدء الملاحة إليها.",
+    "map.tripDestinationsBody":
+      "نشرت إدارة الرحلة هذه الوجهات. اختر وجهة لبدء الملاحة إليها.",
     "map.tripDestinationsTitle": "وجهات مجموعة الرحلة",
     "nav.about": "حول التطبيق",
     "nav.account": "بيانات الحساب",
@@ -3629,7 +3941,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "reader.displaySettings": "العرض",
     "reader.findContent": "البحث في المحتوى",
     "reader.loading": "جار تحميل النص …",
-    "reader.noVisibleText": "فعّل مكوّناً نصياً واحداً على الأقل في إعدادات العرض.",
+    "reader.noVisibleText":
+      "فعّل مكوّناً نصياً واحداً على الأقل في إعدادات العرض.",
     "reader.notFound": "لم يتم العثور على نص القراءة",
     "reader.notes": "ملاحظات",
     "reader.pendingReview": "المراجعة قيد الانتظار",
@@ -3655,7 +3968,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "settings.accountGuestBody":
       "يعمل الدليل وإعداداتك المحلية دون حساب. يلزم تسجيل الدخول لميزات الحساب والمجموعة.",
     "settings.accountEmail": "تم تسجيل الدخول باسم",
-    "settings.manageAccount": "تغيير بيانات الحساب أو الأشخاص أو الحقائب أو شرائح الاتصال",
+    "settings.manageAccount":
+      "تغيير بيانات الحساب أو الأشخاص أو الحقائب أو شرائح الاتصال",
     "settings.appPrep": "إعداد التطبيق",
     "settings.arabicFontBody":
       "ينطبق على النصوص المؤقتة والمحتوى العربي المراجع.",

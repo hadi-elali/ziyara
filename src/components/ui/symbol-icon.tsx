@@ -5,6 +5,7 @@ import type { ColorValue } from 'react-native';
 export type SymbolIconName =
   | 'account'
   | 'alarm'
+  | 'back'
   | 'book'
   | 'bookmark'
   | 'bus'
@@ -14,6 +15,8 @@ export type SymbolIconName =
   | 'copy'
   | 'decline'
   | 'external-link'
+  | 'eye'
+  | 'eye-off'
   | 'globe'
   | 'home'
   | 'info'
@@ -38,6 +41,7 @@ const symbolNames: Record<SymbolIconName, React.ComponentProps<typeof SymbolView
     android: 'notifications_active',
     web: 'notifications_active',
   },
+  back: { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' },
   book: { ios: 'book.closed', android: 'menu_book', web: 'menu_book' },
   bookmark: { ios: 'bookmark', android: 'bookmark', web: 'bookmark' },
   bus: { ios: 'bus.fill', android: 'directions_bus', web: 'directions_bus' },
@@ -47,6 +51,8 @@ const symbolNames: Record<SymbolIconName, React.ComponentProps<typeof SymbolView
   copy: { ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' },
   decline: { ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' },
   'external-link': { ios: 'arrow.up.forward.square', android: 'open_in_new', web: 'open_in_new' },
+  eye: { ios: 'eye', android: 'visibility', web: 'visibility' },
+  'eye-off': { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
   globe: { ios: 'globe', android: 'language', web: 'language' },
   home: { ios: 'house', android: 'home', web: 'home' },
   info: { ios: 'info.circle', android: 'info', web: 'info' },
