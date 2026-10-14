@@ -20,12 +20,10 @@ import {
   cityRoute,
   emergencyRoute,
   groupRoute,
-  guideRoute,
 } from "@/features/navigation/routes";
 import { PlaceImageCard } from "@/features/places/PlaceImageCard";
 import { useQuestionRound } from "@/features/question-round/question-round-context";
 import { useTheme } from "@/hooks/use-theme";
-import { useTripGuidance } from "@/features/trip-guidance/trip-guidance-context";
 import { useTripGroups } from "@/features/trip-groups/trip-group-context";
 import { SymbolIcon } from "@/components/ui/symbol-icon";
 import { useThemeMode } from "@/features/theme/theme-mode";
@@ -45,7 +43,7 @@ function isPlace(place: Place | undefined): place is Place {
 export default function HomeScreen() {
   const theme = useTheme();
   const { language, t } = useI18n();
-  const { profile, session } = useAuth();
+  const { session } = useAuth();
   const { activeBoarding, participants: busParticipants } = useBusManagement();
   const { activeCheck, currentResponse } = useGroupCheck();
   const { groups: tripGroups } = useTripGroups();
@@ -63,8 +61,6 @@ export default function HomeScreen() {
     refresh: refreshQuestionRound,
     syncErrorMessage: questionRoundSyncErrorMessage,
   } = useQuestionRound();
-  const { activeGuidance, participants: guidanceParticipants } =
-    useTripGuidance();
   const ownTripGroups = tripGroups.filter(
     (group) => group.is_current_user_member,
   );
@@ -216,29 +212,6 @@ export default function HomeScreen() {
             icon="people"
             label={t("tripGroups.open")}
             onPress={() => router.push(groupRoute())}
-          />
-        </View>
-      ) : null}
-
-      {session &&
-      profile !== null &&
-      profile.role !== "admin" &&
-      activeGuidance &&
-      guidanceParticipants.length > 0 ? (
-        <View
-          style={[
-            styles.notice,
-            { backgroundColor: theme.successSoft, borderColor: theme.success },
-          ]}
-        >
-          <ThemedText type="heading">{t("guide.homeTitle")}</ThemedText>
-          <ThemedText themeColor="textSecondary">
-            {t("guide.homeBody", { place: activeGuidance.current_place_name })}
-          </ThemedText>
-          <Button
-            icon="map"
-            label={t("guide.open")}
-            onPress={() => router.push(guideRoute())}
           />
         </View>
       ) : null}

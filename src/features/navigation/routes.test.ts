@@ -9,12 +9,12 @@ import {
   busRoute,
   bypassesGroupCheck,
   dailyProgramRoute,
-  guideRoute,
   getProtectedReturnRoute,
   groupRoute,
   loginRoute,
   onboardingRoute,
   protectedRoutePaths,
+  questionRoundManagementRoute,
 } from '@/features/navigation/routes';
 
 describe('protected navigation', () => {
@@ -174,13 +174,9 @@ describe('protected navigation', () => {
     });
   });
 
-  it('führt die Reiseführung als geschützte interne Route', () => {
-    expect(guideRoute()).toBe('/guide');
-    expect(protectedRoutePaths).toContain('/guide');
-    expect(loginRoute(guideRoute())).toEqual({
-      params: { returnTo: '/guide' },
-      pathname: '/login',
-    });
+  it('verwirft das entfernte Programmpunktziel beim Login-Rücksprung', () => {
+    expect(protectedRoutePaths).not.toContain('/guide');
+    expect(getProtectedReturnRoute('/guide')).toBe('/');
   });
 
   it('führt die Reisegruppe als geschützte interne Route', () => {
@@ -197,6 +193,14 @@ describe('protected navigation', () => {
     expect(protectedRoutePaths).toContain('/program');
     expect(loginRoute(dailyProgramRoute())).toEqual({
       params: { returnTo: '/program' },
+      pathname: '/login',
+    });
+  });
+
+  it('führt die Fragerundenverwaltung als eigenes geschütztes Rücksprungziel', () => {
+    expect(questionRoundManagementRoute()).toBe('/question-round-management');
+    expect(loginRoute(questionRoundManagementRoute())).toEqual({
+      params: { returnTo: '/question-round-management' },
       pathname: '/login',
     });
   });

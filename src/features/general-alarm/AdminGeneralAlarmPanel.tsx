@@ -36,9 +36,11 @@ export function AdminGeneralAlarmPanel() {
   } = useWakeUpCall();
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState<'now' | 'scheduled'>('now');
-  const [date, setDate] = useState(() =>
-    wakeUpDateTimeFields(new Date(Date.now() + 86400000)).date
-  );
+  const [date, setDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return wakeUpDateTimeFields(tomorrow).date;
+  });
   const [time, setTime] = useState('06:00');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [working, setWorking] = useState(false);

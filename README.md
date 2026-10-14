@@ -2,7 +2,7 @@
 
 Produktionsorientierte Expo-SDK-57-App für eine schiitische Ziyarah-Reise im Irak. Stand dieser Dokumentation: 22. September 2026.
 
-Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, Einstellungs-, About-, Disclaimer- und Quelleninhalten lokal gebündelt und startet ohne Anmeldung sowie ohne Supabase-Verbindung. Konto-, Tagesprogramm-, Bus-, Reisegruppen-, Generalalarm-, Reiseführungs-, Gruppencheck-, Fragerunden- und Administrationsfunktionen bleiben durch Supabase Auth, Row Level Security und serverseitig geprüfte RPCs geschützt.
+Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, Einstellungs-, About-, Disclaimer- und Quelleninhalten lokal gebündelt und startet ohne Anmeldung sowie ohne Supabase-Verbindung. Konto-, Tagesprogramm-, Bus-, Reisegruppen-, Generalalarm-, Gruppencheck-, Fragerunden- und Administrationsfunktionen bleiben durch Supabase Auth, Row Level Security und serverseitig geprüfte RPCs geschützt.
 
 ## Dokumentation
 
@@ -24,7 +24,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 ### Authentifizierung und Konten
 
 - Der AuthContext trennt initiales Session-/Profil-Laden von Hintergrundrefreshes. App-Resume und Realtime-Rollenänderungen erhalten bestehendes Profil, Navigation und Screen-State; Logout oder ein echter Benutzerwechsel entfernt alte Profildaten sofort.
-- Registrierung, Login und Kontoverwaltung unterstützen Anzeigename, `member_type`, `party_size`, Kofferanzahl, E-Mail und Passwort. Die Kofferanzahl gilt für alle durch das Konto vertretenen Personen, kann bei der Registrierung `0` bis `50` betragen und später über die Kontoseite in den Einstellungen geändert werden. Profile können die Rollen `user`, `medical_staff`, `organization_team` und `admin` besitzen.
+- Registrierung, Login und Kontoverwaltung unterstützen Anzeigename, `member_type`, `party_size`, Kofferanzahl, E-Mail und Passwort. Die Kofferanzahl gilt für alle durch das Konto vertretenen Personen, kann bei der Registrierung `0` bis `50` betragen und später über die Kontoseite in den Einstellungen geändert werden. Profile können die Rollen `user`, `medical_staff`, `organization_team`, `scholar` (Gelehrter) und `admin` besitzen.
 - Admins können eigenständige Benutzerkonten im Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size` und Reisegruppen getrennt und können unter **Reiseorganisation → Zwischenreise & Busse** als Einheit ausgewählt werden.
 - „Passwort vergessen“ und der vollständige Recovery-Deep-Link laufen ausschließlich über `/reset-password` beziehungsweise `ziyara:///reset-password`. Normale Login-/Signup-Links werden nicht als Recovery-Link behandelt; nach erfolgreicher Passwortänderung wird die lokale Session entfernt.
 - Nutzer können ausschließlich das eigene Konto über `supabase/functions/delete-account` löschen. Die Function nimmt keine Ziel-User-ID an, prüft den Bearer-Token selbst, schützt den letzten Admin und hält Service-Role-Zugangsdaten vollständig aus dem Client.
@@ -36,6 +36,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Die Adminauswertung zeigt alle relevanten Profile als Ja, Nein oder Noch offen. Account-Anzahl und über `party_size` repräsentierte Personenzahl werden getrennt ausgewiesen.
 - Rollenänderungen, Gruppencheck-Antwort gegen Schließen, das Fünf-Fragen-Limit und Account-Löschungen sind auch bei parallelen Transaktionen datenbankseitig abgesichert.
 - Anonyme Fragen speichern keine User-/Profil-ID am Fragetext. Temporäre, für Clients nicht lesbare Limit-Zähler werden beim Schließen der Runde gelöscht.
+- Admins und Gelehrte öffnen oder schließen Fragerunden, lesen Fragen und haken sie ab. Gelehrte finden **Fragerunden verwalten** ausschließlich in den Einstellungen; Admins nutzen die Fragenverwaltung im Admin-Dashboard. Beide Zugänge bleiben auch ohne offene Runde verfügbar. Die Rolle **Gelehrter** wird ausschließlich durch Admins vergeben und verleiht keine weiteren Adminrechte. Die beiden Migrationen `20261013000000` und `20261013010000` sind lokal angewandt; vor produktiver Nutzung müssen sie remote angewandt und der aktualisierte Client ausgeliefert werden.
 
 ### Notfallmeldungen
 
@@ -49,7 +50,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Im ersten Schritt **Zwischenreise & Busse** wird eine aktive Zwischenreise mit benannten Bussen angelegt. Für jeden neuen Bus ist eine registrierte Person als Busführer erforderlich; Personen und Familien erscheinen in den Auswahlfeldern erst nach einer Suche.
 - Personen werden über ihr registriertes Konto oder gemeinsam als ganze Kontofamilie einem Bus zugeordnet. Sobald eine Familie zugeordnet ist, werden ihre Mitglieder nicht zusätzlich als Einzelpersonen angeboten.
 - Eine aktive Zwischenreise lässt sich einklappen und beenden. Danach kann eine leere Zwischenreise erstellt oder die komplette Busanordnung einschließlich Führung und Personen-/Familienzuordnung aus einer beendeten Zwischenreise übernommen werden; alte Boardingstände werden nicht kopiert. Das Tagesprogramm bleibt davon unberührt.
-- Die **Live-Begleitung** übernimmt das Starten, Überwachen und Beenden des Bestätigungsablaufs. **Zwischenreise & Busse** bleibt auf Zwischenreise-, Bus- und Teilnehmerzuordnung konzentriert.
+- Unter **Zwischenreisen & Busse** werden Zwischenreise-, Bus- und Teilnehmerzuordnung sowie das Starten, Überwachen und Beenden des Boardings verwaltet.
 - Realtime, App-Fokus und ein gestaffelter Fallback-Refresh halten die Übersicht aktuell. Monotone Request-Versionen verhindern, dass ältere Reads einen gespeicherten Status zurücksetzen. Antwort und Schließen sperren dieselbe Boarding-Zeile und bleiben dadurch transaktional geordnet.
 - Bei einer abgelaufenen oder fehlenden Auth-Session erneuert der Client die Sitzung und wiederholt eine Teilnehmer- oder Admin-Statusmutation genau einmal für dieselbe User-ID. Endgültige Fehler laden den autoritativen Stand und unterscheiden Auth-, geschlossenes Boarding-, geänderte Zuordnungs-, Offline- und Serverzustände.
 
@@ -62,9 +63,9 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Es gibt kein Live- oder Hintergrundtracking. Geteilte Koordinaten sind per RLS nur für Anführer und Admins und höchstens 15 Minuten lesbar; erneute Anfragen sowie Gruppenänderung oder -löschung entfernen die zuvor gespeicherte Position.
 - Gruppen, Mitgliedschaften und Standortanfragen werden per Realtime, App-Fokus und gestaffeltem Fallback aktualisiert. Alle Mutationen laufen über serverseitig authentifizierte RPCs.
 
-### Reiseorganisation: Live-Begleitung und Generalalarm
+### Zwischenreisen & Busse: Boarding
 
-- Im dritten Schritt **Live-Begleitung** verwaltet der Admin Reiseführung und Generalalarm gemeinsam. Für den Alarm legt er Meldung und Abfahrt fest und schaltet ihn ausdrücklich ein; der Bereich zeigt **Eingeschaltet** oder **Ausgeschaltet** und bietet bei aktivem Alarm eine Beenden-Aktion.
+- Unter **Zwischenreisen & Busse** verwaltet der Admin Buszuordnungen und Boarding. Der frühere aktuelle Programmpunkt samt Teilnehmeransicht ist entfernt. Weckrufe werden im getrennten Punkt **Weckruf** verwaltet.
 - Ein offenes Boarding führt jede zugeordnete Person durch `Gelesen` → `Ich bin unterwegs` → `Im Bus`; `Problem` bleibt als Ausnahmeweg verfügbar.
 - Nach fünf Minuten ohne nächste Stufe werden native lokale Erinnerungen geplant. Ein geschützter Dispatcher beansprucht zusätzlich höchstens einen Expo-Push-Versuch je Gerät, Teilnehmer, Stufe und Fünf-Minuten-Fenster.
 - Das separate Generalalarm-Panel zeigt bestätigte und fehlende Personen, alle ausstehenden Namen, die Schließbereitschaft jedes Busses und eine ausdrücklich protokollierte manuelle Eskalation.
@@ -78,12 +79,12 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Angemeldete Nutzer sehen das heutige Programm kompakt im grünen Home-Bereich. Ein Tipp öffnet das geschützte Wochenprogramm mit heute und den nächsten sechs Tagen, getrennten Tageskarten und gegliederten Ablaufpunkten. Der letzte erfolgreiche, benutzergebundene Stand wird lokal gespeichert und beim nächsten Start sofort angezeigt, während Realtime, App-Fokus und ein gestaffelter Fallback-Refresh ihn im Hintergrund aktualisieren.
 - RLS gibt das reiseweite Programm allen angemeldeten Konten frei, auch wenn keine aktive Zwischenreise besteht oder das Konto keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
 
-### Reiseführung und „Wo sind wir?“
+### Reiseziele & Navigation
 
-- Admins veröffentlichen unter **Reiseorganisation → Live-Begleitung** den aktuellen Besuchsort, nächsten Programmpunkt, Abfahrt, Treffpunkt, relevante Tür, Entfernungshinweis, Beschreibung und Handlungen. Der optionale Offline-Katalogort wird gesucht statt vollständig aufgelistet; die gewählte Abfahrts-Schnellauswahl bleibt farblich markiert. Im davon getrennten Punkt **Reiseziele & Navigation** legen Admins unabhängig davon mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
-- Teilnehmer melden für ihr zugeordnetes Konto „Noch unterwegs“, „Bin gleich da“, „Beim Treffpunkt“, „Problem“, „Verloren“ oder „Medizinische Hilfe benötigt“. Problemfälle werden ausdrücklich von einem Admin übernommen; der meldende Teilnehmer sieht dessen Anzeigenamen.
-- Alle aktiven Reiseziele erscheinen angemeldeten Teilnehmern als rote Marker auf der nativen und der Webkarte und sind einzeln über externe Navigation erreichbar. Verknüpfte Katalogorte bleiben separat sichtbar. Ein validierter, benutzergebundener AsyncStorage-Cache hält den letzten erfolgreichen Reisezielstand über App-Neustarts hinweg sichtbar, falls der erste Serverabruf fehlschlägt; ein erfolgreicher Supabase-Abruf bleibt maßgeblich und entfernt überholte Ziele. Die Entfernung zum aktuellen Programmtreffpunkt wird nur nach einem Klick einmalig bestimmt; es gibt kein permanentes Tracking und keine Speicherung der Geräteposition im Backend.
-- Eindeutige Offlinefehler werden in einer validierten, benutzerspezifischen AsyncStorage-Warteschlange vorgemerkt. Die UI sagt ausdrücklich, dass diese Meldung noch nicht beim Reiseleiter angekommen ist.
+- Unter **Reiseziele & Navigation** legen Admins unabhängig von Zwischenreisen mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
+- Alle aktiven Reiseziele erscheinen angemeldeten Nutzern als rote Marker auf der nativen und der Webkarte und sind einzeln über externe Navigation erreichbar. Verknüpfte Katalogorte bleiben separat sichtbar.
+- Ein validierter, benutzergebundener AsyncStorage-Cache hält den letzten erfolgreichen Reisezielstand über App-Neustarts hinweg sichtbar, falls der erste Serverabruf fehlschlägt; ein erfolgreicher Supabase-Abruf bleibt maßgeblich und entfernt überholte Ziele.
+- Historische Programmpunktdaten und ihre RPCs bleiben zur Kompatibilität mit älteren Clients erhalten. Der aktuelle Client liest sie nicht und sendet keine vorgemerkten Treffpunktmeldungen mehr.
 
 ### Fehlerbehandlung und Monitoring
 
@@ -136,7 +137,7 @@ npx expo export --platform android
 npm audit
 ```
 
-`npm run validate` umfasst TypeScript, Lint, Jest mit Coverage-Gates und den Expo-Abhängigkeitscheck. Die Gates verlangen mindestens 50 % globale Line Coverage sowie jeweils 80 % für Auth-, Busmanagement-, Reiseführungs-, Gruppencheck- und Fragerunden-Kontext.
+`npm run validate` umfasst TypeScript, Lint, Jest mit Coverage-Gates und den Expo-Abhängigkeitscheck. Die Gates verlangen mindestens 50 % globale Line Coverage sowie jeweils 80 % für Auth-, Busmanagement-, Reiseziel-, Gruppencheck- und Fragerunden-Kontext.
 
 Gezielte Produktionsprüfung vom 21. September 2026 auf Commit `aabf955`:
 
@@ -190,7 +191,6 @@ Die Kernarchitektur und die automatisierten lokalen Prüfungen sind stabil, die 
 - religiöse, historische und ortsbezogene Inhalte fachlich und rechtlich freigeben
 - native Karte, RTL, dynamische Schrift und alle drei Sprachen auf Zielgeräten prüfen
 - realen Last-/Mobilfunktest für Bus-, Realtime- und Gruppenfunktionen mit der erwarteten Reisegruppengröße durchführen
-- Reiseführung mit neuem Client-Build sowie Realtime/Offline-Warteschlange unter realen Mobilfunkbedingungen prüfen
 - aktualisierten Client verteilen und Tagesprogramm-Realtime/Zeitzone auf kleinen Zielgeräten prüfen
 - Registrierung, Kofferänderung und Familienverwaltung mit mehreren Testkonten auf dem aktuellen Client prüfen; die zugehörigen Migrationen sind bereits remote vorhanden
 - Wegen der angepassten iOS-Berechtigungsbeschreibung einen neuen nativen Build erstellen und Reisegruppen einschließlich Adminmitgliedschaft, Anfrage, Ablehnung, einmaliger Standortfreigabe sowie 15-Minuten-Ablauf auf echten iOS-/Android-Geräten prüfen

@@ -3,11 +3,14 @@ import { Text } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
 import { RequireAuth } from '@/features/auth/RequireAuth';
+import type { AppRole } from '@/domain/database';
+import { questionRoundManagerRoles } from '@/features/question-round/question-round-permissions';
 
 const mockAuthState = {
   isAdmin: false,
   isLoading: false,
   session: null as { user: { id: string } } | null,
+  profile: null as { role: AppRole } | null,
 };
 
 jest.mock('expo-router', () => {
@@ -60,6 +63,7 @@ describe('RequireAuth route guard', () => {
     mockAuthState.isAdmin = false;
     mockAuthState.isLoading = false;
     mockAuthState.session = null;
+    mockAuthState.profile = null;
   });
 
   afterEach(async () => {
@@ -127,5 +131,64 @@ describe('RequireAuth route guard', () => {
     });
 
     expect(getRenderer().root.findByType(Text).props.children).toBe('Administration');
+  });
+
+  it.each(['admin', 'scholar'] as const)('erlaubt %s die Fragerundenverwaltung', async (role) => {
+    mockAuthState.session = { user: { id: 'manager-a' } };
+    mockAuthState.profile = { role };
+    mockAuthState.isAdmin = role === 'admin';
+    await act(async () => {
+      renderer = create(
+        <RequireAuth roles={questionRoundManagerRoles} returnTo="/question-round-management">
+          <Text>Fragerundenverwaltung</Text>
+        </RequireAuth>,
+      );
+    });
+
+    expect(getRenderer().root.findByType(Text).props.children).toBe('Fragerundenverwaltung');
+  });
+
+  it.each(['user', 'medical_staff', 'organization_team', null] as const)(
+    'verweigert %s die Fragerundenverwaltung',
+    async (role) => {
+      mockAuthState.session = { user: { id: 'user-a' } };
+      mockAuthState.profile = role ? { role } : null;
+      await act(async () => {
+        renderer = create(
+          <RequireAuth roles={questionRoundManagerRoles} returnTo="/question-round-management">
+            <Text>Fragerundenverwaltung</Text>
+          </RequireAuth>,
+        );
+      });
+
+      expect(getRenderer().root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(
+        JSON.stringify('/'),
+      );
+      expect(getRenderer().root.findAllByType(Text)).toHaveLength(0);
+    },
+  );
+
+  it('entfernt den Zugang sofort bei einem Rollenwechsel und behält Adminrouten gesperrt', async () => {
+    mockAuthState.session = { user: { id: 'scholar-a' } };
+    mockAuthState.profile = { role: 'scholar' };
+    const content = () => (
+      <RequireAuth roles={questionRoundManagerRoles} returnTo="/question-round-management">
+        <Text>Fragerundenverwaltung</Text>
+      </RequireAuth>
+    );
+    await act(async () => { renderer = create(content()); });
+    expect(getRenderer().root.findAllByType(Text)).toHaveLength(1);
+
+    mockAuthState.profile = { role: 'user' };
+    await act(async () => { getRenderer().update(content()); });
+    expect(getRenderer().root.findAllByType(Text)).toHaveLength(0);
+
+    mockAuthState.profile = { role: 'scholar' };
+    await act(async () => {
+      getRenderer().update(<RequireAuth admin returnTo="/admin"><Text>Admin</Text></RequireAuth>);
+    });
+    expect(getRenderer().root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(
+      JSON.stringify('/'),
+    );
   });
 });

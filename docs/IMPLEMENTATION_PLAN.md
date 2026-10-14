@@ -394,43 +394,33 @@ Tests/checks:
 - Playwright full-stack smoke from trip creation through boarding confirmation and close.
 - Web, iOS and Android JavaScript exports.
 
-## Phase 12: Trip guidance and “Where are we?”
+## Phase 12: Trip destinations and navigation
 
-Files to create or modify:
+Since 13 October 2026, the current itinerary point, its admin editor, Home entry, `/guide` route, participant reports, problem acknowledgements and offline outbox are removed from the client. Historical migrations, database types, tables and RPCs remain for existing data and older clients.
 
-- `src/app/guide.tsx`
-- `src/features/trip-guidance/*`
+Files:
+
+- `src/features/trip-guidance/*` (the historical folder/provider name now covers navigation destinations only)
 - `src/app/admin.tsx`
-- `src/app/(tabs)/index.tsx`
-- `src/app/_layout.tsx`
-- `src/domain/database.ts`
+- `src/features/map/*`
 - `src/features/i18n/i18n.tsx`
-- `supabase/migrations/20260827120000_add_trip_guidance.sql`
 - `supabase/migrations/20260828120000_add_trip_navigation_destinations.sql`
-- `supabase/tests/database/phase9_trip_guidance.test.sql`
-- `e2e/phase7-smoke.spec.ts`
+- `supabase/migrations/20261007000000_separate_navigation_from_intermediate_trips.sql`
 
 Acceptance criteria:
 
-- An admin publishes one current itinerary point for the active intermediate trip with current place, next item, departure, meeting point, relevant gate, distance hint, description and actions.
-- Meeting-point corrections update the current item in place; publishing a new item closes the old version and starts fresh participant reports.
-- Assigned participants report `on_way`, `almost_there`, `at_meeting_point`, `problem`, `lost` or `medical_help` for their account-backed assignment.
-- An admin explicitly accepts a problem report, and the participant sees the accepting leader’s captured display name.
-- Place links, external meeting-point navigation and a one-shot distance check work without continuous tracking or backend location storage.
-- The admin dashboard exposes trip destinations and navigation as its own section, separate from trip-guidance editing. Admins can create and edit multiple named destinations without an active intermediate trip, place each on a platform-specific map, drag the native marker or use their current location, preview navigation and archive obsolete entries.
-- All signed-in users, including those without a trip or bus assignment, see every active destination as a distinct marker on the native and web maps. A “Trip destinations” button exposes the full list on both platforms; native selections focus the corresponding marker, and every destination remains reachable through external navigation.
-- Destinations remain visible and editable when an intermediate trip ends or is deleted. Existing markers are preserved, and new markers have no trip dependency.
-- The last successful destination list is cached locally with strict validation and a user ID. It remains visible after an app restart when the initial read fails, while a successful server response, including an empty list, replaces the cache authoritatively.
-- Realtime, app focus and staggered fallback refreshes keep guidance and reports current.
-- Clear network failures queue reports in a validated, user-scoped AsyncStorage outbox. Pending UI never claims the leader received the report, and retries remain idempotent.
-- RLS exposes only the active intermediate trip to members, only linked participant reports to normal accounts and the complete overview to admins. All writes use authenticated RPCs.
+- `Intermediate trips & buses` contains bus management and boarding without a current itinerary point.
+- The admin dashboard exposes trip destinations and navigation as its own section. Admins create, edit and archive multiple named destinations without an active intermediate trip and select coordinates on a platform-specific map or through one foreground location request.
+- Every signed-in account sees active destinations as distinct map markers, can open their list and use external navigation. Destinations remain visible when an intermediate trip ends or is deleted.
+- A validated user-scoped destination cache survives restart and initial read failures; a successful server response, including an empty list, replaces it authoritatively.
+- The client reads and subscribes only to navigation destinations in this provider. Realtime, focus and staggered fallback refreshes remain available without trip or participant reads.
+- The independent daily program remains available on Home and `/program`.
 
 Tests/checks:
 
-- Jest state, outbox parsing, destination-cache restart, distance and protected-route tests.
-- Fresh local migration, database lint and pgTAP RLS/RPC lifecycle tests.
-- Playwright full-stack smoke from publication through a Realtime meeting-point edit and explicit problem acceptance.
-- Web, iOS and Android JavaScript exports plus manual native location-permission review.
+- Existing destination-cache, provider, navigation, admin destination editor and public offline-start tests.
+- TypeScript, lint, Expo dependency alignment, Expo Doctor and web export.
+- No database migration or new native dependency is required for the client removal.
 
 ## Phase 13: General alarm and escalation
 
@@ -450,7 +440,7 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- Since 8 October 2026, the standalone `Wake-up call` dashboard section sends immediately or schedules multiple messages by date and time in `Asia/Baghdad`, without a trip, bus or group dependency. Future calls can be edited or cancelled. The authenticated server scheduler activates due calls and captures recipients at activation. Users acknowledge once; admins see acknowledgement totals and close the call. The former departure alarm remains a separate boarding workflow under `Intermediate trips & buses`.
+- Since 8 October 2026, the standalone `Wake-up call` dashboard section sends immediately or schedules multiple messages without a trip, bus or group dependency. As clarified on 14 October, date/time entry, editing and display use the sender's current device time zone, including the offset for the scheduled date. Scheduling still stores an absolute UTC instant; existing calls retain their activation time. Future calls can be edited or cancelled. The authenticated server scheduler activates due calls and captures recipients at activation. Users acknowledge once; admins see acknowledgement totals and close the call. The former departure alarm remains a separate boarding workflow under `Intermediate trips & buses`.
 - Participants confirm `read`, `on_way` and `boarded` in sequence for their account-backed assignment; `problem` remains available as an exception path.
 - A missing next stage becomes due after five minutes. Native clients reconcile bounded local reminders, while an idempotent server dispatcher claims at most one Expo push attempt per device, participant, stage and reminder window.
 - Push tokens are never client-readable. Registration is profile-bound, dispatch requires a verified admin or scheduler secret, and privileged claims/completions are limited to `service_role`.
@@ -611,5 +601,14 @@ Tests/checks:
 - `20261008010000_schedule_wake_up_calls.sql` adds absolute scheduled/activation timestamps, keeps existing calls and permits several planned or active calls. Normal users cannot see or acknowledge future calls.
 - The existing minutely scheduler authenticates through `dispatch-general-alarm` and executes the shared wake-up dispatcher even without an active boarding or open app. No new secret or client background task is required.
 - Due activation locks the same call row as edit/cancel operations. Cancelled and future calls are excluded. Each recipient/device is claimed once; accounts created after planning are included at activation.
-- The admin form offers Now/Schedule, Iraqi date/time, an editable planned list and separate active calls. The user panel acknowledges each active call independently.
+- The admin form offers Now/Schedule, local device date/time (clarified on 14 October), an editable planned list and separate active calls. Nonexistent local times at a daylight-saving transition are rejected; repeated local times resolve to the first occurrence. The user panel acknowledges each active call independently.
 - Only focused date/time, authorization and scheduling lifecycle checks are added. Both Functions must be deployed with the new migration; existing cron configuration must remain enabled.
+
+## 13 October 2026: Scholar role and anonymous question management
+
+- Add `scholar` to the app-role enum in its own migration before referencing it in the question-permissions migration. Admins assign it through the existing audited role RPC, preserving last-admin protection and the `user` signup default.
+- Admins and scholars can read anonymous questions, check them off, and open or close rounds. Scope RLS and management RPCs through `can_manage_question_rounds`; preserve `is_admin` and all unrelated administrative boundaries.
+- As clarified on 14 October, expose `/question-round-management` only in Settings for scholars, including when no round is open. Admins retain question management in the admin dashboard. Home has no management link. Retain the participant submission route, session/role guards and the normal non-admin mandatory-check flow.
+- Preserve anonymous question rows, private submission counters, five-question limits and cleanup on closure. Provide German, English and Arabic role labels, management links and recipient explanations.
+- Run required TypeScript, lint, SDK compatibility, Doctor and web-export checks plus focused role-authorization checks. No additional full coverage, E2E or device suite for this request.
+- Both migrations are applied and tested locally; remote application and updated client delivery remain pending. No native configuration or dependency change requires a new development build.

@@ -44,7 +44,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.plan": "Planen",
     "wakeUp.date": "Datum (JJJJ-MM-TT)",
     "wakeUp.time": "Uhrzeit (HH:MM)",
-    "wakeUp.timeZone": "Irak-Zeit (Bagdad)",
+    "wakeUp.timeZone": "Lokale Zeit deines Geräts",
     "wakeUp.schedule": "Weckruf planen",
     "wakeUp.planned": "Geplante Weckrufe",
     "wakeUp.plannedCount": "{count} geplant",
@@ -78,7 +78,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.enableNotifications": "Mitteilungen aktivieren",
     "admin.transport.title": "Zwischenreisen & Busse",
     "admin.transport.description":
-      "Buszuordnung und Live-Begleitung für einzelne Fahrten.",
+      "Buszuordnung und Boarding für einzelne Fahrten.",
     "tripGroups.groupCount": "{count} Gruppen",
     "tripGroups.admin.families": "Familien hinzufügen",
     "tripGroups.admin.familiesBody":
@@ -497,30 +497,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.reminderDue.read": "Bitte bestätige jetzt „Gelesen“.",
     "generalAlarm.sequenceBody":
       "Bestätige nacheinander: Gelesen → Ich bin unterwegs → Im Bus. Nach fünf Minuten ohne nächsten Status wird erneut erinnert.",
-    "guide.acts": "Beschreibung und Handlungen",
-    "guide.admin.actionError":
-      "Die Änderung konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
-    "guide.admin.acts": "Hinweise und Handlungen",
-    "guide.admin.actsPlaceholder":
-      "Nur geprüfte oder organisatorische Hinweise eintragen",
     "guide.admin.cancelNew": "Abbrechen",
     "guide.admin.coordinateError":
       "Breiten- und Längengrad müssen jeweils gemeinsam und als gültige Zahlen eingetragen werden.",
-    "guide.admin.coordinatesHint":
-      "Die Koordinaten des Besuchsorts sind optional und werden bei Auswahl eines Katalogorts automatisch eingetragen.",
-    "guide.admin.currentLatitude": "Breitengrad des Besuchsorts",
-    "guide.admin.currentLongitude": "Längengrad des Besuchsorts",
-    "guide.admin.currentPlace": "Aktueller Besuchsort",
-    "guide.admin.currentPlacePlaceholder": "Name des aktuellen Orts",
-    "guide.admin.departureIn": "Abfahrt festlegen",
-    "guide.admin.departurePreview": "Geplante Abfahrt: {date}",
-    "guide.admin.description": "Beschreibung",
-    "guide.admin.descriptionPlaceholder":
-      "Organisatorische Hinweise zum Programmpunkt",
-    "guide.admin.distanceHint": "Entfernungshinweis",
-    "guide.admin.distanceHintPlaceholder": "Zum Beispiel: etwa 300 m",
-    "guide.admin.editTitle": "Veröffentlichten Programmpunkt ändern",
-    "guide.admin.liveHint": "Gespeicherte Änderungen erscheinen über Realtime.",
     "guide.admin.mapPickerAccessibilityLabel":
       "Karte zur Auswahl des Reiseziels",
     "guide.admin.mapPickerBody":
@@ -541,98 +520,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Tippe auf die Irak-Karte. Für eine sehr genaue Position verwende deinen aktuellen Standort oder passe die Koordinaten darunter an.",
     "guide.admin.meetingLatitude": "Breitengrad des Treffpunkts",
     "guide.admin.meetingLongitude": "Längengrad des Treffpunkts",
-    "guide.admin.meetingPoint": "Treffpunkt",
-    "guide.admin.meetingPointPlaceholder":
-      "Genaue Beschreibung des Treffpunkts",
-    "guide.admin.minutes": "in {count} Minuten",
-    "guide.admin.newPointBody":
-      "Beim Veröffentlichen wird der bisherige Programmpunkt beendet. Die Statusmeldungen beginnen neu.",
-    "guide.admin.newPointTitle": "Neuen Programmpunkt vorbereiten",
-    "guide.admin.nextProgram": "Nächster Programmpunkt",
-    "guide.admin.nextProgramPlaceholder": "Was folgt als Nächstes?",
-    "guide.admin.noParticipants":
-      "Der aktiven Zwischenreise sind noch keine Personen oder Familien zugeordnet.",
-    "guide.admin.placeCatalog": "Optionalen Ort aus dem Offline-Katalog wählen",
-    "guide.admin.placeSearchPlaceholder": "Ort oder Stadt suchen …",
-    "guide.admin.placeSelected": "Ausgewählter Katalogort",
-    "guide.admin.placeNoResults": "Kein passender Ort gefunden.",
-    "guide.admin.prepareNew": "Neuen Programmpunkt beginnen",
-    "guide.admin.publish": "Programmpunkt veröffentlichen",
-    "guide.admin.publishTitle": "Aktuellen Programmpunkt veröffentlichen",
-    "guide.admin.published": "Live veröffentlicht",
-    "guide.admin.relevantGate": "Relevante Tür / Eingang",
-    "guide.admin.relevantGatePlaceholder": "Zum Beispiel: Tor 3",
-    "guide.admin.responsesBody":
-      "Statusmeldungen werden live aktualisiert. Problemfälle müssen ausdrücklich übernommen werden.",
-    "guide.admin.responsesTitle": "Teilnehmerstatus",
-    "guide.admin.saveChanges": "Änderungen live speichern",
-    "guide.admin.saved": "Der Programmpunkt wurde gespeichert.",
-    "guide.admin.takeProblem": "Problem übernehmen",
-    "guide.admin.takenBy": "Übernommen von {name}",
-    "guide.admin.tripRequiredBody":
-      "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise an und ordne Personen oder Familien zu.",
-    "guide.admin.tripRequiredTitle": "Aktive Zwischenreise erforderlich",
-    "guide.calculateDistance": "Entfernung einmalig ermitteln",
-    "guide.currentLabel": "Wo sind wir?",
-    "guide.departure": "Abfahrtszeit",
-    "guide.description": "Beschreibung",
-    "guide.distance": "Entfernung zum Treffpunkt",
-    "guide.distanceDenied":
-      "Ohne Standortfreigabe kann die Entfernung nicht berechnet werden.",
-    "guide.distanceError":
-      "Der aktuelle Standort konnte nicht bestimmt werden.",
-    "guide.distanceLoading": "Standort wird ermittelt …",
-    "guide.homeBody":
-      "Aktuell: {place}. Treffpunkt und Abfahrt sind live verfügbar.",
-    "guide.homeTitle": "Aktueller Programmpunkt",
-    "guide.loading": "Reiseführung wird geladen …",
-    "guide.meetingPoint": "Treffpunkt",
-    "guide.navTitle": "Wo sind wir?",
-    "guide.nextProgram": "Als Nächstes",
-    "guide.noAssignmentBody":
-      "Dein Konto ist noch keiner aktiven Zwischenreise zugeordnet. Wende dich an die Reiseleitung.",
-    "guide.noAssignmentTitle": "Keine Reisezuordnung",
-    "guide.noCoordinatesDistance":
-      "Ohne genaue Treffpunktkoordinaten kann nur die Kartensuche, aber keine Entfernung genutzt werden.",
-    "guide.noTracking":
-      "Der Standort wird nur auf deinen Klick einmalig abgefragt und nicht dauerhaft verfolgt.",
-    "guide.noUpdateBody":
-      "Die Reiseleitung hat noch keinen aktuellen Programmpunkt veröffentlicht.",
-    "guide.noUpdateTitle": "Noch kein Programmpunkt",
-    "guide.notSpecified": "Nicht angegeben",
-    "guide.open": "Programmpunkt öffnen",
-    "guide.openNavigation": "Externe Navigation öffnen",
-    "guide.openPlace": "Ort öffnen",
-    "guide.pendingBody":
-      "Mindestens eine Meldung ist nur auf diesem Gerät gespeichert und beim Reiseleiter noch nicht angekommen.",
-    "guide.pendingRetry": "Übertragung erneut versuchen",
-    "guide.pendingTitle": "Noch nicht übertragen",
-    "guide.problemAcknowledged": "Deine Meldung wurde von {name} gesehen.",
-    "guide.relevantGate": "Relevante Tür / Eingang",
     "guide.retry": "Erneut versuchen",
-    "guide.status.almost_there": "Bin gleich da",
-    "guide.status.at_meeting_point": "Beim Treffpunkt",
-    "guide.status.lost": "Verloren",
-    "guide.status.medical_help": "Medizinische Hilfe benötigt",
-    "guide.status.not_reported": "Noch keine Meldung",
-    "guide.status.on_way": "Noch unterwegs",
-    "guide.status.problem": "Problem",
-    "guide.statusBody": "Wähle deinen aktuellen Stand.",
-    "guide.statusPending": "Nur lokal vorgemerkt – noch nicht übertragen",
-    "guide.statusPendingBody":
-      "Die Reiseleitung kann diese Meldung erst sehen, wenn die Übertragung erfolgreich war.",
-    "guide.statusSaved": "Dein Status wurde übertragen.",
-    "guide.statusTitle": "Wie ist dein Status?",
-    "guide.submitError.auth":
-      "Deine Sitzung ist abgelaufen. Melde dich erneut an.",
-    "guide.submitError.closed": "Der Programmpunkt wurde inzwischen geändert.",
-    "guide.submitError.not_linked":
-      "Deine Teilnehmer-Zuordnung wurde geändert. Wende dich an die Reiseleitung.",
-    "guide.submitError.offline": "Die Meldung wurde lokal vorgemerkt.",
-    "guide.submitError.server":
-      "Der Status konnte wegen eines Serverfehlers nicht gespeichert werden.",
-    "guide.syncErrorTitle": "Reiseführung nicht verfügbar",
-    "guide.title": "Reiseführung",
     "groupCheck.actionError":
       "Die Aktion konnte nicht ausgeführt werden. Prüfe die Verbindung und versuche es erneut.",
     "groupCheck.activeLabel": "Verpflichtende Abfrage läuft",
@@ -696,10 +584,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "questionRound.close": "Fragerunde schließen",
     "questionRound.empty": "Noch keine Fragen eingereicht.",
     "questionRound.homeBody":
-      "Du kannst jetzt eine Frage ohne Namen oder Profil-ID an den Admin senden.",
+      "Du kannst jetzt eine Frage ohne Namen oder Profil-ID an Admins und Gelehrte senden.",
     "questionRound.homeTitle": "Die anonyme Fragerunde ist geöffnet",
     "questionRound.markChecked": "Frage als erledigt abhaken",
     "questionRound.markOpen": "Frage wieder als offen markieren",
+    "questionRound.manage": "Fragerunden verwalten",
     "questionRound.navTitle": "Anonyme Frage",
     "questionRound.open": "Fragerunde freigeben",
     "questionRound.openForm": "Anonyme Frage stellen",
@@ -720,7 +609,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Du hast das Limit von fünf Fragen für diese Runde erreicht.",
     "questionRound.submitSuccess": "Deine Frage wurde anonym gespeichert.",
     "questionRound.userBody":
-      "Der Admin kann den Fragetext lesen und später als erledigt abhaken.",
+      "Admins und Gelehrte können den Fragetext lesen und als erledigt abhaken.",
     "questionRound.userTitle": "Frage anonym stellen",
     "questionRound.validation":
       "Die Frage muss mindestens 3 Zeichen enthalten.",
@@ -851,16 +740,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.organization.groups.title": "Gruppen",
     "admin.organization.groups.description":
       "Untergruppen bilden und Gruppenanführer bestimmen.",
-    "admin.organization.live.title": "Live-Begleitung",
-    "admin.organization.live.description":
-      "Programmpunkt, Teilnehmermeldungen und Generalalarm steuern.",
     "admin.organization.overview.activeTrip": "Aktive Zwischenreise",
     "admin.organization.overview.noActiveTrip":
       "Noch keine aktive Zwischenreise",
     "admin.organization.overview.buses": "Busse",
     "admin.organization.overview.participants": "Teilnehmer",
     "admin.organization.overview.groups": "Gruppen",
-    "admin.organization.overview.guidance": "Reiseführung",
     "admin.organization.overview.alarm": "Generalalarm",
     "admin.organization.overview.live": "Live",
     "admin.organization.overview.notPublished": "Nicht veröffentlicht",
@@ -882,12 +767,6 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.groups.error": "Fehler",
     "admin.section.groups.inactive": "Noch keine Gruppen",
     "admin.section.groups.title": "Reisegruppen",
-    "admin.section.guidance.active": "Live",
-    "admin.section.guidance.description":
-      "Aktuellen Programmpunkt, Abfahrt und Teilnehmermeldungen live verwalten.",
-    "admin.section.guidance.error": "Fehler",
-    "admin.section.guidance.inactive": "Nicht veröffentlicht",
-    "admin.section.guidance.title": "Reiseführung",
     "admin.section.navigation.active": "{count} Ziele",
     "admin.section.navigation.description":
       "Mehrere Ziele auf der Karte anlegen, bearbeiten und zur Navigation veröffentlichen.",
@@ -1013,10 +892,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.role.admin": "Admin",
     "admin.role.medical_staff": "Medizinisches Personal",
     "admin.role.organization_team": "Organisationsteam-Mitglied",
+    "admin.role.scholar": "Gelehrter",
     "admin.role.user": "Nutzer",
     "admin.roleLabel": "Rolle",
     "admin.roleAssignment.body":
-      "Nur Admins können Rollen vergeben. Die Adminrolle erlaubt die Benutzer- und Gruppenverwaltung. Mindestens ein Admin muss erhalten bleiben.",
+      "Nur Admins können Rollen vergeben. Die Adminrolle erlaubt die Benutzer- und Gruppenverwaltung. Gelehrte können anonyme Fragen lesen, abhaken und Fragerunden öffnen oder schließen. Mindestens ein Admin muss erhalten bleiben.",
     "admin.roleAssignment.close": "Rollenwahl schließen",
     "admin.roleAssignment.error":
       "Die Rolle konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
@@ -1409,7 +1289,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.plan": "Schedule",
     "wakeUp.date": "Date (YYYY-MM-DD)",
     "wakeUp.time": "Time (HH:MM)",
-    "wakeUp.timeZone": "Iraq time (Baghdad)",
+    "wakeUp.timeZone": "Your device's local time",
     "wakeUp.schedule": "Schedule wake-up call",
     "wakeUp.planned": "Scheduled wake-up calls",
     "wakeUp.plannedCount": "{count} scheduled",
@@ -1443,7 +1323,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.enableNotifications": "Enable notifications",
     "admin.transport.title": "Intermediate trips & buses",
     "admin.transport.description":
-      "Bus assignments and live guidance for individual journeys.",
+      "Bus assignments and boarding for individual journeys.",
     "tripGroups.groupCount": "{count} groups",
     "tripGroups.admin.families": "Add families",
     "tripGroups.admin.familiesBody":
@@ -1848,30 +1728,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.reminderDue.read": "Please confirm “Read” now.",
     "generalAlarm.sequenceBody":
       "Confirm in sequence: Read → I am on my way → On the bus. A missing next status is reminded after five minutes.",
-    "guide.acts": "Description and actions",
-    "guide.admin.actionError":
-      "The change could not be saved. Check the connection and retry.",
-    "guide.admin.acts": "Notes and actions",
-    "guide.admin.actsPlaceholder":
-      "Enter only reviewed or organizational notes",
     "guide.admin.cancelNew": "Cancel",
     "guide.admin.coordinateError":
       "Latitude and longitude must be entered together as valid numbers.",
-    "guide.admin.coordinatesHint":
-      "Visit-place coordinates are optional and are entered automatically when a catalog place is selected.",
-    "guide.admin.currentLatitude": "Visit-place latitude",
-    "guide.admin.currentLongitude": "Visit-place longitude",
-    "guide.admin.currentPlace": "Current visit place",
-    "guide.admin.currentPlacePlaceholder": "Name of the current place",
-    "guide.admin.departureIn": "Set departure",
-    "guide.admin.departurePreview": "Planned departure: {date}",
-    "guide.admin.description": "Description",
-    "guide.admin.descriptionPlaceholder":
-      "Organizational notes for this itinerary point",
-    "guide.admin.distanceHint": "Distance hint",
-    "guide.admin.distanceHintPlaceholder": "For example: about 300 m",
-    "guide.admin.editTitle": "Edit published itinerary point",
-    "guide.admin.liveHint": "Saved changes appear through Realtime.",
     "guide.admin.mapPickerAccessibilityLabel":
       "Map for selecting the trip destination",
     "guide.admin.mapPickerBody":
@@ -1892,96 +1751,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Tap the Iraq map. For a very precise position, use your current location or adjust the coordinates below.",
     "guide.admin.meetingLatitude": "Meeting-point latitude",
     "guide.admin.meetingLongitude": "Meeting-point longitude",
-    "guide.admin.meetingPoint": "Meeting point",
-    "guide.admin.meetingPointPlaceholder": "Exact meeting-point description",
-    "guide.admin.minutes": "in {count} minutes",
-    "guide.admin.newPointBody":
-      "Publishing ends the previous itinerary point and starts fresh status reports.",
-    "guide.admin.newPointTitle": "Prepare a new itinerary point",
-    "guide.admin.nextProgram": "Next itinerary point",
-    "guide.admin.nextProgramPlaceholder": "What comes next?",
-    "guide.admin.noParticipants":
-      "No people or families are assigned to the active intermediate trip yet.",
-    "guide.admin.placeCatalog":
-      "Optionally select a place from the offline catalog",
-    "guide.admin.placeSearchPlaceholder": "Search for a place or city …",
-    "guide.admin.placeSelected": "Selected catalog place",
-    "guide.admin.placeNoResults": "No matching place found.",
-    "guide.admin.prepareNew": "Start a new itinerary point",
-    "guide.admin.publish": "Publish itinerary point",
-    "guide.admin.publishTitle": "Publish the current itinerary point",
-    "guide.admin.published": "Published live",
-    "guide.admin.relevantGate": "Relevant door / entrance",
-    "guide.admin.relevantGatePlaceholder": "For example: Gate 3",
-    "guide.admin.responsesBody":
-      "Status reports update live. Problem reports must be accepted explicitly.",
-    "guide.admin.responsesTitle": "Participant status",
-    "guide.admin.saveChanges": "Save changes live",
-    "guide.admin.saved": "The itinerary point was saved.",
-    "guide.admin.takeProblem": "Take problem",
-    "guide.admin.takenBy": "Taken by {name}",
-    "guide.admin.tripRequiredBody":
-      "First create an active intermediate trip under Trip organization and assign people or families.",
-    "guide.admin.tripRequiredTitle": "Active intermediate trip required",
-    "guide.calculateDistance": "Check distance once",
-    "guide.currentLabel": "Where are we?",
-    "guide.departure": "Departure time",
-    "guide.description": "Description",
-    "guide.distance": "Distance to the meeting point",
-    "guide.distanceDenied":
-      "Distance cannot be calculated without location permission.",
-    "guide.distanceError": "The current location could not be determined.",
-    "guide.distanceLoading": "Getting location …",
-    "guide.homeBody": "Current: {place}. Meeting point and departure are live.",
-    "guide.homeTitle": "Current itinerary point",
-    "guide.loading": "Loading trip guidance …",
-    "guide.meetingPoint": "Meeting point",
-    "guide.navTitle": "Where are we?",
-    "guide.nextProgram": "Up next",
-    "guide.noAssignmentBody":
-      "Your account is not assigned to an active intermediate trip yet. Contact the trip leader.",
-    "guide.noAssignmentTitle": "No trip assignment",
-    "guide.noCoordinatesDistance":
-      "Without exact meeting-point coordinates, map search is available but distance is not.",
-    "guide.noTracking":
-      "Location is requested once only when you tap and is not tracked continuously.",
-    "guide.noUpdateBody":
-      "The trip leader has not published a current itinerary point yet.",
-    "guide.noUpdateTitle": "No itinerary point yet",
-    "guide.notSpecified": "Not specified",
-    "guide.open": "Open itinerary point",
-    "guide.openNavigation": "Open external navigation",
-    "guide.openPlace": "Open place",
-    "guide.pendingBody":
-      "At least one report is stored only on this device and has not reached the trip leader.",
-    "guide.pendingRetry": "Retry transmission",
-    "guide.pendingTitle": "Not transmitted yet",
-    "guide.problemAcknowledged": "Your report was seen by {name}.",
-    "guide.relevantGate": "Relevant door / entrance",
     "guide.retry": "Try again",
-    "guide.status.almost_there": "Almost there",
-    "guide.status.at_meeting_point": "At the meeting point",
-    "guide.status.lost": "Lost",
-    "guide.status.medical_help": "Medical help needed",
-    "guide.status.not_reported": "No report yet",
-    "guide.status.on_way": "Still on my way",
-    "guide.status.problem": "Problem",
-    "guide.statusBody": "Choose your current state.",
-    "guide.statusPending": "Queued locally — not transmitted yet",
-    "guide.statusPendingBody":
-      "The trip leader can see this report only after transmission succeeds.",
-    "guide.statusSaved": "Your status was transmitted.",
-    "guide.statusTitle": "What is your status?",
-    "guide.submitError.auth": "Your session expired. Sign in again.",
-    "guide.submitError.closed":
-      "The itinerary point has changed in the meantime.",
-    "guide.submitError.not_linked":
-      "Your participant assignment changed. Contact the trip leader.",
-    "guide.submitError.offline": "The report was queued locally.",
-    "guide.submitError.server":
-      "The status could not be saved because of a server error.",
-    "guide.syncErrorTitle": "Trip guidance unavailable",
-    "guide.title": "Trip guidance",
     "groupCheck.actionError":
       "The action could not be completed. Check your connection and try again.",
     "groupCheck.activeLabel": "Required check in progress",
@@ -2044,10 +1814,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "questionRound.close": "Close question round",
     "questionRound.empty": "No questions have been submitted yet.",
     "questionRound.homeBody":
-      "You can now send the admin a question without a name or profile ID.",
+      "You can now send admins and scholars a question without a name or profile ID.",
     "questionRound.homeTitle": "The anonymous question round is open",
     "questionRound.markChecked": "Mark question as completed",
     "questionRound.markOpen": "Mark question as open again",
+    "questionRound.manage": "Manage question rounds",
     "questionRound.navTitle": "Anonymous question",
     "questionRound.open": "Open question round",
     "questionRound.openForm": "Ask an anonymous question",
@@ -2068,7 +1839,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "You have reached the limit of five questions for this round.",
     "questionRound.submitSuccess": "Your question was saved anonymously.",
     "questionRound.userBody":
-      "The admin can read the question text and check it off as completed later.",
+      "Admins and scholars can read the question text and check it off as completed.",
     "questionRound.userTitle": "Ask anonymously",
     "questionRound.validation":
       "The question must contain at least 3 characters.",
@@ -2194,16 +1965,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.organization.groups.title": "Groups",
     "admin.organization.groups.description":
       "Create subgroups and choose group leaders.",
-    "admin.organization.live.title": "Live support",
-    "admin.organization.live.description":
-      "Manage the current itinerary point, participant reports, and general alarm.",
     "admin.organization.overview.activeTrip": "Active intermediate trip",
     "admin.organization.overview.noActiveTrip":
       "No active intermediate trip yet",
     "admin.organization.overview.buses": "Buses",
     "admin.organization.overview.participants": "Participants",
     "admin.organization.overview.groups": "Groups",
-    "admin.organization.overview.guidance": "Trip guidance",
     "admin.organization.overview.alarm": "General alarm",
     "admin.organization.overview.live": "Live",
     "admin.organization.overview.notPublished": "Not published",
@@ -2225,12 +1992,6 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.groups.error": "Error",
     "admin.section.groups.inactive": "No groups yet",
     "admin.section.groups.title": "Trip groups",
-    "admin.section.guidance.active": "Live",
-    "admin.section.guidance.description":
-      "Manage the current itinerary point, departure and participant reports live.",
-    "admin.section.guidance.error": "Error",
-    "admin.section.guidance.inactive": "Not published",
-    "admin.section.guidance.title": "Trip guidance",
     "admin.section.navigation.active": "{count} destinations",
     "admin.section.navigation.description":
       "Create and edit multiple map destinations and publish them for navigation.",
@@ -2351,10 +2112,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.role.admin": "Admin",
     "admin.role.medical_staff": "Medical staff",
     "admin.role.organization_team": "Organization team member",
+    "admin.role.scholar": "Scholar",
     "admin.role.user": "User",
     "admin.roleLabel": "Role",
     "admin.roleAssignment.body":
-      "Only administrators can assign roles. The administrator role grants access to user and group management. At least one administrator must remain.",
+      "Only administrators can assign roles. The administrator role grants access to user and group management. Scholars can read and check off anonymous questions and open or close question rounds. At least one administrator must remain.",
     "admin.roleAssignment.close": "Close role selection",
     "admin.roleAssignment.error":
       "The role could not be saved. Check the connection and try again.",
@@ -2741,7 +2503,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.plan": "جدولة",
     "wakeUp.date": "التاريخ (YYYY-MM-DD)",
     "wakeUp.time": "الوقت (HH:MM)",
-    "wakeUp.timeZone": "توقيت العراق (بغداد)",
+    "wakeUp.timeZone": "التوقيت المحلي لجهازك",
     "wakeUp.schedule": "جدولة نداء إيقاظ",
     "wakeUp.planned": "نداءات الإيقاظ المجدولة",
     "wakeUp.plannedCount": "{count} مجدولة",
@@ -2773,7 +2535,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "فعّل الإشعارات لتلقي نداءات الإيقاظ خارج التطبيق. يعتمد الصوت على إعدادات جهازك.",
     "wakeUp.enableNotifications": "تفعيل الإشعارات",
     "admin.transport.title": "التنقلات والحافلات",
-    "admin.transport.description": "توزيع الحافلات والإرشاد المباشر للتنقلات.",
+    "admin.transport.description": "توزيع الحافلات وتأكيد الصعود للتنقلات.",
     "tripGroups.groupCount": "{count} مجموعات",
     "tripGroups.admin.families": "إضافة عائلات",
     "tripGroups.admin.familiesBody":
@@ -3166,29 +2928,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.reminderDue.read": "يرجى تأكيد «تمت القراءة» الآن.",
     "generalAlarm.sequenceBody":
       "أكد بالترتيب: تمت القراءة ← أنا في الطريق ← في الحافلة. يُعاد التذكير بعد خمس دقائق إذا غابت الحالة التالية.",
-    "guide.acts": "الوصف والأعمال",
-    "guide.admin.actionError":
-      "تعذر حفظ التغيير. تحقق من الاتصال وحاول مرة أخرى.",
-    "guide.admin.acts": "ملاحظات وأعمال",
-    "guide.admin.actsPlaceholder":
-      "أدخل فقط ملاحظات تنظيمية أو محتوى تمت مراجعته",
     "guide.admin.cancelNew": "إلغاء",
     "guide.admin.coordinateError":
       "يجب إدخال خط العرض وخط الطول معاً كرقمين صالحين.",
-    "guide.admin.coordinatesHint":
-      "إحداثيات موقع الزيارة اختيارية، وتُدخل تلقائياً عند اختيار موقع من الدليل.",
-    "guide.admin.currentLatitude": "خط عرض موقع الزيارة",
-    "guide.admin.currentLongitude": "خط طول موقع الزيارة",
-    "guide.admin.currentPlace": "موقع الزيارة الحالي",
-    "guide.admin.currentPlacePlaceholder": "اسم الموقع الحالي",
-    "guide.admin.departureIn": "تحديد المغادرة",
-    "guide.admin.departurePreview": "المغادرة المخططة: {date}",
-    "guide.admin.description": "الوصف",
-    "guide.admin.descriptionPlaceholder": "ملاحظات تنظيمية لنقطة البرنامج",
-    "guide.admin.distanceHint": "ملاحظة عن المسافة",
-    "guide.admin.distanceHintPlaceholder": "مثلاً: نحو 300 متر",
-    "guide.admin.editTitle": "تعديل نقطة البرنامج المنشورة",
-    "guide.admin.liveHint": "تظهر التغييرات المحفوظة مباشرة عبر Realtime.",
     "guide.admin.mapPickerAccessibilityLabel": "خريطة لاختيار وجهة الرحلة",
     "guide.admin.mapPickerBody":
       "اضغط على الخريطة أو اسحب العلامة لتحديد وجهة الرحلة.",
@@ -3207,93 +2949,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "اضغط على خريطة العراق. للحصول على موقع دقيق جداً استخدم موقعك الحالي أو عدّل الإحداثيات أدناه.",
     "guide.admin.meetingLatitude": "خط عرض نقطة اللقاء",
     "guide.admin.meetingLongitude": "خط طول نقطة اللقاء",
-    "guide.admin.meetingPoint": "نقطة اللقاء",
-    "guide.admin.meetingPointPlaceholder": "وصف دقيق لنقطة اللقاء",
-    "guide.admin.minutes": "خلال {count} دقيقة",
-    "guide.admin.newPointBody":
-      "عند النشر تنتهي نقطة البرنامج السابقة وتبدأ بلاغات حالة جديدة.",
-    "guide.admin.newPointTitle": "إعداد نقطة برنامج جديدة",
-    "guide.admin.nextProgram": "نقطة البرنامج التالية",
-    "guide.admin.nextProgramPlaceholder": "ما التالي؟",
-    "guide.admin.noParticipants":
-      "لم يُعيّن أي أشخاص أو عائلات للرحلة القصيرة النشطة بعد.",
-    "guide.admin.placeCatalog":
-      "اختر اختيارياً موقعاً من الدليل المتاح دون اتصال",
-    "guide.admin.placeSearchPlaceholder": "ابحث عن مكان أو مدينة …",
-    "guide.admin.placeSelected": "المكان المختار من الدليل",
-    "guide.admin.placeNoResults": "لم يتم العثور على مكان مطابق.",
-    "guide.admin.prepareNew": "بدء نقطة برنامج جديدة",
-    "guide.admin.publish": "نشر نقطة البرنامج",
-    "guide.admin.publishTitle": "نشر نقطة البرنامج الحالية",
-    "guide.admin.published": "منشور مباشرة",
-    "guide.admin.relevantGate": "الباب / المدخل المعني",
-    "guide.admin.relevantGatePlaceholder": "مثلاً: الباب 3",
-    "guide.admin.responsesBody":
-      "تُحدَّث البلاغات مباشرة، ويجب استلام بلاغات المشكلة صراحةً.",
-    "guide.admin.responsesTitle": "حالة المشاركين",
-    "guide.admin.saveChanges": "حفظ التغييرات مباشرة",
-    "guide.admin.saved": "تم حفظ نقطة البرنامج.",
-    "guide.admin.takeProblem": "استلام المشكلة",
-    "guide.admin.takenBy": "استلمها {name}",
-    "guide.admin.tripRequiredBody":
-      "أنشئ أولاً رحلة قصيرة نشطة ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
-    "guide.admin.tripRequiredTitle": "يلزم وجود رحلة قصيرة نشطة",
-    "guide.calculateDistance": "حساب المسافة لمرة واحدة",
-    "guide.currentLabel": "أين نحن؟",
-    "guide.departure": "وقت المغادرة",
-    "guide.description": "الوصف",
-    "guide.distance": "المسافة إلى نقطة اللقاء",
-    "guide.distanceDenied": "لا يمكن حساب المسافة دون إذن الموقع.",
-    "guide.distanceError": "تعذر تحديد الموقع الحالي.",
-    "guide.distanceLoading": "جار تحديد الموقع…",
-    "guide.homeBody":
-      "الموقع الحالي: {place}. نقطة اللقاء والمغادرة محدثتان مباشرة.",
-    "guide.homeTitle": "نقطة البرنامج الحالية",
-    "guide.loading": "جار تحميل إرشاد الرحلة…",
-    "guide.meetingPoint": "نقطة اللقاء",
-    "guide.navTitle": "أين نحن؟",
-    "guide.nextProgram": "التالي",
-    "guide.noAssignmentBody":
-      "لم يُعيّن حسابك لرحلة قصيرة نشطة بعد. تواصل مع إدارة الرحلة.",
-    "guide.noAssignmentTitle": "لا يوجد تعيين للرحلة",
-    "guide.noCoordinatesDistance":
-      "من دون إحداثيات دقيقة لنقطة اللقاء تتوفر خريطة البحث فقط، ولا يمكن حساب المسافة.",
-    "guide.noTracking":
-      "يُطلب موقعك مرة واحدة فقط عند الضغط، ولا تتم متابعته باستمرار.",
-    "guide.noUpdateBody": "لم تنشر إدارة الرحلة نقطة برنامج حالية بعد.",
-    "guide.noUpdateTitle": "لا توجد نقطة برنامج بعد",
-    "guide.notSpecified": "غير محدد",
-    "guide.open": "فتح نقطة البرنامج",
-    "guide.openNavigation": "فتح الملاحة الخارجية",
-    "guide.openPlace": "فتح الموقع",
-    "guide.pendingBody":
-      "يوجد بلاغ واحد على الأقل محفوظ على هذا الجهاز فقط ولم يصل إلى إدارة الرحلة.",
-    "guide.pendingRetry": "إعادة محاولة الإرسال",
-    "guide.pendingTitle": "لم يُرسل بعد",
-    "guide.problemAcknowledged": "اطّلع {name} على بلاغك.",
-    "guide.relevantGate": "الباب / المدخل المعني",
     "guide.retry": "المحاولة مرة أخرى",
-    "guide.status.almost_there": "سأصل قريباً",
-    "guide.status.at_meeting_point": "عند نقطة اللقاء",
-    "guide.status.lost": "تائه",
-    "guide.status.medical_help": "أحتاج إلى مساعدة طبية",
-    "guide.status.not_reported": "لا يوجد بلاغ بعد",
-    "guide.status.on_way": "ما زلت في الطريق",
-    "guide.status.problem": "مشكلة",
-    "guide.statusBody": "اختر حالتك الحالية.",
-    "guide.statusPending": "محفوظ محلياً فقط — لم يُرسل بعد",
-    "guide.statusPendingBody":
-      "لن تتمكن إدارة الرحلة من رؤية هذا البلاغ حتى ينجح الإرسال.",
-    "guide.statusSaved": "تم إرسال حالتك.",
-    "guide.statusTitle": "ما حالتك؟",
-    "guide.submitError.auth": "انتهت جلستك. سجّل الدخول مرة أخرى.",
-    "guide.submitError.closed": "تم تغيير نقطة البرنامج في هذه الأثناء.",
-    "guide.submitError.not_linked":
-      "تم تغيير تعيين المشارك. تواصل مع إدارة الرحلة.",
-    "guide.submitError.offline": "تم حفظ البلاغ محلياً.",
-    "guide.submitError.server": "تعذر حفظ الحالة بسبب خطأ في الخادم.",
-    "guide.syncErrorTitle": "إرشاد الرحلة غير متاح",
-    "guide.title": "إرشاد الرحلة",
     "groupCheck.actionError":
       "تعذر تنفيذ الإجراء. تحقق من الاتصال وحاول مرة أخرى.",
     "groupCheck.activeLabel": "استطلاع إلزامي جارٍ",
@@ -3353,10 +3009,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "questionRound.close": "إغلاق جولة الأسئلة",
     "questionRound.empty": "لم تُرسل أي أسئلة بعد.",
     "questionRound.homeBody":
-      "يمكنك الآن إرسال سؤال إلى المشرف دون اسم أو معرف ملف.",
+      "يمكنك الآن إرسال سؤال إلى المشرفين والعلماء دون اسم أو معرف ملف.",
     "questionRound.homeTitle": "جولة الأسئلة المجهولة مفتوحة",
     "questionRound.markChecked": "وضع علامة على السؤال كمنجز",
     "questionRound.markOpen": "إعادة السؤال إلى حالة مفتوحة",
+    "questionRound.manage": "إدارة جولات الأسئلة",
     "questionRound.navTitle": "سؤال مجهول",
     "questionRound.open": "فتح جولة الأسئلة",
     "questionRound.openForm": "طرح سؤال مجهول",
@@ -3376,7 +3033,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "questionRound.submitLimit": "لقد وصلت إلى حد خمسة أسئلة لهذه الجولة.",
     "questionRound.submitSuccess": "تم حفظ سؤالك دون اسم.",
     "questionRound.userBody":
-      "يمكن للمشرف قراءة نص السؤال ووضع علامة عليه كمنجز لاحقاً.",
+      "يمكن للمشرفين والعلماء قراءة نص السؤال ووضع علامة عليه كمنجز.",
     "questionRound.userTitle": "اطرح سؤالاً دون اسم",
     "questionRound.validation": "يجب أن يحتوي السؤال على 3 أحرف على الأقل.",
     "tripGroups.navTitle": "مجموعتي",
@@ -3492,15 +3149,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.organization.groups.title": "المجموعات",
     "admin.organization.groups.description":
       "أنشئ المجموعات الفرعية وعيّن قادة المجموعات.",
-    "admin.organization.live.title": "المتابعة المباشرة",
-    "admin.organization.live.description":
-      "أدر نقطة البرنامج وبلاغات المشاركين والإنذار العام.",
     "admin.organization.overview.activeTrip": "الرحلة القصيرة النشطة",
     "admin.organization.overview.noActiveTrip": "لا توجد رحلة قصيرة نشطة بعد",
     "admin.organization.overview.buses": "الحافلات",
     "admin.organization.overview.participants": "المشاركون",
     "admin.organization.overview.groups": "المجموعات",
-    "admin.organization.overview.guidance": "إرشاد الرحلة",
     "admin.organization.overview.alarm": "الإنذار العام",
     "admin.organization.overview.live": "مباشر",
     "admin.organization.overview.notPublished": "غير منشور",
@@ -3522,12 +3175,6 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.groups.error": "خطأ",
     "admin.section.groups.inactive": "لا توجد مجموعات بعد",
     "admin.section.groups.title": "مجموعات الرحلة",
-    "admin.section.guidance.active": "مباشر",
-    "admin.section.guidance.description":
-      "أدر نقطة البرنامج الحالية والمغادرة وبلاغات المشاركين مباشرة.",
-    "admin.section.guidance.error": "خطأ",
-    "admin.section.guidance.inactive": "غير منشور",
-    "admin.section.guidance.title": "إرشاد الرحلة",
     "admin.section.navigation.active": "{count} وجهات",
     "admin.section.navigation.description":
       "أنشئ عدة وجهات على الخريطة وعدّلها وانشرها للملاحة.",
@@ -3645,10 +3292,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.role.admin": "مشرف",
     "admin.role.medical_staff": "الطاقم الطبي",
     "admin.role.organization_team": "عضو فريق التنظيم",
+    "admin.role.scholar": "عالم ديني",
     "admin.role.user": "مستخدم",
     "admin.roleLabel": "الدور",
     "admin.roleAssignment.body":
-      "يمكن للمشرفين فقط منح الأدوار. يمنح دور المشرف صلاحية إدارة المستخدمين والمجموعة، ويجب أن يبقى مشرف واحد على الأقل.",
+      "يمكن للمشرفين فقط منح الأدوار. يمنح دور المشرف صلاحية إدارة المستخدمين والمجموعة. يمكن للعلماء قراءة الأسئلة المجهولة ووضع علامة عليها وفتح جولات الأسئلة أو إغلاقها. يجب أن يبقى مشرف واحد على الأقل.",
     "admin.roleAssignment.close": "إغلاق اختيار الدور",
     "admin.roleAssignment.error":
       "تعذر حفظ الدور. تحقق من الاتصال وحاول مرة أخرى.",

@@ -8,10 +8,10 @@ export const protectedRoutePaths = [
   '/emergency',
   '/emergency-dashboard',
   '/group',
-  '/guide',
   '/program',
   '/check-in',
   '/question-round',
+  '/question-round-management',
 ] as const;
 
 export type ProtectedRoutePath = (typeof protectedRoutePaths)[number];
@@ -82,10 +82,6 @@ export function emergencyDashboardRoute(): Href & ProtectedRoutePath {
   return '/emergency-dashboard' as Href & ProtectedRoutePath;
 }
 
-export function guideRoute(): Href & ProtectedRoutePath {
-  return '/guide' as Href & ProtectedRoutePath;
-}
-
 export function groupRoute(): Href & ProtectedRoutePath {
   return '/group' as Href & ProtectedRoutePath;
 }
@@ -102,4 +98,8 @@ export function checkInRoute(returnTo: ProtectedRoutePath | '/' = '/'): Href {
 
 export function alarmRoute(): Href & ProtectedRoutePath {
   return '/alarm' as Href & ProtectedRoutePath;
+}
+
+export function questionRoundManagementRoute(): Href & ProtectedRoutePath {
+  return '/question-round-management' as Href & ProtectedRoutePath;
 }

@@ -1,4 +1,4 @@
-export type AppRole = 'admin' | 'medical_staff' | 'organization_team' | 'user';
+export type AppRole = 'admin' | 'medical_staff' | 'organization_team' | 'scholar' | 'user';
 export type BusBoardingStatus = 'boarded' | 'on_way' | 'problem' | 'read';
 export type EmergencyTeam = 'medical' | 'travel';
 export type MemberType = 'brother' | 'sister';
@@ -1357,6 +1357,10 @@ export type Database = {
       close_question_round: {
         Args: { p_round_id: number };
         Returns: QuestionRound;
+      };
+      can_manage_question_rounds: {
+        Args: never;
+        Returns: boolean;
       };
       open_question_round: {
         Args: never;

@@ -4,11 +4,13 @@ export type LoginScreenDecision = 'check-in' | 'form' | 'loading' | 'return';
 export function getProtectedRouteDecision({
   admin,
   hasSession,
+  hasRequiredRole = true,
   isAdmin,
   isLoading,
 }: {
   admin: boolean;
   hasSession: boolean;
+  hasRequiredRole?: boolean;
   isAdmin: boolean;
   isLoading: boolean;
 }): ProtectedRouteDecision {
@@ -20,7 +22,7 @@ export function getProtectedRouteDecision({
     return 'login';
   }
 
-  return admin && !isAdmin ? 'unauthorized' : 'allow';
+  return (admin && !isAdmin) || !hasRequiredRole ? 'unauthorized' : 'allow';
 }
 
 export function getLoginScreenDecision({

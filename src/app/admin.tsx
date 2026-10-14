@@ -32,7 +32,6 @@ import { RequireAuth } from '@/features/auth/RequireAuth';
 import { supabase } from '@/features/auth/supabase';
 import { AdminBoardingPanel } from '@/features/bus-management/AdminBoardingPanel';
 import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
-import { AdminTripGuidancePanel } from '@/features/trip-guidance/AdminTripGuidancePanel';
 import { AdminGeneralAlarmPanel } from '@/features/general-alarm/AdminGeneralAlarmPanel';
 import { useWakeUpCall } from '@/features/wake-up-call/wake-up-call-context';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
@@ -54,7 +53,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useTripGroups } from '@/features/trip-groups/trip-group-context';
 
 const adminPageSize = 200;
-const assignableRoles: AppRole[] = ['user', 'medical_staff', 'organization_team', 'admin'];
+const assignableRoles: AppRole[] = ['user', 'medical_staff', 'organization_team', 'scholar', 'admin'];
 
 type AdminSection =
   | 'alarm'
@@ -350,12 +349,7 @@ function AdminContent() {
                 {expandedSections.transport ? (
                   <>
                     <AdminBusManagementPanel families={families} users={users} />
-                    {activeTrip ? (
-                      <>
-                        <AdminTripGuidancePanel />
-                        <AdminBoardingPanel />
-                      </>
-                    ) : null}
+                    {activeTrip ? <AdminBoardingPanel /> : null}
                   </>
                 ) : null}
               </View>

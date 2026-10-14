@@ -4,19 +4,6 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
 import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrganizationPanel';
 
-const mockBusState = {
-  activeBoarding: null,
-  activeTrip: {
-    archived_at: null,
-    created_at: '2026-09-21T10:00:00.000Z',
-    created_by_profile_id: 1,
-    id: 7,
-    name: 'Ziyara 2026',
-  },
-  buses: [{ id: 1 }, { id: 2 }],
-  participants: [{ id: 10 }, { id: 11 }, { id: 12 }],
-};
-
 jest.mock('@/components/themed-text', () => {
   const { Text: MockText } = jest.requireActual<typeof import('react-native')>('react-native');
 
@@ -55,29 +42,11 @@ jest.mock('@/features/general-alarm/AdminGeneralAlarmPanel', () => {
   return { AdminGeneralAlarmPanel: () => <MockText>alarm-panel</MockText> };
 });
 
-jest.mock('@/features/trip-guidance/AdminTripGuidancePanel', () => {
-  const { Text: MockText } = jest.requireActual<typeof import('react-native')>('react-native');
-
-  return { AdminTripGuidancePanel: () => <MockText>guidance-panel</MockText> };
-});
-
 jest.mock('@/features/trip-groups/AdminTripGroupPanel', () => {
   const { Text: MockText } = jest.requireActual<typeof import('react-native')>('react-native');
 
   return { AdminTripGroupPanel: () => <MockText>groups-panel</MockText> };
 });
-
-jest.mock('@/features/bus-management/bus-management-context', () => ({
-  useBusManagement: () => mockBusState,
-}));
-
-jest.mock('@/features/trip-groups/trip-group-context', () => ({
-  useTripGroups: () => ({ groups: [{ id: 20 }] }),
-}));
-
-jest.mock('@/features/trip-guidance/trip-guidance-context', () => ({
-  useTripGuidance: () => ({ activeGuidance: { id: 30 } }),
-}));
 
 jest.mock('@/features/i18n/i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -130,34 +99,13 @@ describe('AdminTravelOrganizationPanel', () => {
     actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT = originalActEnvironment;
   });
 
-  it('zeigt die Zwischenreiseübersicht und startet mit Zwischenreise & Busse', async () => {
+  it('zeigt die unabhängige Gruppenverwaltung', async () => {
     await act(async () => {
       renderer = create(<AdminTravelOrganizationPanel families={[]} users={[]} />);
     });
 
-    expect(visibleText()).toContain('Ziyara 2026');
-    expect(visibleText()).toContain('bus-panel');
-    expect(visibleText()).not.toContain('groups-panel');
-    expect(visibleText()).not.toContain('guidance-panel');
-  });
-
-  it('wechselt zwischen Gruppen und der kombinierten Live-Begleitung', async () => {
-    await act(async () => {
-      renderer = create(<AdminTravelOrganizationPanel families={[]} users={[]} />);
-    });
-
-    const tabs = getRenderer()
-      .root.findAllByProps({ accessibilityRole: 'radio' })
-      .filter((node) => typeof node.props.style === 'function');
-    expect(tabs).toHaveLength(3);
-
-    await act(async () => tabs[1].props.onPress());
     expect(visibleText()).toContain('groups-panel');
     expect(visibleText()).not.toContain('bus-panel');
-
-    await act(async () => tabs[2].props.onPress());
-    expect(visibleText()).toContain('guidance-panel');
-    expect(visibleText()).toContain('alarm-panel');
-    expect(tabs[2].props.accessibilityState.checked).toBe(true);
+    expect(visibleText()).not.toContain('alarm-panel');
   });
 });

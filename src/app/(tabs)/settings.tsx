@@ -17,6 +17,7 @@ import {
   groupRoute,
   emergencyDashboardRoute,
   loginRoute,
+  questionRoundManagementRoute,
 } from "@/features/navigation/routes";
 import { useThemeMode, type ThemeMode } from "@/features/theme/theme-mode";
 import { useTheme } from "@/hooks/use-theme";
@@ -254,6 +255,14 @@ export default function SettingsScreen() {
                   icon="people"
                   label={t("settings.openAdmin")}
                   onPress={() => router.push("/admin")}
+                />
+              ) : null}
+              {profile?.role === "scholar" ? (
+                <Button
+                  icon="question"
+                  label={t("questionRound.manage")}
+                  onPress={() => router.push(questionRoundManagementRoute())}
+                  variant="secondary"
                 />
               ) : null}
             </>
