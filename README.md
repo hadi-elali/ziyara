@@ -1,6 +1,6 @@
 # Shia Ziyarah Iraq
 
-Produktionsorientierte Expo-SDK-57-App für eine schiitische Ziyarah-Reise im Irak. Stand dieser Dokumentation: 22. September 2026.
+Produktionsorientierte Expo-SDK-57-App für eine schiitische Ziyarah-Reise im Irak. Stand dieser Dokumentation: 15. Oktober 2026.
 
 Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, Einstellungs-, About-, Disclaimer- und Quelleninhalten lokal gebündelt und startet ohne Anmeldung sowie ohne Supabase-Verbindung. Konto-, Tagesprogramm-, Bus-, Reisegruppen-, Generalalarm-, Gruppencheck-, Fragerunden- und Administrationsfunktionen bleiben durch Supabase Auth, Row Level Security und serverseitig geprüfte RPCs geschützt.
 
@@ -25,7 +25,7 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 
 - Der AuthContext trennt initiales Session-/Profil-Laden von Hintergrundrefreshes. App-Resume und Realtime-Rollenänderungen erhalten bestehendes Profil, Navigation und Screen-State; Logout oder ein echter Benutzerwechsel entfernt alte Profildaten sofort.
 - Registrierung, Login und Kontoverwaltung unterstützen Anzeigename, `member_type`, `party_size`, Kofferanzahl, E-Mail und Passwort. Die Kofferanzahl gilt für alle durch das Konto vertretenen Personen, kann bei der Registrierung `0` bis `50` betragen und später über die Kontoseite in den Einstellungen geändert werden. Profile können die Rollen `user`, `medical_staff`, `organization_team`, `scholar` (Gelehrter) und `admin` besitzen.
-- Admins können eigenständige Benutzerkonten im Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size` und Reisegruppen getrennt und können unter **Reiseorganisation → Zwischenreise & Busse** als Einheit ausgewählt werden.
+- Admins können eigenständige Benutzerkonten im Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size` und Reisegruppen getrennt und können unter **Gruppen & Gruppenleitung** sowie **Fahrten & Busse** als Einheit ausgewählt werden.
 - „Passwort vergessen“ und der vollständige Recovery-Deep-Link laufen ausschließlich über `/reset-password` beziehungsweise `ziyara:///reset-password`. Normale Login-/Signup-Links werden nicht als Recovery-Link behandelt; nach erfolgreicher Passwortänderung wird die lokale Session entfernt.
 - Nutzer können ausschließlich das eigene Konto über `supabase/functions/delete-account` löschen. Die Function nimmt keine Ziel-User-ID an, prüft den Bearer-Token selbst, schützt den letzten Admin und hält Service-Role-Zugangsdaten vollständig aus dem Client.
 
@@ -44,28 +44,31 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Alle Konten der passenden Teamrolle sowie alle Admins sind automatisch und dauerhaft im Dienst. Admins erhalten beide Notfallarten. Eine manuelle Diensteinteilung existiert im Adminbereich nicht, und historische Einteilungsdaten beeinflussen die Empfängerauswahl nicht.
 - Die Meldung wird zuerst für jedes passende Teamkonto dauerhaft im Postfach gespeichert und danach bestmöglich per Push versucht. Push-Tokens und Versandprotokolle bleiben für Clients unlesbar.
 
-### Reiseorganisation: Zwischenreise & Busse
+### Fahrten & Busse
 
-- Die **Reiseorganisation** plant nicht die gesamte Ziyara, sondern kleine Zwischenreisen innerhalb der Gesamtreise, zum Beispiel `Hotel → Karbala`.
-- Im ersten Schritt **Zwischenreise & Busse** wird eine aktive Zwischenreise mit benannten Bussen angelegt. Für jeden neuen Bus ist eine registrierte Person als Busführer erforderlich; Personen und Familien erscheinen in den Auswahlfeldern erst nach einer Suche.
+- Unter **Fahrten & Busse** werden einzelne Fahrten innerhalb der gesamten Ziyara verwaltet, zum Beispiel `Hotel → Karbala`.
+- Es kann eine Fahrt gleichzeitig aktiv sein, mit mehreren benannten Bussen. Für jeden neuen Bus ist eine registrierte Person als Busführer erforderlich; Personen und Familien erscheinen in den Auswahlfeldern erst nach einer Suche.
 - Personen werden über ihr registriertes Konto oder gemeinsam als ganze Kontofamilie einem Bus zugeordnet. Sobald eine Familie zugeordnet ist, werden ihre Mitglieder nicht zusätzlich als Einzelpersonen angeboten.
-- Eine aktive Zwischenreise lässt sich einklappen und beenden. Danach kann eine leere Zwischenreise erstellt oder die komplette Busanordnung einschließlich Führung und Personen-/Familienzuordnung aus einer beendeten Zwischenreise übernommen werden; alte Boardingstände werden nicht kopiert. Das Tagesprogramm bleibt davon unberührt.
-- Unter **Zwischenreisen & Busse** werden Zwischenreise-, Bus- und Teilnehmerzuordnung sowie das Starten, Überwachen und Beenden des Boardings verwaltet.
+- Eine aktive Fahrt lässt sich einklappen und beenden. Danach kann eine leere Fahrt erstellt oder die komplette Busanordnung einschließlich Führung und Personen-/Familienzuordnung aus einer beendeten Fahrt übernommen werden; alte Boardingstände werden nicht kopiert. Das Tagesprogramm bleibt davon unberührt.
+- Unter **Fahrten & Busse** werden Fahrten-, Bus- und Teilnehmerzuordnung sowie das Starten, Überwachen und Beenden des Boardings verwaltet.
 - Realtime, App-Fokus und ein gestaffelter Fallback-Refresh halten die Übersicht aktuell. Monotone Request-Versionen verhindern, dass ältere Reads einen gespeicherten Status zurücksetzen. Antwort und Schließen sperren dieselbe Boarding-Zeile und bleiben dadurch transaktional geordnet.
 - Bei einer abgelaufenen oder fehlenden Auth-Session erneuert der Client die Sitzung und wiederholt eine Teilnehmer- oder Admin-Statusmutation genau einmal für dieselbe User-ID. Endgültige Fehler laden den autoritativen Stand und unterscheiden Auth-, geschlossenes Boarding-, geänderte Zuordnungs-, Offline- und Serverzustände.
 
-### Reiseorganisation: Gruppen und Anführerstandort
+### Gruppen & Gruppenleitung
 
-- Im zweiten Schritt **Gruppen** bilden Admins Untergruppen aus den der Reise zugeordneten Personen. Anführer und Mitglieder werden über eine Namenssuche ausgewählt, statt alle Konten ungefiltert anzuzeigen. Jede Person gehört höchstens einer Gruppe; eine registrierte Person wird als Anführer festgelegt und ist automatisch Mitglied.
+- Ein einzelner Buchstabe oder eine Ziffer genügt als Gruppenname. Der Name bleibt ein Pflichtfeld mit höchstens 80 Zeichen. Dafür muss die Migration `20261015000000_allow_short_organization_group_names.sql` auch remote angewandt werden.
+- Unter **Gruppen & Gruppenleitung** erstellen, bearbeiten und löschen Admins Gruppen direkt aus registrierten Personen oder ganzen Kontofamilien. Die Gruppen bleiben bei wechselnden Fahrten bestehen und können ohne aktive Fahrt oder Buszuordnung angelegt werden. Jede Person gehört höchstens einer Gruppe; jede Gruppe erhält einen oder mehrere Leiter, die selbst Mitglieder sind.
+- Familien werden beim Speichern atomar in ihre aktuellen Konten aufgelöst; spätere Familienänderungen verändern gespeicherte Gruppenmitgliedschaften nicht automatisch. Ein Konflikt mit einer anderen Gruppe verhindert die gesamte Speicherung.
+- Gruppenzugehörigkeit und Buszuordnung werden getrennt gepflegt; Gruppenleiter und Busführer werden separat bestimmt. Eine Gruppe wird aktuell nicht automatisch einem Bus zugeordnet.
 - Auch ein Admin kann Mitglied oder Anführer sein. Auf Home und unter `/group` sieht er nur seine eigenen Gruppenzuordnungen; die vollständige Gruppenverwaltung bleibt im Adminbereich.
 - Der Admin kann den Anführer in der App nach seinem Standort fragen. Der Anführer sieht die Anfrage auf Home und entscheidet ausdrücklich zwischen einer einmaligen Freigabe und Ablehnung; erst nach Zustimmung wird die Vordergrund-Standortberechtigung angefragt.
 - Ein freigegebener Anführerstandort erscheint im Adminbereich auf einer kleinen Karte. Der Admin kann seinen eigenen aktuellen Standort nach separater Zustimmung lokal als zweiten Marker einblenden; diese Adminposition wird weder gespeichert noch geteilt.
 - Es gibt kein Live- oder Hintergrundtracking. Geteilte Koordinaten sind per RLS nur für Anführer und Admins und höchstens 15 Minuten lesbar; erneute Anfragen sowie Gruppenänderung oder -löschung entfernen die zuvor gespeicherte Position.
 - Gruppen, Mitgliedschaften und Standortanfragen werden per Realtime, App-Fokus und gestaffeltem Fallback aktualisiert. Alle Mutationen laufen über serverseitig authentifizierte RPCs.
 
-### Zwischenreisen & Busse: Boarding
+### Fahrten & Busse: Boarding
 
-- Unter **Zwischenreisen & Busse** verwaltet der Admin Buszuordnungen und Boarding. Der frühere aktuelle Programmpunkt samt Teilnehmeransicht ist entfernt. Weckrufe werden im getrennten Punkt **Weckruf** verwaltet.
+- Unter **Fahrten & Busse** verwaltet der Admin Buszuordnungen und Boarding. Der frühere aktuelle Programmpunkt samt Teilnehmeransicht ist entfernt. Weckrufe werden im getrennten Punkt **Weckruf** verwaltet.
 - Ein offenes Boarding führt jede zugeordnete Person durch `Gelesen` → `Ich bin unterwegs` → `Im Bus`; `Problem` bleibt als Ausnahmeweg verfügbar.
 - Nach fünf Minuten ohne nächste Stufe werden native lokale Erinnerungen geplant. Ein geschützter Dispatcher beansprucht zusätzlich höchstens einen Expo-Push-Versuch je Gerät, Teilnehmer, Stufe und Fünf-Minuten-Fenster.
 - Das separate Generalalarm-Panel zeigt bestätigte und fehlende Personen, alle ausstehenden Namen, die Schließbereitschaft jedes Busses und eine ausdrücklich protokollierte manuelle Eskalation.
@@ -73,15 +76,15 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 
 ### Tagesprogramm
 
-- Das **Tagesprogramm** ist von der Reiseorganisation und ihren Zwischenreisen unabhängig und gilt für die gesamte Ziyara. Es kann auch ohne aktive Zwischenreise geplant und gelesen werden.
+- Das **Tagesprogramm** ist von Gruppen und Fahrten unabhängig und gilt für die gesamte Ziyara. Es kann auch ohne aktive Fahrt geplant und gelesen werden.
 - Admins wählen im eigenen Punkt **Tagesprogramm** einen Starttag und planen wahlweise einen, zwei, drei, fünf oder sieben aufeinanderfolgende Tage in einem Formular.
 - Jeder Tag erhält eine optionale Überschrift und einen freien organisatorischen Ablauf. Alle ausgewählten Tage werden atomar gespeichert; ein bereits veröffentlichter Tag kann später geändert werden.
 - Angemeldete Nutzer sehen das heutige Programm kompakt im grünen Home-Bereich. Ein Tipp öffnet das geschützte Wochenprogramm mit heute und den nächsten sechs Tagen, getrennten Tageskarten und gegliederten Ablaufpunkten. Der letzte erfolgreiche, benutzergebundene Stand wird lokal gespeichert und beim nächsten Start sofort angezeigt, während Realtime, App-Fokus und ein gestaffelter Fallback-Refresh ihn im Hintergrund aktualisieren.
-- RLS gibt das reiseweite Programm allen angemeldeten Konten frei, auch wenn keine aktive Zwischenreise besteht oder das Konto keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
+- RLS gibt das reiseweite Programm allen angemeldeten Konten frei, auch wenn keine aktive Fahrt besteht oder das Konto keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
 
 ### Reiseziele & Navigation
 
-- Unter **Reiseziele & Navigation** legen Admins unabhängig von Zwischenreisen mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
+- Unter **Reiseziele & Navigation** legen Admins unabhängig von Fahrten mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
 - Alle aktiven Reiseziele erscheinen angemeldeten Nutzern als rote Marker auf der nativen und der Webkarte und sind einzeln über externe Navigation erreichbar. Verknüpfte Katalogorte bleiben separat sichtbar.
 - Ein validierter, benutzergebundener AsyncStorage-Cache hält den letzten erfolgreichen Reisezielstand über App-Neustarts hinweg sichtbar, falls der erste Serverabruf fehlschlägt; ein erfolgreicher Supabase-Abruf bleibt maßgeblich und entfernt überholte Ziele.
 - Historische Programmpunktdaten und ihre RPCs bleiben zur Kompatibilität mit älteren Clients erhalten. Der aktuelle Client liest sie nicht und sendet keine vorgemerkten Treffpunktmeldungen mehr.

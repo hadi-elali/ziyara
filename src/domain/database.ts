@@ -174,6 +174,7 @@ export type TripParticipant = {
 
 export type OrganizationGroup = {
   id: number;
+  /** Required name; a single character is sufficient (maximum 80 characters). */
   name: string;
   created_at: string;
   updated_at: string;
@@ -340,6 +341,8 @@ export type GeneralAlarmNotificationClaim = {
 
 export type EmergencyRequest = {
   accuracy_meters: number | null;
+  completed_at: string | null;
+  completed_by_profile_id: number | null;
   created_at: string;
   id: number;
   latitude: number | null;
@@ -370,6 +373,7 @@ export type EmergencyNotificationAttempt = {
 
 export type EmergencyInboxMessage = {
   accuracy_meters: number | null;
+  completed_at: string | null;
   created_at: string;
   latitude: number | null;
   location_label: string | null;
@@ -646,7 +650,13 @@ export type Database = {
           recipient_profile_id: number;
           request_id: number;
         };
-        Relationships: [];
+        Relationships: [{
+          foreignKeyName: 'emergency_request_recipients_request_id_fkey';
+          columns: ['request_id'];
+          isOneToOne: false;
+          referencedRelation: 'emergency_requests';
+          referencedColumns: ['id'];
+        }];
         Row: EmergencyRequestRecipient;
         Update: {
           read_at?: string | null;
@@ -655,6 +665,8 @@ export type Database = {
       emergency_requests: {
         Insert: {
           accuracy_meters?: number | null;
+          completed_at?: string | null;
+          completed_by_profile_id?: number | null;
           created_at?: string;
           id?: never;
           latitude?: number | null;
@@ -1347,6 +1359,14 @@ export type Database = {
         Returns: undefined;
       };
       mark_emergency_request_read: {
+        Args: { p_request_id: number };
+        Returns: undefined;
+      };
+      complete_emergency_request: {
+        Args: { p_request_id: number };
+        Returns: string;
+      };
+      admin_delete_emergency_request: {
         Args: { p_request_id: number };
         Returns: undefined;
       };

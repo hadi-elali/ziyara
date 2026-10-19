@@ -71,7 +71,7 @@ const originalActEnvironment = actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT;
 let renderer: ReactTestRenderer | null;
 
 function getRenderer() {
-  if (!renderer) throw new Error('Die Reiseorganisation wurde noch nicht gerendert.');
+  if (!renderer) throw new Error('Die Gruppenverwaltung wurde noch nicht gerendert.');
   return renderer;
 }
 

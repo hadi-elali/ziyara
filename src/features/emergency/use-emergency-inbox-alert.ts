@@ -41,8 +41,9 @@ export function useEmergencyInboxAlert() {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
         supabase
           .from('emergency_request_recipients')
-          .select('request_id')
+          .select('request_id, emergency_requests!inner(completed_at)')
           .is('read_at', null)
+          .is('emergency_requests.completed_at', null)
           .limit(1)
           .abortSignal(signal),
       );

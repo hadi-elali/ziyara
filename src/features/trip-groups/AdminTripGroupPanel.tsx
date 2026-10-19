@@ -93,6 +93,7 @@ export function AdminTripGroupPanel(
   );
   const matchingLeaderCandidates = normalizedLeaderSearch
     ? linkedLeaderCandidates
+      .filter((participant) => !leaderIds.has(participant.id))
       .filter((participant) =>
         participant.display_name
           .toLocaleLowerCase(language)
@@ -153,14 +154,36 @@ export function AdminTripGroupPanel(
   };
 
   const selectLeader = (participantId: string) => {
-    setLeaderIds((current) => {
-      const next = new Set(current);
-      if (next.has(participantId)) next.delete(participantId);
-      else next.add(participantId);
-      return next;
-    });
+    setLeaderIds((current) => new Set(current).add(participantId));
     setSelectedParticipantIds((current) => new Set(current).add(participantId));
     setLeaderSearch('');
+  };
+
+  const confirmRemoveLeader = (participantId: string, displayName: string) => {
+    if (isWorking) return;
+    const removeLeader = () => {
+      setLeaderIds((current) => {
+        const next = new Set(current);
+        next.delete(participantId);
+        return next;
+      });
+    };
+    const title = t('tripGroups.admin.removeLeaderTitle', { name: displayName });
+    const body = t('tripGroups.admin.removeLeaderBody');
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n${body}`)) removeLeader();
+      return;
+    }
+
+    Alert.alert(title, body, [
+      { style: 'cancel', text: t('tripGroups.admin.cancel') },
+      {
+        onPress: removeLeader,
+        style: 'destructive',
+        text: t('tripGroups.admin.removeLeaderConfirm'),
+      },
+    ]);
   };
 
   const toggleMember = (participantId: string) => {
@@ -389,14 +412,41 @@ export function AdminTripGroupPanel(
             )
             : null}
           {selectedLeaders.map((leader) => (
-            <ChoiceRow
+            <View
               key={leader.id}
-              label={leader.display_name}
-              note={t('tripGroups.admin.selectedLeader')}
-              selected
-              type='checkbox'
-              onPress={() => selectLeader(leader.id)}
-            />
+              style={[
+                styles.choiceRow,
+                {
+                  backgroundColor: theme.accentSoft,
+                  borderColor: theme.accent,
+                },
+              ]}
+            >
+              <SymbolIcon color={theme.accent} name='confirm' size={20} />
+              <View style={styles.selectedLeaderText}>
+                <ThemedText type='smallBold'>{leader.display_name}</ThemedText>
+                <ThemedText type='small' themeColor='textSecondary'>
+                  {t('tripGroups.admin.selectedLeader')}
+                </ThemedText>
+              </View>
+              <Pressable
+                accessibilityLabel={t('tripGroups.admin.removeLeader', {
+                  name: leader.display_name,
+                })}
+                accessibilityRole='button'
+                accessibilityState={{ disabled: isWorking }}
+                disabled={isWorking}
+                onPress={() => confirmRemoveLeader(leader.id, leader.display_name)}
+                style={({ pressed }) => [
+                  styles.removeLeaderButton,
+                  { backgroundColor: theme.dangerSoft },
+                  pressed && styles.pressed,
+                  isWorking && styles.disabled,
+                ]}
+              >
+                <SymbolIcon color={theme.danger} name='close' size={20} />
+              </Pressable>
+            </View>
           ))}
           {linkedLeaderCandidates.length > 0
             ? (
@@ -629,7 +679,7 @@ export function AdminTripGroupPanel(
 
         <Button
           disabled={isWorking ||
-            groupName.trim().length < 2 ||
+            groupName.trim() === '' ||
             leaderIds.size === 0 ||
             selectedParticipantIds.size === 0}
           icon={editingGroupId === null ? 'plus' : 'confirm'}
@@ -1037,6 +1087,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
   },
   selectedMembers: { gap: Spacing.one },
+  selectedLeaderText: { flex: 1, gap: Spacing.half, minWidth: 0 },
+  removeLeaderButton: {
+    alignItems: 'center',
+    borderRadius: 8,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44,
+  },
   pressed: { opacity: 0.72 },
   disabled: { opacity: 0.55 },
 });

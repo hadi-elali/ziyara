@@ -76,9 +76,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.notificationHint":
       "Aktiviere Mitteilungen, um Weckrufe auch außerhalb der App zu erhalten. Der Ton richtet sich nach deinen Geräteeinstellungen.",
     "wakeUp.enableNotifications": "Mitteilungen aktivieren",
-    "admin.transport.title": "Zwischenreisen & Busse",
+    "admin.transport.title": "Fahrten & Busse",
     "admin.transport.description":
-      "Buszuordnung und Boarding für einzelne Fahrten.",
+      "Einzelne Fahrten planen, Busse zuordnen und das Boarding verfolgen.",
     "tripGroups.groupCount": "{count} Gruppen",
     "tripGroups.admin.families": "Familien hinzufügen",
     "tripGroups.admin.familiesBody":
@@ -235,7 +235,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.sentEmpty": "Du hast noch keinen Notfall gesendet.",
     "emergency.new": "NEU",
     "emergency.read": "Gelesen",
-    "emergency.markRead": "Als gelesen markieren",
+    "emergency.markRead": "Gelesen",
+    "emergency.open": "Offen",
+    "emergency.completed": "Abgeschlossen",
+    "emergency.completedAt": "Abgeschlossen am {date}",
+    "emergency.complete": "Abschließen",
+    "emergency.completing": "Wird abgeschlossen …",
+    "emergency.delete": "Löschen",
+    "emergency.deleting": "Wird gelöscht …",
+    "emergency.deleteTitle": "Notfall endgültig löschen?",
+    "emergency.deleteBody": "Die Meldung wird für den Absender und alle Empfänger dauerhaft entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "emergency.cancel": "Abbrechen",
+    "emergency.actionError": "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.",
     "emergency.markReadError":
       "Der Lesestatus konnte nicht gespeichert werden.",
     "emergencyDashboard.navTitle": "Notfall-Dashboard",
@@ -322,11 +333,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.actionError":
       "Die Busaktion konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
     "bus.admin.addBus": "Bus mit Führer anlegen",
-    "bus.admin.archive": "Zwischenreise beenden",
+    "bus.admin.archive": "Fahrt beenden",
     "bus.admin.archiveBody":
-      "Die Zwischenreise wird beendet. Busse, Führer und Zuordnungen bleiben erhalten und können in die nächste Zwischenreise übernommen werden. Das Tagesprogramm bleibt unverändert.",
-    "bus.admin.archiveConfirm": "Zwischenreise beenden",
-    "bus.admin.archiveTitle": "Aktive Zwischenreise beenden?",
+      "Die Fahrt wird beendet. Busse, Führer und Zuordnungen bleiben erhalten und können in die nächste Fahrt übernommen werden. Das Tagesprogramm bleibt unverändert.",
+    "bus.admin.archiveConfirm": "Fahrt beenden",
+    "bus.admin.archiveTitle": "Aktive Fahrt beenden?",
     "bus.admin.assignmentBody":
       "Wähle eine registrierte Person oder eine ganze Kontofamilie und anschließend den Bus. Wird eine Familie zugeordnet, erscheinen ihre Mitglieder nicht mehr einzeln in der Personenauswahl.",
     "bus.admin.assignmentTitle": "Person oder Familie zuordnen",
@@ -344,11 +355,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.cancel": "Abbrechen",
     "bus.admin.changeBusLeader": "Führer ändern",
     "bus.admin.closeBoarding": "Boarding schließen",
-    "bus.admin.createTrip": "Zwischenreise anlegen",
+    "bus.admin.createTrip": "Fahrt anlegen",
     "bus.admin.createTripBody":
-      "Plane eine kleine Fahrt innerhalb der Gesamtreise, zum Beispiel vom Hotel zu einem Besuchsort. Lege sie leer an oder übernimm Busse, Busführer und Zuordnungen aus einer beendeten Zwischenreise.",
-    "bus.admin.createTripFromTemplate": "Zwischenreise mit Anordnung anlegen",
-    "bus.admin.createTripTitle": "Neue Zwischenreise planen",
+      "Plane eine kleine Fahrt innerhalb der Gesamtreise, zum Beispiel vom Hotel zu einem Besuchsort. Lege sie leer an oder übernimm Busse, Busführer und Zuordnungen aus einer beendeten Fahrt.",
+    "bus.admin.createTripFromTemplate": "Fahrt mit Busanordnung anlegen",
+    "bus.admin.createTripTitle": "Neue Fahrt planen",
     "bus.admin.departureIn": "Geplante Abfahrt in",
     "bus.admin.family": "Ganze Familie",
     "bus.admin.familyMembers": "{count} Konten: {names}",
@@ -372,10 +383,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.setBusLeader": "Führer festlegen",
     "bus.admin.startBoarding": "Boarding starten",
     "bus.admin.startBoardingTitle": "Neue Abfahrt",
-    "bus.admin.tripName": "Name der Zwischenreise",
+    "bus.admin.tripName": "Name der Fahrt",
     "bus.admin.tripNamePlaceholder": "Zum Beispiel: Hotel → Karbala",
     "bus.admin.templateBody":
-      "Bei einer Übernahme werden Busse, Busführer und die Personen-/Familienzuordnung kopiert. Alte Abfahrten und Status bleiben in der beendeten Zwischenreise.",
+      "Bei einer Übernahme werden Busse, Busführer und die Personen-/Familienzuordnung kopiert. Alte Abfahrten und Status bleiben in der beendeten Fahrt.",
     "bus.admin.templateEmpty": "Ohne Übernahme",
     "bus.admin.templateTitle": "Anordnung übernehmen (optional)",
     "bus.admin.tripSummary": "Busse: {buses} · Zuordnungen: {assignments}",
@@ -438,7 +449,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.admin.messageLabel": "Abfahrtsmeldung",
     "generalAlarm.admin.messagePlaceholder": "Zum Beispiel: Abfahrt vom Hotel",
     "generalAlarm.admin.noParticipantsBody":
-      "Ordne zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ mindestens eine Person oder Familie zu.",
+      "Ordne unter „Fahrten & Busse“ mindestens eine Person oder Familie einem Bus zu.",
     "generalAlarm.admin.outstandingBody":
       "{count} Teilnehmer sind noch nicht im Bus bestätigt.",
     "generalAlarm.admin.outstandingTitle": "Ausstehende Teilnehmer",
@@ -454,8 +465,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Fällige Push-Erinnerungen wurden an den Expo-Dienst übergeben.",
     "generalAlarm.admin.pushNow": "Push jetzt prüfen",
     "generalAlarm.admin.tripRequiredBody":
-      "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise und Busse an und ordne Personen oder Familien zu.",
-    "generalAlarm.admin.tripRequiredTitle": "Aktive Zwischenreise erforderlich",
+      "Lege unter „Fahrten & Busse“ eine aktive Fahrt und Busse an und ordne Personen oder Familien zu.",
+    "generalAlarm.admin.tripRequiredTitle": "Aktive Fahrt erforderlich",
     "generalAlarm.admin.unavailableTitle": "Boarding nicht verfügbar",
     "generalAlarm.departureCountdown": "Noch {count} Minuten bis zur Abfahrt",
     "generalAlarm.departureOverdue": "Abfahrt seit {count} Minuten fällig",
@@ -656,13 +667,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Die Aktion konnte ohne Internetverbindung nicht gespeichert werden.",
     "tripGroups.error.server":
       "Die Gruppenaktion konnte wegen eines Serverfehlers nicht gespeichert werden.",
-    "tripGroups.admin.tripRequiredTitle": "Aktive Zwischenreise erforderlich",
-    "tripGroups.admin.tripRequiredBody":
-      "Lege zuerst unter „Reiseorganisation“ im Schritt „Zwischenreise & Busse“ eine aktive Zwischenreise an und ordne Personen oder Familien zu.",
     "tripGroups.admin.createTitle": "Neue Gruppe bilden",
     "tripGroups.admin.editTitle": "Gruppe bearbeiten",
     "tripGroups.admin.editorBody":
-      "Wähle einen oder mehrere Gruppenleiter und füge Personen oder ganze Familien hinzu.",
+      "Wähle einen oder mehrere Gruppenleiter und füge registrierte Personen oder ganze Kontofamilien hinzu. Die Gruppe bleibt bei wechselnden Fahrten bestehen.",
     "tripGroups.admin.name": "Gruppenname",
     "tripGroups.admin.namePlaceholder": "Zum Beispiel: Gruppe Abbas",
     "tripGroups.admin.selectLeader": "Gruppenleiter / Gruppenadmins",
@@ -672,7 +680,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.memberSearch": "Gruppenmitglied suchen",
     "tripGroups.admin.searchPlaceholder": "Nach Namen suchen …",
     "tripGroups.admin.selectedLeader":
-      "Als Gruppenleiter ausgewählt · Tippen zum Entfernen",
+      "Als Gruppenleiter ausgewählt",
+    "tripGroups.admin.removeLeader": "{name} als Gruppenleiter entfernen",
+    "tripGroups.admin.removeLeaderTitle": "„{name}“ als Gruppenleiter entfernen?",
+    "tripGroups.admin.removeLeaderBody":
+      "Die Person bleibt als Gruppenmitglied ausgewählt. Die Änderung wird erst beim Speichern der Gruppe übernommen.",
+    "tripGroups.admin.removeLeaderConfirm": "Entfernen",
     "tripGroups.admin.selectedMembers": "Ausgewählt: {count}",
     "tripGroups.admin.removeMember": "{name} aus der Auswahl entfernen",
     "tripGroups.admin.noSearchResults": "Kein passender Name gefunden.",
@@ -691,14 +704,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.saved": "Die Gruppe wurde gespeichert.",
     "tripGroups.admin.emptyTitle": "Noch keine Gruppen",
     "tripGroups.admin.emptyBody":
-      "Bilde oben die erste Gruppe aus den zugeordneten Personen.",
+      "Bilde oben die erste Gruppe aus registrierten Personen oder ganzen Kontofamilien.",
     "tripGroups.admin.memberCount": "{count} Personen",
     "tripGroups.admin.leaderUnavailable": "Anführer nicht verfügbar",
     "tripGroups.admin.edit": "Bearbeiten",
     "tripGroups.admin.delete": "Löschen",
     "tripGroups.admin.deleteTitle": "„{name}“ löschen?",
     "tripGroups.admin.deleteBody":
-      "Die Gruppenzuordnung und eine vorhandene Standortanfrage werden gelöscht. Teilnehmer und Zwischenreise bleiben erhalten.",
+      "Die Gruppe, ihre Mitgliedschaftszuordnungen und alle Standortanfragen werden gelöscht. Die Benutzerkonten bleiben erhalten.",
     "tripGroups.admin.deleteConfirm": "Gruppe löschen",
     "tripGroups.admin.locationTitle": "Standort anfragen",
     "tripGroups.admin.locationIdle":
@@ -727,22 +740,20 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.requested":
       "Die Standortanfrage wurde an den Gruppenanführer gesendet.",
     "admin.description":
-      "Verwalte Zwischenreisen, das davon unabhängige Tagesprogramm, Reiseziele, Statusabfragen, anonyme Fragen und Benutzer in klaren Arbeitsbereichen.",
-    "admin.section.organization.active": "Aktive Zwischenreise",
+      "Verwalte Gruppen, Fahrten und Busse, Tagesprogramm, Reiseziele, Statusabfragen, anonyme Fragen und Benutzer in eigenen Bereichen.",
     "admin.section.organization.description":
-      "Gruppen gründen, Leiter bestimmen und Personen oder Familien zuordnen.",
+      "Gruppen bilden, Leiter bestimmen und deren Standort mit Zustimmung anfragen.",
     "admin.section.organization.error": "Fehler",
-    "admin.section.organization.inactive": "Keine aktive Zwischenreise",
-    "admin.section.organization.title": "Reiseorganisation",
-    "admin.organization.setup.title": "Zwischenreise & Busse",
+    "admin.section.organization.title": "Gruppen & Gruppenleitung",
+    "admin.organization.setup.title": "Fahrten & Busse",
     "admin.organization.setup.description":
-      "Eine kleine Zwischenreise anlegen, Busse führen und Teilnehmer zuordnen.",
+      "Eine kleine Fahrt anlegen, Busse führen und Teilnehmer zuordnen.",
     "admin.organization.groups.title": "Gruppen",
     "admin.organization.groups.description":
       "Untergruppen bilden und Gruppenanführer bestimmen.",
-    "admin.organization.overview.activeTrip": "Aktive Zwischenreise",
+    "admin.organization.overview.activeTrip": "Aktive Fahrt",
     "admin.organization.overview.noActiveTrip":
-      "Noch keine aktive Zwischenreise",
+      "Noch keine aktive Fahrt",
     "admin.organization.overview.buses": "Busse",
     "admin.organization.overview.participants": "Teilnehmer",
     "admin.organization.overview.groups": "Gruppen",
@@ -758,7 +769,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.alarm.inactive": "Ausgeschaltet",
     "admin.section.alarm.title": "Generalalarm",
     "admin.section.bus.description":
-      "Lege Zwischenreisen und Busse mit Führung an und ordne Personen oder Familien zu.",
+      "Lege Fahrten und Busse mit Führung an und ordne Personen oder Familien zu.",
     "admin.section.bus.status": "Bereit",
     "admin.section.bus.title": "Busmanagement",
     "admin.section.groups.active": "{count} Gruppen",
@@ -790,7 +801,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Zum Beispiel: 08:00 Frühstück\n09:00 Abfahrt\n10:00 gemeinsamer Treffpunkt",
     "dailyProgram.admin.edit": "Bearbeiten",
     "dailyProgram.admin.editorBody":
-      "Plane hier unabhängig von den Zwischenreisen das Programm für die gesamte Reise. Jeder Tag erhält sein eigenes Programm und wird gemeinsam gespeichert.",
+      "Plane hier unabhängig von den Fahrten das Programm für die gesamte Reise. Jeder Tag erhält sein eigenes Programm und wird gemeinsam gespeichert.",
     "dailyProgram.admin.editorTitle": "Tagesprogramm planen",
     "dailyProgram.admin.empty":
       "Für heute und die kommenden Tage ist noch kein Programm veröffentlicht.",
@@ -824,7 +835,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Das Reiseziel konnte nicht gespeichert oder entfernt werden. Prüfe die Verbindung und versuche es erneut.",
     "navigation.admin.addTitle": "Neues Reiseziel anlegen",
     "navigation.admin.body":
-      "Gib dem Ort einen Namen und setze den Marker auf der Karte – auch ohne aktive Zwischenreise. Alle angemeldeten Nutzer sehen ihn anschließend auf ihrer Karte.",
+      "Gib dem Ort einen Namen und setze den Marker auf der Karte – auch ohne aktive Fahrt. Alle angemeldeten Nutzer sehen ihn anschließend auf ihrer Karte.",
     "navigation.admin.coordinatesHint":
       "Die Karte trägt die Koordinaten automatisch ein. Für eine Feinabstimmung können sie direkt geändert werden.",
     "navigation.admin.count": "{count} aktive Reiseziele",
@@ -1321,9 +1332,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.notificationHint":
       "Enable notifications to receive wake-up calls outside the app. Sound depends on your device settings.",
     "wakeUp.enableNotifications": "Enable notifications",
-    "admin.transport.title": "Intermediate trips & buses",
+    "admin.transport.title": "Trips & buses",
     "admin.transport.description":
-      "Bus assignments and boarding for individual journeys.",
+      "Plan individual trips, assign buses and track boarding.",
     "tripGroups.groupCount": "{count} groups",
     "tripGroups.admin.families": "Add families",
     "tripGroups.admin.familiesBody":
@@ -1475,7 +1486,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.sentEmpty": "You have not sent an emergency yet.",
     "emergency.new": "NEW",
     "emergency.read": "Read",
-    "emergency.markRead": "Mark as read",
+    "emergency.markRead": "Read",
+    "emergency.open": "Open",
+    "emergency.completed": "Completed",
+    "emergency.completedAt": "Completed on {date}",
+    "emergency.complete": "Complete",
+    "emergency.completing": "Completing …",
+    "emergency.delete": "Delete",
+    "emergency.deleting": "Deleting …",
+    "emergency.deleteTitle": "Permanently delete emergency?",
+    "emergency.deleteBody": "The report will be permanently removed for the sender and all recipients. This cannot be undone.",
+    "emergency.cancel": "Cancel",
+    "emergency.actionError": "The change could not be saved. Please try again.",
     "emergency.markReadError": "The read status could not be saved.",
     "emergencyDashboard.navTitle": "Emergency dashboard",
     "emergencyDashboard.title": "Emergency dashboard",
@@ -1557,11 +1579,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.actionError":
       "The bus action could not be saved. Check your connection and try again.",
     "bus.admin.addBus": "Create bus with leader",
-    "bus.admin.archive": "End intermediate trip",
+    "bus.admin.archive": "End trip",
     "bus.admin.archiveBody":
-      "The intermediate trip will end. Buses, leaders, and assignments remain available to copy into the next one. The daily program is unchanged.",
-    "bus.admin.archiveConfirm": "End intermediate trip",
-    "bus.admin.archiveTitle": "End active intermediate trip?",
+      "The trip will end. Buses, leaders, and assignments remain available to copy into the next one. The daily program is unchanged.",
+    "bus.admin.archiveConfirm": "End trip",
+    "bus.admin.archiveTitle": "End active trip?",
     "bus.admin.assignmentBody":
       "Choose a registered person or an entire account family, then choose the bus. Once a family is assigned, its members are hidden from the individual-person selection.",
     "bus.admin.assignmentTitle": "Assign person or family",
@@ -1579,11 +1601,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.cancel": "Cancel",
     "bus.admin.changeBusLeader": "Change leader",
     "bus.admin.closeBoarding": "Close boarding",
-    "bus.admin.createTrip": "Create intermediate trip",
+    "bus.admin.createTrip": "Create trip",
     "bus.admin.createTripBody":
-      "Plan a short journey within the overall pilgrimage, such as from the hotel to a place of visitation. Start empty or copy buses, leaders, and assignments from an ended intermediate trip.",
-    "bus.admin.createTripFromTemplate": "Create with arrangement",
-    "bus.admin.createTripTitle": "Plan an intermediate trip",
+      "Plan a short journey within the overall pilgrimage, such as from the hotel to a place of visitation. Start empty or copy buses, leaders, and assignments from an ended trip.",
+    "bus.admin.createTripFromTemplate": "Create trip with bus arrangement",
+    "bus.admin.createTripTitle": "Plan a trip",
     "bus.admin.departureIn": "Planned departure in",
     "bus.admin.family": "Entire family",
     "bus.admin.familyMembers": "{count} accounts: {names}",
@@ -1606,10 +1628,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.setBusLeader": "Set leader",
     "bus.admin.startBoarding": "Start boarding",
     "bus.admin.startBoardingTitle": "New departure",
-    "bus.admin.tripName": "Intermediate trip name",
+    "bus.admin.tripName": "Trip name",
     "bus.admin.tripNamePlaceholder": "For example: Hotel → Karbala",
     "bus.admin.templateBody":
-      "Copying carries over buses, bus leaders, and person/family assignments. Previous departures and statuses stay with the ended intermediate trip.",
+      "Copying carries over buses, bus leaders, and person/family assignments. Previous departures and statuses stay with the ended trip.",
     "bus.admin.templateEmpty": "Start empty",
     "bus.admin.templateTitle": "Copy arrangement (optional)",
     "bus.admin.tripSummary": "Buses: {buses} · Assignments: {assignments}",
@@ -1674,7 +1696,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.admin.messagePlaceholder":
       "For example: Departure from the hotel",
     "generalAlarm.admin.noParticipantsBody":
-      "First assign at least one person or family under Trip organization in the Intermediate trip & buses step.",
+      "Assign at least one person or family to a bus under “Trips & buses”.",
     "generalAlarm.admin.outstandingBody":
       "{count} participants are not yet confirmed on the bus.",
     "generalAlarm.admin.outstandingTitle": "Outstanding participants",
@@ -1689,8 +1711,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Due push reminders were accepted by the Expo service.",
     "generalAlarm.admin.pushNow": "Check push now",
     "generalAlarm.admin.tripRequiredBody":
-      "First create an active intermediate trip and buses under Trip organization, then assign people or families.",
-    "generalAlarm.admin.tripRequiredTitle": "Active intermediate trip required",
+      "Create an active trip and buses under “Trips & buses”, then assign people or families.",
+    "generalAlarm.admin.tripRequiredTitle": "Active trip required",
     "generalAlarm.admin.unavailableTitle": "Boarding unavailable",
     "generalAlarm.departureCountdown": "{count} minutes until departure",
     "generalAlarm.departureOverdue": "Departure was due {count} minutes ago",
@@ -1885,13 +1907,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "The action could not be saved without an internet connection.",
     "tripGroups.error.server":
       "The group action could not be saved because of a server error.",
-    "tripGroups.admin.tripRequiredTitle": "Active intermediate trip required",
-    "tripGroups.admin.tripRequiredBody":
-      "First create an active intermediate trip under Trip organization and assign people or families.",
     "tripGroups.admin.createTitle": "Create a new group",
     "tripGroups.admin.editTitle": "Edit group",
     "tripGroups.admin.editorBody":
-      "Choose one or more group leaders and add people or whole families.",
+      "Choose one or more group leaders and add registered people or whole account families. The group stays together across different trips.",
     "tripGroups.admin.name": "Group name",
     "tripGroups.admin.namePlaceholder": "For example: Abbas group",
     "tripGroups.admin.selectLeader": "Group leaders",
@@ -1901,7 +1920,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.memberSearch": "Search for a group member",
     "tripGroups.admin.searchPlaceholder": "Search by name …",
     "tripGroups.admin.selectedLeader":
-      "Selected as group leader · Tap to remove",
+      "Selected as group leader",
+    "tripGroups.admin.removeLeader": "Remove {name} as group leader",
+    "tripGroups.admin.removeLeaderTitle": "Remove “{name}” as group leader?",
+    "tripGroups.admin.removeLeaderBody":
+      "The person remains selected as a group member. The change takes effect when you save the group.",
+    "tripGroups.admin.removeLeaderConfirm": "Remove",
     "tripGroups.admin.selectedMembers": "Selected: {count}",
     "tripGroups.admin.removeMember": "Remove {name} from the selection",
     "tripGroups.admin.noSearchResults": "No matching name found.",
@@ -1918,14 +1942,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.saved": "The group was saved.",
     "tripGroups.admin.emptyTitle": "No groups yet",
     "tripGroups.admin.emptyBody":
-      "Use the form above to create the first group from assigned people.",
+      "Use the form above to create your first group from registered people or whole account families.",
     "tripGroups.admin.memberCount": "{count} people",
     "tripGroups.admin.leaderUnavailable": "Leader unavailable",
     "tripGroups.admin.edit": "Edit",
     "tripGroups.admin.delete": "Delete",
     "tripGroups.admin.deleteTitle": "Delete “{name}”?",
     "tripGroups.admin.deleteBody":
-      "The group assignment and any location request will be deleted. Participants and the intermediate trip remain.",
+      "The group, its memberships and all location requests will be deleted. User accounts are preserved.",
     "tripGroups.admin.deleteConfirm": "Delete group",
     "tripGroups.admin.locationTitle": "Request location",
     "tripGroups.admin.locationIdle":
@@ -1952,22 +1976,20 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.requested":
       "The location request was sent to the group leader.",
     "admin.description":
-      "Manage intermediate trips, the independent whole-journey daily program, destinations, status checks, anonymous questions, and users in clear work areas.",
-    "admin.section.organization.active": "Active intermediate trip",
+      "Manage groups, trips and buses, the daily program, destinations, status checks, anonymous questions and users in separate sections.",
     "admin.section.organization.description":
-      "Create groups, assign leaders and add people or families.",
+      "Create groups, choose leaders and request their location with consent.",
     "admin.section.organization.error": "Error",
-    "admin.section.organization.inactive": "No active intermediate trip",
-    "admin.section.organization.title": "Trip organization",
-    "admin.organization.setup.title": "Intermediate trip & buses",
+    "admin.section.organization.title": "Groups & group leaders",
+    "admin.organization.setup.title": "Trips & buses",
     "admin.organization.setup.description":
-      "Create a short intermediate trip, manage buses, and assign participants.",
+      "Create a short trip, manage buses, and assign participants.",
     "admin.organization.groups.title": "Groups",
     "admin.organization.groups.description":
       "Create subgroups and choose group leaders.",
-    "admin.organization.overview.activeTrip": "Active intermediate trip",
+    "admin.organization.overview.activeTrip": "Active trip",
     "admin.organization.overview.noActiveTrip":
-      "No active intermediate trip yet",
+      "No active trip yet",
     "admin.organization.overview.buses": "Buses",
     "admin.organization.overview.participants": "Participants",
     "admin.organization.overview.groups": "Groups",
@@ -1983,7 +2005,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.alarm.inactive": "Off",
     "admin.section.alarm.title": "General alarm",
     "admin.section.bus.description":
-      "Create intermediate trips and buses with leaders and assign people or families.",
+      "Create trips and buses with leaders and assign people or families.",
     "admin.section.bus.status": "Ready",
     "admin.section.bus.title": "Bus management",
     "admin.section.groups.active": "{count} groups",
@@ -2015,7 +2037,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "For example: 08:00 Breakfast\n09:00 Departure\n10:00 Group meeting point",
     "dailyProgram.admin.edit": "Edit",
     "dailyProgram.admin.editorBody":
-      "Plan the program for the entire pilgrimage here, independently of intermediate trips. Each day has its own program and they are saved together.",
+      "Plan the program for the entire pilgrimage here, independently of trips. Each day has its own program and they are saved together.",
     "dailyProgram.admin.editorTitle": "Plan daily program",
     "dailyProgram.admin.empty":
       "No program has been published for today or the coming days.",
@@ -2047,7 +2069,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "The trip destination could not be saved or removed. Check the connection and try again.",
     "navigation.admin.addTitle": "Create a trip destination",
     "navigation.admin.body":
-      "Name the place and set its marker on the map, even without an active intermediate trip. All signed-in users will then see it on their map.",
+      "Name the place and set its marker on the map, even without an active trip. All signed-in users will then see it on their map.",
     "navigation.admin.coordinatesHint":
       "The map enters the coordinates automatically. They can be edited directly for fine adjustment.",
     "navigation.admin.count": "{count} active trip destinations",
@@ -2535,7 +2557,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "فعّل الإشعارات لتلقي نداءات الإيقاظ خارج التطبيق. يعتمد الصوت على إعدادات جهازك.",
     "wakeUp.enableNotifications": "تفعيل الإشعارات",
     "admin.transport.title": "التنقلات والحافلات",
-    "admin.transport.description": "توزيع الحافلات وتأكيد الصعود للتنقلات.",
+    "admin.transport.description": "خطط للتنقلات وعيّن الحافلات وتابع صعود المشاركين.",
     "tripGroups.groupCount": "{count} مجموعات",
     "tripGroups.admin.families": "إضافة عائلات",
     "tripGroups.admin.familiesBody":
@@ -2682,7 +2704,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.sentEmpty": "لم ترسل أي بلاغ طارئ بعد.",
     "emergency.new": "جديد",
     "emergency.read": "مقروء",
-    "emergency.markRead": "تحديد كمقروء",
+    "emergency.markRead": "مقروء",
+    "emergency.open": "مفتوح",
+    "emergency.completed": "مكتمل",
+    "emergency.completedAt": "تم الإكمال في {date}",
+    "emergency.complete": "إكمال",
+    "emergency.completing": "جارٍ الإكمال …",
+    "emergency.delete": "حذف",
+    "emergency.deleting": "جارٍ الحذف …",
+    "emergency.deleteTitle": "حذف البلاغ الطارئ نهائيًا؟",
+    "emergency.deleteBody": "سيُحذف البلاغ نهائيًا لدى المرسل وجميع المستلمين. لا يمكن التراجع عن ذلك.",
+    "emergency.cancel": "إلغاء",
+    "emergency.actionError": "تعذر حفظ التغيير. يرجى المحاولة مجددًا.",
     "emergency.markReadError": "تعذر حفظ حالة القراءة.",
     "emergencyDashboard.navTitle": "لوحة الطوارئ",
     "emergencyDashboard.title": "لوحة الطوارئ",
@@ -2764,11 +2797,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.actionError":
       "تعذر حفظ إجراء الحافلة. تحقق من الاتصال وحاول مرة أخرى.",
     "bus.admin.addBus": "إنشاء حافلة مع قائد",
-    "bus.admin.archive": "إنهاء الرحلة القصيرة",
+    "bus.admin.archive": "إنهاء التنقل",
     "bus.admin.archiveBody":
-      "ستنتهي الرحلة القصيرة. تبقى الحافلات والقادة والتعيينات محفوظة للنسخ إلى الرحلة القصيرة التالية، ولا يتغير البرنامج اليومي.",
-    "bus.admin.archiveConfirm": "إنهاء الرحلة القصيرة",
-    "bus.admin.archiveTitle": "إنهاء الرحلة القصيرة النشطة؟",
+      "سينتهي التنقل. تبقى الحافلات والقادة والتعيينات محفوظة للنسخ إلى التنقل التالي، ولا يتغير البرنامج اليومي.",
+    "bus.admin.archiveConfirm": "إنهاء التنقل",
+    "bus.admin.archiveTitle": "إنهاء التنقل النشط؟",
     "bus.admin.assignmentBody":
       "اختر شخصاً مسجلاً أو عائلة حسابات كاملة، ثم اختر الحافلة. عند تعيين العائلة لن يظهر أفرادها في اختيار الأشخاص المنفردين.",
     "bus.admin.assignmentTitle": "تعيين شخص أو عائلة",
@@ -2786,11 +2819,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.cancel": "إلغاء",
     "bus.admin.changeBusLeader": "تغيير القائد",
     "bus.admin.closeBoarding": "إنهاء الصعود",
-    "bus.admin.createTrip": "إنشاء رحلة قصيرة",
+    "bus.admin.createTrip": "إنشاء تنقل",
     "bus.admin.createTripBody":
-      "خطط لرحلة قصيرة ضمن رحلة الزيارة، مثل الانتقال من الفندق إلى موقع زيارة. ابدأ من دون ترتيب أو انسخ ترتيب رحلة قصيرة منتهية.",
-    "bus.admin.createTripFromTemplate": "إنشاء رحلة قصيرة مع الترتيب",
-    "bus.admin.createTripTitle": "تخطيط رحلة قصيرة جديدة",
+      "خطط لتنقل ضمن رحلة الزيارة، مثل الانتقال من الفندق إلى موقع زيارة. ابدأ من دون ترتيب أو انسخ الحافلات وقادتها والتعيينات من تنقل منتهٍ.",
+    "bus.admin.createTripFromTemplate": "إنشاء تنقل مع ترتيب الحافلات",
+    "bus.admin.createTripTitle": "تخطيط تنقل جديد",
     "bus.admin.departureIn": "المغادرة المخططة بعد",
     "bus.admin.family": "العائلة كاملة",
     "bus.admin.familyMembers": "{count} حسابات: {names}",
@@ -2812,10 +2845,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.setBusLeader": "تحديد القائد",
     "bus.admin.startBoarding": "بدء الصعود",
     "bus.admin.startBoardingTitle": "مغادرة جديدة",
-    "bus.admin.tripName": "اسم الرحلة القصيرة",
+    "bus.admin.tripName": "اسم التنقل",
     "bus.admin.tripNamePlaceholder": "مثلاً: الفندق ← كربلاء",
     "bus.admin.templateBody":
-      "ينسخ الترتيب الحافلات وقادتها وتعيينات الأشخاص والعائلات. تبقى المغادرات والحالات السابقة في الرحلة القصيرة المنتهية.",
+      "ينسخ الترتيب الحافلات وقادتها وتعيينات الأشخاص والعائلات. تبقى المغادرات والحالات السابقة في التنقل المنتهي.",
     "bus.admin.templateEmpty": "البدء دون نسخ",
     "bus.admin.templateTitle": "نسخ الترتيب (اختياري)",
     "bus.admin.tripSummary": "الحافلات: {buses} · التعيينات: {assignments}",
@@ -2875,7 +2908,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "generalAlarm.admin.messageLabel": "رسالة المغادرة",
     "generalAlarm.admin.messagePlaceholder": "مثلاً: المغادرة من الفندق",
     "generalAlarm.admin.noParticipantsBody":
-      "عيّن أولاً شخصاً واحداً أو عائلة واحدة على الأقل في خطوة «الرحلة القصيرة والحافلات» ضمن «تنظيم الرحلة».",
+      "عيّن شخصاً واحداً أو عائلة واحدة على الأقل لحافلة ضمن «التنقلات والحافلات».",
     "generalAlarm.admin.outstandingBody":
       "لم يُؤكد وجود {count} مشاركين في الحافلة بعد.",
     "generalAlarm.admin.outstandingTitle": "المشاركون المعلّقون",
@@ -2889,8 +2922,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "قبلت خدمة Expo تذكيرات الإشعارات المستحقة.",
     "generalAlarm.admin.pushNow": "فحص الإشعارات الآن",
     "generalAlarm.admin.tripRequiredBody":
-      "أنشئ أولاً رحلة قصيرة نشطة وحافلات ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
-    "generalAlarm.admin.tripRequiredTitle": "يلزم وجود رحلة قصيرة نشطة",
+      "أنشئ تنقلاً نشطاً وحافلات ضمن «التنقلات والحافلات»، ثم عيّن الأشخاص أو العائلات.",
+    "generalAlarm.admin.tripRequiredTitle": "يلزم وجود تنقل نشط",
     "generalAlarm.admin.unavailableTitle": "صعود الحافلة غير متاح",
     "generalAlarm.departureCountdown": "بقي {count} دقيقة على المغادرة",
     "generalAlarm.departureOverdue": "تأخرت المغادرة {count} دقيقة",
@@ -3074,13 +3107,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "لم تعد المجموعة أو مطالبة الموقع حالية. حدّث الشاشة.",
     "tripGroups.error.offline": "تعذر حفظ الإجراء دون اتصال بالإنترنت.",
     "tripGroups.error.server": "تعذر حفظ إجراء المجموعة بسبب خطأ في الخادم.",
-    "tripGroups.admin.tripRequiredTitle": "يلزم وجود رحلة قصيرة نشطة",
-    "tripGroups.admin.tripRequiredBody":
-      "أنشئ أولاً رحلة قصيرة نشطة ضمن «تنظيم الرحلة»، ثم عيّن الأشخاص أو العائلات.",
     "tripGroups.admin.createTitle": "إنشاء مجموعة جديدة",
     "tripGroups.admin.editTitle": "تعديل المجموعة",
     "tripGroups.admin.editorBody":
-      "اختر قائداً أو أكثر وأضف أفراداً أو عائلات كاملة.",
+      "اختر قائداً أو أكثر وأضف أشخاصاً مسجلين أو عائلات حسابات كاملة. تبقى المجموعة قائمة مع تغيّر التنقلات.",
     "tripGroups.admin.name": "اسم المجموعة",
     "tripGroups.admin.namePlaceholder": "مثلاً: مجموعة العباس",
     "tripGroups.admin.selectLeader": "قادة المجموعة / مشرفوها",
@@ -3089,7 +3119,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.leaderSearch": "البحث عن قائد",
     "tripGroups.admin.memberSearch": "البحث عن عضو في المجموعة",
     "tripGroups.admin.searchPlaceholder": "البحث بالاسم …",
-    "tripGroups.admin.selectedLeader": "تم اختياره قائداً · اضغط للإزالة",
+    "tripGroups.admin.selectedLeader": "تم اختياره قائداً",
+    "tripGroups.admin.removeLeader": "إزالة {name} من قادة المجموعة",
+    "tripGroups.admin.removeLeaderTitle": "إزالة «{name}» من قادة المجموعة؟",
+    "tripGroups.admin.removeLeaderBody":
+      "يبقى الشخص محدداً كعضو في المجموعة. يُطبّق التغيير عند حفظ المجموعة فقط.",
+    "tripGroups.admin.removeLeaderConfirm": "إزالة",
     "tripGroups.admin.selectedMembers": "المختارون: {count}",
     "tripGroups.admin.removeMember": "إزالة {name} من الاختيار",
     "tripGroups.admin.noSearchResults": "لم يتم العثور على اسم مطابق.",
@@ -3104,14 +3139,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.saved": "تم حفظ المجموعة.",
     "tripGroups.admin.emptyTitle": "لا توجد مجموعات بعد",
     "tripGroups.admin.emptyBody":
-      "استخدم النموذج أعلاه لإنشاء أول مجموعة من الأشخاص المعيّنين.",
+      "استخدم النموذج أعلاه لإنشاء أول مجموعة من أشخاص مسجلين أو عائلات حسابات كاملة.",
     "tripGroups.admin.memberCount": "{count} أشخاص",
     "tripGroups.admin.leaderUnavailable": "قائد المجموعة غير متاح",
     "tripGroups.admin.edit": "تعديل",
     "tripGroups.admin.delete": "حذف",
     "tripGroups.admin.deleteTitle": "حذف «{name}»؟",
     "tripGroups.admin.deleteBody":
-      "سيُحذف تعيين المجموعة وأي طلب موقع موجود، بينما يبقى المشاركون والرحلة القصيرة.",
+      "ستُحذف المجموعة وعضوياتها وجميع طلبات الموقع. تبقى حسابات المستخدمين محفوظة.",
     "tripGroups.admin.deleteConfirm": "حذف المجموعة",
     "tripGroups.admin.locationTitle": "طلب الموقع",
     "tripGroups.admin.locationIdle":
@@ -3136,21 +3171,19 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.adminLocationError": "تعذر تحديد موقعك.",
     "tripGroups.admin.requested": "تم إرسال طلب الموقع إلى قائد المجموعة.",
     "admin.description":
-      "أدر الرحلات القصيرة والبرنامج اليومي المستقل لرحلة الزيارة كلها والوجهات وبقية مساحات العمل.",
-    "admin.section.organization.active": "رحلة قصيرة نشطة",
+      "أدر المجموعات والتنقلات والحافلات والبرنامج اليومي والوجهات واستعلامات الحالة والأسئلة المجهولة والمستخدمين في أقسام مستقلة.",
     "admin.section.organization.description":
-      "أنشئ مجموعات وعيّن قادة وأضف أفراداً أو عائلات.",
+      "أنشئ مجموعات وعيّن قادتها واطلب موقعهم بموافقتهم.",
     "admin.section.organization.error": "خطأ",
-    "admin.section.organization.inactive": "لا توجد رحلة قصيرة نشطة",
-    "admin.section.organization.title": "تنظيم الرحلة",
-    "admin.organization.setup.title": "الرحلة القصيرة والحافلات",
+    "admin.section.organization.title": "المجموعات وقادتها",
+    "admin.organization.setup.title": "التنقلات والحافلات",
     "admin.organization.setup.description":
-      "أنشئ رحلة قصيرة وأدر الحافلات وعيّن المشاركين.",
+      "أنشئ تنقلاً وأدر الحافلات وعيّن المشاركين.",
     "admin.organization.groups.title": "المجموعات",
     "admin.organization.groups.description":
       "أنشئ المجموعات الفرعية وعيّن قادة المجموعات.",
-    "admin.organization.overview.activeTrip": "الرحلة القصيرة النشطة",
-    "admin.organization.overview.noActiveTrip": "لا توجد رحلة قصيرة نشطة بعد",
+    "admin.organization.overview.activeTrip": "التنقل النشط",
+    "admin.organization.overview.noActiveTrip": "لا يوجد تنقل نشط بعد",
     "admin.organization.overview.buses": "الحافلات",
     "admin.organization.overview.participants": "المشاركون",
     "admin.organization.overview.groups": "المجموعات",
@@ -3166,7 +3199,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.section.alarm.inactive": "متوقف",
     "admin.section.alarm.title": "الإنذار العام",
     "admin.section.bus.description":
-      "أنشئ الرحلات القصيرة والحافلات مع قادتها وعيّن الأشخاص أو العائلات.",
+      "أنشئ التنقلات والحافلات مع قادتها وعيّن الأشخاص أو العائلات.",
     "admin.section.bus.status": "جاهز",
     "admin.section.bus.title": "إدارة الحافلات",
     "admin.section.groups.active": "{count} مجموعات",
@@ -3198,7 +3231,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "مثلاً: 08:00 الإفطار\n09:00 الانطلاق\n10:00 نقطة اللقاء الجماعية",
     "dailyProgram.admin.edit": "تعديل",
     "dailyProgram.admin.editorBody":
-      "خطط هنا للبرنامج اليومي لرحلة الزيارة كلها بشكل مستقل عن الرحلات القصيرة. لكل يوم برنامجه الخاص، وتُحفظ الأيام معاً.",
+      "خطط هنا للبرنامج اليومي لرحلة الزيارة كلها بشكل مستقل عن التنقلات. لكل يوم برنامجه الخاص، وتُحفظ الأيام معاً.",
     "dailyProgram.admin.editorTitle": "تخطيط البرنامج اليومي",
     "dailyProgram.admin.empty": "لم يُنشر برنامج لليوم أو للأيام القادمة بعد.",
     "dailyProgram.admin.numberOfDays": "كم عدد الأيام؟",
@@ -3228,7 +3261,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "تعذر حفظ وجهة الرحلة أو إزالتها. تحقق من الاتصال وحاول مرة أخرى.",
     "navigation.admin.addTitle": "إنشاء وجهة رحلة جديدة",
     "navigation.admin.body":
-      "امنح المكان اسماً وضع علامته على الخريطة، حتى دون رحلة قصيرة نشطة. سيشاهده جميع المستخدمين المسجلين على خريطتهم.",
+      "امنح المكان اسماً وضع علامته على الخريطة، حتى دون تنقل نشط. سيشاهده جميع المستخدمين المسجلين على خريطتهم.",
     "navigation.admin.coordinatesHint":
       "تُدخل الخريطة الإحداثيات تلقائياً، ويمكن تعديلها مباشرةً لضبط الموقع.",
     "navigation.admin.count": "{count} وجهات رحلة نشطة",

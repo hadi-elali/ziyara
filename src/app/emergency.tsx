@@ -25,6 +25,7 @@ import type {
 import { RequireAuth } from "@/features/auth/RequireAuth";
 import { useAuth } from "@/features/auth/auth-context";
 import { supabase } from "@/features/auth/supabase";
+import { EmergencyRequestActions, EmergencyRequestStatus, type EmergencyRequestChange } from "@/features/emergency/EmergencyRequestActions";
 import { useGeneralAlarmNotifications } from "@/features/general-alarm/general-alarm-notifications-context";
 import { isEmergencyInboxRole } from "@/features/emergency/use-emergency-inbox-alert";
 import { useI18n } from "@/features/i18n/i18n";
@@ -55,7 +56,7 @@ type SubmitFeedback =
   | null;
 
 const requestSelect =
-  "id, requester_profile_id, requester_display_name, target_team, message, location_label, latitude, longitude, accuracy_meters, created_at";
+  "id, requester_profile_id, requester_display_name, target_team, message, location_label, latitude, longitude, accuracy_meters, created_at, completed_at, completed_by_profile_id";
 const pushDispatchTimeoutMs = 8_000;
 
 async function dispatchEmergencyPush(requestId: number) {
@@ -194,13 +195,39 @@ function EmergencyContent() {
             if (state === "active") void refresh();
           });
 
+    let stopped = false;
+    let pollingTimeout: ReturnType<typeof setTimeout>;
+    const scheduleRefresh = () => {
+      if (stopped) return;
+      pollingTimeout = setTimeout(() => void refresh().finally(scheduleRefresh), 60_000 + Math.random() * 30_000);
+    };
+    scheduleRefresh();
+
     return () => {
+      stopped = true;
+      clearTimeout(pollingTimeout);
       clearTimeout(initialRefreshTimeout);
       refreshVersion.current += 1;
       appStateSubscription?.remove();
       void supabase.removeChannel(channel);
     };
   }, [refresh, userId]);
+
+  const handleRequestChanged = (change: EmergencyRequestChange) => {
+    // Invalidate reads that began before the successful write.
+    refreshVersion.current += 1;
+    setInbox((current) => change.kind === 'deleted'
+      ? current.filter((item) => item.request_id !== change.requestId)
+      : current.map((item) => item.request_id === change.requestId
+        ? { ...item, completed_at: change.completedAt }
+        : item));
+    setSent((current) => change.kind === 'deleted'
+      ? current.filter((item) => item.id !== change.requestId)
+      : current.map((item) => item.id === change.requestId
+        ? { ...item, completed_at: change.completedAt }
+        : item));
+    void refresh();
+  };
 
   const captureCurrentLocation = async () => {
     if (isLocating) return;
@@ -647,6 +674,7 @@ function EmergencyContent() {
                   markingRead={markingReadId === item.request_id}
                   onMarkRead={() => void markRead(item.request_id)}
                   onOpenCoordinates={() => openCoordinates(item)}
+                  onRequestChanged={handleRequestChanged}
                 />
               ))}
             </View>
@@ -690,6 +718,7 @@ function EmergencyMessageCard({
   markingRead = false,
   onMarkRead,
   onOpenCoordinates,
+  onRequestChanged,
   sent = false,
 }: {
   date: string;
@@ -698,50 +727,56 @@ function EmergencyMessageCard({
   markingRead?: boolean;
   onMarkRead?: () => void;
   onOpenCoordinates: () => void;
+  onRequestChanged?: (change: EmergencyRequestChange) => void;
   sent?: boolean;
 }) {
   const theme = useTheme();
   const { t } = useI18n();
-  const unread = !sent && item.read_at === null;
+  const unread = !sent && item.read_at === null && item.completed_at === null;
 
   return (
     <Card
       style={[
         styles.messageCard,
         unread
-          ? { backgroundColor: theme.dangerSoft, borderColor: theme.danger }
+          ? { borderStartColor: theme.danger, borderStartWidth: 3 }
           : null,
       ]}
     >
       <View style={styles.messageHeader}>
         <View style={styles.messageHeading}>
-          <ThemedText type="heading">
-            {sent
-              ? t(`emergency.team.${item.target_team}`)
-              : item.requester_display_name}
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {date}
-          </ThemedText>
-        </View>
-        {unread ? (
-          <View style={[styles.newBadge, { backgroundColor: theme.danger }]}>
-            <ThemedText style={{ color: theme.surface }} type="tinyBold">
-              {t("emergency.new")}
+          <View style={styles.messageNameRow}>
+            <ThemedText type="smallBold" style={styles.senderName}>
+              {sent
+                ? t(`emergency.team.${item.target_team}`)
+                : item.requester_display_name}
+            </ThemedText>
+            {unread ? (
+              <View style={[styles.newBadge, { backgroundColor: theme.dangerSoft }]}>
+                <ThemedText themeColor="danger" type="tinyBold">
+                  {t("emergency.new")}
+                </ThemedText>
+              </View>
+            ) : null}
+          </View>
+          <View style={styles.messageMeta}>
+            {!sent ? (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.metaText}>
+                {t(`emergency.team.${item.target_team}`)}
+              </ThemedText>
+            ) : null}
+            <ThemedText type="small" themeColor="textSecondary" style={styles.metaText}>
+              {date}
             </ThemedText>
           </View>
-        ) : null}
+        </View>
+        <EmergencyRequestStatus completedAt={item.completed_at} />
       </View>
 
-      {!sent ? (
-        <ThemedText type="tinyBold" themeColor="danger">
-          {t(`emergency.team.${item.target_team}`)}
-        </ThemedText>
-      ) : null}
       <ThemedText>{item.message}</ThemedText>
 
       {item.location_label ? (
-        <ThemedText type="small">
+        <ThemedText type="small" themeColor="textSecondary">
           {t("emergency.locationPrefix", { location: item.location_label })}
         </ThemedText>
       ) : null}
@@ -761,25 +796,20 @@ function EmergencyMessageCard({
             icon="map"
             label={t("emergency.locationOpen")}
             onPress={onOpenCoordinates}
-            variant="secondary"
+            size="compact"
+            variant="ghost"
           />
         </View>
       ) : null}
 
-      {unread && onMarkRead ? (
-        <Button
-          disabled={markingRead}
-          icon="confirm"
-          label={t("emergency.markRead")}
-          onPress={onMarkRead}
-          variant="secondary"
-        />
-      ) : null}
-      {!unread && !sent ? (
-        <ThemedText type="small" themeColor="success">
-          {t("emergency.read")}
-        </ThemedText>
-      ) : null}
+      <EmergencyRequestActions
+        item={item}
+        onChanged={onRequestChanged}
+        onMarkRead={unread ? onMarkRead : undefined}
+        markingRead={markingRead}
+        readAt={!sent ? item.read_at : undefined}
+        showStatus={false}
+      />
       {markReadError ? (
         <ThemedText
           type="small"
@@ -820,17 +850,21 @@ const styles = StyleSheet.create({
   },
   intro: { gap: Spacing.two },
   list: { gap: Spacing.three },
-  messageCard: { gap: Spacing.three },
+  messageCard: { gap: Spacing.two },
   messageHeader: {
     alignItems: "flex-start",
     flexDirection: "row",
     gap: Spacing.two,
   },
-  messageHeading: { flex: 1, gap: Spacing.one },
+  messageHeading: { flex: 1, gap: Spacing.one, minWidth: 0 },
+  messageNameRow: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: Spacing.two },
+  messageMeta: { flexDirection: "row", flexWrap: "wrap", columnGap: Spacing.two },
+  metaText: { fontSize: 12, lineHeight: 18 },
+  senderName: { fontSize: 16, lineHeight: 22, flexShrink: 1 },
   messageInput: { minHeight: 150 },
   newBadge: {
-    borderRadius: 8,
-    minHeight: 28,
+    borderRadius: 4,
+    minHeight: 20,
     justifyContent: "center",
     paddingHorizontal: Spacing.two,
   },

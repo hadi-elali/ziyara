@@ -171,6 +171,13 @@ describe('useEmergencyInboxAlert', () => {
     await waitForCondition(() => getAlert().hasUnreadMessages);
 
     expect(mockSupabase.from).toHaveBeenCalledWith('emergency_request_recipients');
+    const query = mockSupabase.from.mock.results[0]?.value as {
+      select: MockFunction;
+      is: MockFunction;
+    };
+    expect(query.select).toHaveBeenCalledWith('request_id, emergency_requests!inner(completed_at)');
+    expect(query.is).toHaveBeenCalledWith('read_at', null);
+    expect(query.is).toHaveBeenCalledWith('emergency_requests.completed_at', null);
     expect(channelListeners).toHaveLength(2);
 
     queryResponses.push(Promise.resolve({ data: [], error: null }));

@@ -409,7 +409,7 @@ Files:
 
 Acceptance criteria:
 
-- `Intermediate trips & buses` contains bus management and boarding without a current itinerary point.
+- `Trips & buses` contains bus management and boarding without a current itinerary point.
 - The admin dashboard exposes trip destinations and navigation as its own section. Admins create, edit and archive multiple named destinations without an active intermediate trip and select coordinates on a platform-specific map or through one foreground location request.
 - Every signed-in account sees active destinations as distinct map markers, can open their list and use external navigation. Destinations remain visible when an intermediate trip ends or is deleted.
 - A validated user-scoped destination cache survives restart and initial read failures; a successful server response, including an empty list, replaces it authoritatively.
@@ -440,7 +440,7 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- Since 8 October 2026, the standalone `Wake-up call` dashboard section sends immediately or schedules multiple messages without a trip, bus or group dependency. As clarified on 14 October, date/time entry, editing and display use the sender's current device time zone, including the offset for the scheduled date. Scheduling still stores an absolute UTC instant; existing calls retain their activation time. Future calls can be edited or cancelled. The authenticated server scheduler activates due calls and captures recipients at activation. Users acknowledge once; admins see acknowledgement totals and close the call. The former departure alarm remains a separate boarding workflow under `Intermediate trips & buses`.
+- Since 8 October 2026, the standalone `Wake-up call` dashboard section sends immediately or schedules multiple messages without a trip, bus or group dependency. As clarified on 14 October, date/time entry, editing and display use the sender's current device time zone, including the offset for the scheduled date. Scheduling still stores an absolute UTC instant; existing calls retain their activation time. Future calls can be edited or cancelled. The authenticated server scheduler activates due calls and captures recipients at activation. Users acknowledge once; admins see acknowledgement totals and close the call. The former departure alarm remains a separate boarding workflow under `Trips & buses`.
 - Participants confirm `read`, `on_way` and `boarded` in sequence for their account-backed assignment; `problem` remains available as an exception path.
 - A missing next stage becomes due after five minutes. Native clients reconcile bounded local reminders, while an idempotent server dispatcher claims at most one Expo push attempt per device, participant, stage and reminder window.
 - Push tokens are never client-readable. Registration is profile-bound, dispatch requires a verified admin or scheduler secret, and privileged claims/completions are limited to `service_role`.
@@ -474,7 +474,7 @@ Files to create or modify:
 Acceptance criteria:
 
 - Admins can publish one day or prepare multiple consecutive days in one form, with an optional heading and a separate organizational program for each date.
-- The daily program covers the complete pilgrimage and stays independent of the smaller intermediate trips managed under Trip organization.
+- The daily program covers the complete pilgrimage and stays independent of the individual trips managed under Trips & buses.
 - One row per calendar date is updated atomically through an authenticated admin RPC; direct client writes remain unavailable.
 - Every signed-in account can read the whole-journey program without an active intermediate trip or bus assignment.
 - Home shows a compact preview of today's program. Opening it shows today and the next six days in separate day sections with structured agenda lines.
@@ -507,7 +507,8 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- Admin `Trip organization` creates, edits and deletes independent account groups without requiring an intermediate trip or bus. Admins add individuals or whole account families; family expansion and conflict detection are atomic. One account belongs to at most one group.
+- Admin `Groups & group leaders` creates, edits and deletes independent account groups without requiring an intermediate trip or bus. Admins add individuals or whole account families; family expansion and conflict detection are atomic. One account belongs to at most one group.
+- Group names can be a single character, including a digit or Arabic letter. A name is still required, trimmed and limited to 80 characters. Migration `20261015000000_allow_short_organization_group_names.sql` updates both the table constraint and admin RPC without changing existing rows or authorization. Verify create/rename, boundaries and permission checks locally before remote rollout.
 - Every group has one or more registered leaders who are also members. Group leadership does not grant global admin access.
 - Any app role, including an admin, can be a member or leader directly through its registered account. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.
 - Admins can request only a selected group leader’s location. Each leader sees only their own request; ordinary members cannot be targeted. Re-requesting creates a fresh request ID and clears previously shared coordinates.
@@ -592,7 +593,7 @@ Tests/checks:
 - Migration `20261008000000_independent_groups_and_wake_up_calls.sql` preserves legacy data and imports active group assignments without old location consent.
 - `organization_group*` tables reference accounts directly. Family selections resolve current family accounts on save; later family edits do not silently change saved group memberships.
 - The independent `wake_up_call*` tables persist recipients and acknowledgements. `dispatch-wake-up-call` verifies admin authorization and claims each registered device once. Notification taps open `/alarm`.
-- The client retains boarding under `Zwischenreisen & Busse`; its former alarm component is now `AdminBoardingPanel`.
+- The client retains boarding under `Fahrten & Busse`; its former alarm component is now `AdminBoardingPanel`.
 - Validation is deliberately focused: TypeScript, lint, SDK checks, web export, existing group-state assertions and the new database authorization/lifecycle checks. No full coverage or end-to-end suite is required for this request.
 - Migration is applied locally. Remote migration/function deployment and physical-device delivery verification remain pending.
 
@@ -612,3 +613,20 @@ Tests/checks:
 - Preserve anonymous question rows, private submission counters, five-question limits and cleanup on closure. Provide German, English and Arabic role labels, management links and recipient explanations.
 - Run required TypeScript, lint, SDK compatibility, Doctor and web-export checks plus focused role-authorization checks. No additional full coverage, E2E or device suite for this request.
 - Both migrations are applied and tested locally; remote application and updated client delivery remain pending. No native configuration or dependency change requires a new development build.
+
+## 15 October 2026: Clear group and trip labels
+
+- Name the independent admin sections `Gruppen & Gruppenleitung` / `Groups & group leaders` and `Fahrten & Busse` / `Trips & buses`, with corresponding Arabic labels.
+- Use the same trip terminology in creation, copy, archive, status and help text. Boarding instructions point directly to Trips & buses.
+- Group editing, empty and deletion copy describes registered accounts and families without an active-trip prerequisite. Remove obsolete group/trip prerequisites from the dictionaries.
+- Selected group leaders have a separate red X with a 44-point minimum touch target. Removing leadership requires confirmation on native and web; cancellation preserves the selection. The account remains selected as a member, and changes take effect when the group is saved. Leader search only adds leaders. Translate the confirmation and accessible button labels into all three languages.
+- Preserve separate group memberships, leaders, bus assignments and bus leaders. Assigning an entire group to a bus remains a possible future feature.
+- Update README, context, boarding documentation and existing E2E selectors. This copy change requires no route, backend, dependency or native configuration changes and no new development build.
+
+## 19 October 2026: Complete and delete emergencies
+
+- Follow-up layout: use neutral cards, a narrow unread accent, compact header metadata/status and one wrapping row for Read/Complete/Delete. Add an optional compact button size with 44-point minimum targets; keep the default size elsewhere. Preserve confirmation, pending/error states and role enforcement. Translate short action labels in all three languages; no additional tests for this reversible layout adjustment.
+- Medical and organization staff can complete their own team's emergencies; admins can complete either type. Only admins can permanently delete open or completed emergencies, with confirmation on native and web. Enforce current profile roles and team scope in authenticated RPCs; direct writes remain unavailable.
+- Migration `20261019000000_manage_emergency_requests.sql` adds a shared completion timestamp and nullable actor reference, extends both read RPCs and preserves existing visibility. Completion is idempotent under a row lock; deletion cascades to recipients and private push logs. Personal read receipts remain independent.
+- Expose actions and status in both emergency inbox screens, show completion to senders and exclude completed emergencies from unread Home alerts. Provide translated pending/error states and Realtime/focus/fallback refreshes with stale-read invalidation after successful writes.
+- Apply and verify locally with focused authorization/lifecycle and action tests plus the required TypeScript, lint, SDK, Doctor and web checks. Per user request, no additional full coverage, E2E or device suite. Remote migration and client delivery remain required; no new native dependency or development build is needed.

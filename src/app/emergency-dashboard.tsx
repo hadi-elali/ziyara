@@ -12,6 +12,7 @@ import type { EmergencyDashboardItem } from '@/domain/database';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
+import { EmergencyRequestActions, EmergencyRequestStatus, type EmergencyRequestChange } from '@/features/emergency/EmergencyRequestActions';
 import { useGeneralAlarmNotifications } from '@/features/general-alarm/general-alarm-notifications-context';
 import { useI18n } from '@/features/i18n/i18n';
 import {
@@ -94,13 +95,34 @@ function EmergencyDashboardContent() {
             if (state === 'active') void refresh();
           });
 
+    // DELETE notifications and role-based dashboard reads need a polling fallback.
+    let stopped = false;
+    let pollingTimeout: ReturnType<typeof setTimeout>;
+    const scheduleRefresh = () => {
+      if (stopped) return;
+      pollingTimeout = setTimeout(() => void refresh().finally(scheduleRefresh), 60_000 + Math.random() * 30_000);
+    };
+    scheduleRefresh();
+
     return () => {
+      stopped = true;
+      clearTimeout(pollingTimeout);
       clearTimeout(initialRefreshTimeout);
       refreshSequence.current += 1;
       appStateSubscription?.remove();
       void supabase.removeChannel(channel);
     };
   }, [hasAccess, refresh, userId]);
+
+  const handleRequestChanged = (change: EmergencyRequestChange) => {
+    refreshSequence.current += 1;
+    setRequests((current) => change.kind === 'deleted'
+      ? current.filter((item) => item.request_id !== change.requestId)
+      : current.map((item) => item.request_id === change.requestId
+        ? { ...item, completed_at: change.completedAt }
+        : item));
+    void refresh();
+  };
 
   const formatDate = (value: string) =>
     new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'short' }).format(
@@ -216,30 +238,24 @@ function EmergencyDashboardContent() {
         ) : (
           <View style={styles.list}>
             {requests.map((item) => (
-              <Card key={item.request_id} style={styles.card}>
+              <Card key={item.request_id} style={[styles.card, styles.requestCard]}>
                 <View style={styles.headerRow}>
                   <View style={styles.headingText}>
-                    <ThemedText type="heading">{item.requester_display_name}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {formatDate(item.created_at)}
-                    </ThemedText>
+                    <ThemedText type="smallBold" style={styles.senderName}>{item.requester_display_name}</ThemedText>
+                    <View style={styles.messageMeta}>
+                      <ThemedText type="small" themeColor="textSecondary" style={styles.metaText}>
+                        {t(`emergency.team.${item.target_team}`)}
+                      </ThemedText>
+                      <ThemedText type="small" themeColor="textSecondary" style={styles.metaText}>
+                        {formatDate(item.created_at)}
+                      </ThemedText>
+                    </View>
                   </View>
-                  <View
-                    style={[
-                      styles.teamBadge,
-                      {
-                        backgroundColor: theme.dangerSoft,
-                        borderColor: theme.danger,
-                      },
-                    ]}>
-                    <ThemedText type="tinyBold" themeColor="danger">
-                      {t(`emergency.team.${item.target_team}`)}
-                    </ThemedText>
-                  </View>
+                  <EmergencyRequestStatus completedAt={item.completed_at} />
                 </View>
                 <ThemedText>{item.message}</ThemedText>
                 {item.location_label ? (
-                  <ThemedText type="small">
+                  <ThemedText type="small" themeColor="textSecondary">
                     {t('emergency.locationPrefix', { location: item.location_label })}
                   </ThemedText>
                 ) : null}
@@ -258,10 +274,12 @@ function EmergencyDashboardContent() {
                       icon="map"
                       label={t('emergency.locationOpen')}
                       onPress={() => openCoordinates(item)}
-                      variant="secondary"
+                      size="compact"
+                      variant="ghost"
                     />
                   </View>
                 ) : null}
+                <EmergencyRequestActions item={item} onChanged={handleRequestChanged} showStatus={false} />
               </Card>
             ))}
           </View>
@@ -299,14 +317,12 @@ const styles = StyleSheet.create({
   headingText: { flex: 1, gap: Spacing.one, minWidth: 180 },
   intro: { gap: Spacing.two },
   list: { gap: Spacing.three },
+  requestCard: { gap: Spacing.two },
+  messageMeta: { flexDirection: 'row', flexWrap: 'wrap', columnGap: Spacing.two },
+  metaText: { fontSize: 12, lineHeight: 18 },
+  senderName: { fontSize: 16, lineHeight: 22 },
   statusBadge: {
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  teamBadge: {
-    borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,

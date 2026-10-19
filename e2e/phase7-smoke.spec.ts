@@ -169,32 +169,31 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
     await admin.page.goto('/admin');
-    await admin.page.getByRole('button', { name: /Reiseorganisation/u }).click();
-    await admin.page.getByLabel('Reisename').fill('E2E Ziyara Reise');
-    await admin.page.getByRole('button', { name: 'Reise anlegen' }).click();
+    await admin.page.getByRole('button', { name: /Fahrten & Busse/u }).click();
+    await admin.page.getByLabel('Name der Fahrt').fill('E2E Ziyara Reise');
+    await admin.page.getByRole('button', { name: 'Fahrt anlegen', exact: true }).click();
     await expect(admin.page.getByText('E2E Ziyara Reise')).toBeVisible();
 
     await admin.page.getByLabel('Busname').fill('Bus 1');
-    await admin.page.getByRole('button', { name: 'Bus hinzufügen' }).click();
-    await admin.page.getByLabel('Teilnehmer-ID').fill('E2E01');
-    await admin.page.getByRole('radio', { name: 'Bus 1' }).click();
-    await admin.page
-      .getByLabel('App-Konto verknüpfen (optional)')
-      .fill(memberName);
+    await admin.page.getByLabel('Busführer auswählen', { exact: true }).fill(adminName);
+    await admin.page.getByText(adminName, { exact: true }).last().click();
+    await admin.page.getByRole('button', { name: 'Bus mit Führer anlegen' }).click();
+    await expect(admin.page.getByText(`Busführer: ${adminName}`, { exact: true })).toBeVisible();
+    await admin.page.getByLabel('Person suchen', { exact: true }).fill(memberName);
     await admin.page.getByText(memberName, { exact: true }).last().click();
-    await admin.page.getByRole('button', { name: 'Teilnehmer speichern' }).click();
-    await expect(admin.page.getByText('E2E01')).toBeVisible();
+    await admin.page.getByRole('radio', { name: 'Bus 1' }).click();
+    await admin.page.getByRole('button', { name: 'Zuordnung speichern' }).click();
+    await expect(admin.page.getByText(memberName, { exact: true }).last()).toBeVisible();
 
-    await admin.page.getByRole('radio', { name: /Live-Begleitung/u }).click();
-    await admin.page.getByLabel('Alarmmeldung').fill('Abfahrt vom E2E Hotel');
+    await admin.page.getByLabel('Abfahrtsmeldung', { exact: true }).fill('Abfahrt vom E2E Hotel');
     await admin.page
-      .getByRole('button', { name: /Generalalarm einschalten$/u })
+      .getByRole('button', { name: 'Boarding starten', exact: true })
       .click();
     await expect(admin.page.getByText('Abfahrt vom E2E Hotel')).toBeVisible();
 
     await member.page.getByRole('button', { name: 'Busstatus öffnen' }).click();
     await expect(member.page.getByText('Abfahrt vom E2E Hotel')).toBeVisible();
-    await expect(member.page.getByText('E2E01')).toBeVisible();
+    await expect(member.page.getByText(memberName, { exact: true })).toBeVisible();
     await member.page.getByRole('button', { name: 'Gelesen' }).click();
     await member.page.getByRole('button', { name: 'Unterwegs' }).click();
     await member.page.getByRole('button', { name: 'Im Bus' }).click();
@@ -202,10 +201,10 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await expect(admin.page.getByText('Im Bus').first()).toBeVisible();
 
     await admin.page
-      .getByRole('button', { name: /Generalalarm beenden$/u })
+      .getByRole('button', { name: 'Boarding beenden', exact: true })
       .click();
     await expect(
-      admin.page.getByRole('button', { name: /Generalalarm einschalten$/u }),
+      admin.page.getByRole('button', { name: 'Boarding starten', exact: true }),
     ).toBeVisible();
     await admin.context.close();
     await member.context.close();

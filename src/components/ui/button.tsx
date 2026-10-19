@@ -20,6 +20,7 @@ export type ButtonProps = {
   icon: SymbolIconName;
   label: string;
   onPress: () => void;
+  size?: 'default' | 'compact';
   style?: StyleProp<ViewStyle>;
   variant?: ButtonVariant;
 };
@@ -30,6 +31,7 @@ export function Button({
   icon,
   label,
   onPress,
+  size = 'default',
   style,
   variant = 'primary',
 }: ButtonProps) {
@@ -38,6 +40,7 @@ export function Button({
   const isPrimary = variant === 'primary';
   const isGhost = variant === 'ghost';
   const isDanger = variant === 'danger';
+  const isCompact = size === 'compact';
   const foreground = isPrimary
     ? resolvedTheme === 'dark'
       ? Colors.dark.background
@@ -70,12 +73,13 @@ export function Button({
                 ? theme.danger
                 : theme.border,
         },
+        isCompact && styles.compact,
         style,
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}>
-      <SymbolIcon color={foreground} name={icon} size={18} />
-      <ThemedText type="smallBold" style={{ color: foreground }}>
+      <SymbolIcon color={foreground} name={icon} size={isCompact ? 15 : 18} />
+      <ThemedText type="smallBold" style={[{ color: foreground }, isCompact && styles.compactLabel]}>
         {label}
       </ThemedText>
     </Pressable>
@@ -97,6 +101,14 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
+  compact: {
+    alignSelf: 'flex-start',
+    gap: Spacing.one,
+    minHeight: 44,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+  },
+  compactLabel: { fontSize: 13, lineHeight: 18, fontWeight: 600 },
   disabled: {
     opacity: 0.55,
   },

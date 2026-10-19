@@ -83,7 +83,9 @@ function BusContent() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        edges={['right', 'bottom', 'left']}
+        style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <View style={styles.centered}>
           <ActivityIndicator color={theme.accent} size="large" />
           <ThemedText themeColor="textSecondary">{t('bus.loading')}</ThemedText>
@@ -94,7 +96,9 @@ function BusContent() {
 
   if (hasSyncError && !activeTrip) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        edges={['right', 'bottom', 'left']}
+        style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <View style={styles.centered}>
           <Card style={styles.stateCard}>
             <ThemedText type="heading">{t('bus.syncErrorTitle')}</ThemedText>
@@ -109,16 +113,15 @@ function BusContent() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+    <SafeAreaView
+      edges={['right', 'bottom', 'left']}
+      style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
         <View style={styles.heading}>
-          <View style={styles.headingText}>
-            <ThemedText type="title">{t('bus.title')}</ThemedText>
-            <ThemedText themeColor="textSecondary">
-              {activeTrip?.name ?? t('bus.noAssignmentTitle')}
-            </ThemedText>
-          </View>
+          <ThemedText style={styles.headingText} themeColor="textSecondary">
+            {activeTrip?.name ?? t('bus.noAssignmentTitle')}
+          </ThemedText>
           {isRefreshing ? <ActivityIndicator color={theme.accent} /> : null}
         </View>
 
@@ -440,7 +443,6 @@ const styles = StyleSheet.create({
   },
   headingText: {
     flex: 1,
-    gap: Spacing.half,
   },
   inlineError: {
     alignItems: 'center',

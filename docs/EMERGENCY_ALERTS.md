@@ -11,7 +11,13 @@ Das rollenbasierte `/emergency-dashboard` ist über die Einstellungen erreichbar
 
 Die Sichtbereiche werden durch Datenbank-RPCs und RLS geschützt; die UI-Anzeige allein ist keine Berechtigungsgrenze. Die Empfänger werden aus der aktuellen Team- oder Adminrolle bestimmt. Historische Einteilungsdaten beeinflussen neue Notfälle nicht mehr, und die frühere Einteilungs-RPC wird durch die neue Migration entfernt.
 
-Medizinisches Personal, Mitglieder des Organisationsteams und Admins sehen auf Home einen hervorgehobenen Hinweis, sobald ihr persönliches Notfall-Postfach mindestens eine ungelesene Meldung enthält. Admins erhalten Hinweise für beide Notfallarten. Der Hinweis öffnet `/emergency`, wo die Meldung gelesen und als gelesen markiert werden kann; danach verschwindet er automatisch. Realtime, App-Rückkehr und ein gestaffelter Fallback-Refresh halten den Hinweis aktuell.
+Medizinisches Personal, Mitglieder des Organisationsteams und Admins sehen auf Home einen hervorgehobenen Hinweis, sobald ihr persönliches Notfall-Postfach mindestens eine ungelesene, offene Meldung enthält. Admins erhalten Hinweise für beide Notfallarten. Der Hinweis öffnet `/emergency`, wo die Meldung gelesen und als gelesen markiert werden kann. Realtime, App-Rückkehr und ein gestaffelter Fallback-Refresh halten den Hinweis aktuell.
+
+Seit dem 19. Oktober 2026 bieten `/emergency` und `/emergency-dashboard` zusätzlich „Als abgeschlossen markieren“: medizinisches Personal für medizinische Fälle, das Organisationsteam für organisatorische Fälle und Admins für beide Arten. Der gemeinsame Abschlussstatus und Zeitpunkt sind auch für Absender sichtbar. Persönliche Lesebestätigungen bleiben unabhängig; abgeschlossene Meldungen lösen keinen Hinweis auf neue Notfälle aus. Die Lese-RPCs zeigen offene Fälle zuerst und behalten abgeschlossene Fälle in der Historie.
+
+Nur Admins sehen „Notfall löschen“. Ein nativer beziehungsweise Browserdialog verlangt eine ausdrückliche Bestätigung. Das Löschen entfernt die Meldung für Absender und alle Empfänger endgültig, einschließlich der zugehörigen Empfänger- und privaten Push-Protokollzeilen. Bereits ausgelieferte Systembenachrichtigungen werden dadurch nicht zurückgerufen. Beide Verwaltungsaktionen prüfen aktuelle Profilrollen und Zielteam serverseitig; direkte Tabellenschreibrechte bleiben entzogen.
+
+Die zugehörige Migration `20261019000000_manage_emergency_requests.sql` ist lokal angewandt und geprüft, remote noch ausstehend. Sie muss vor Auslieferung des aktualisierten Clients remote angewandt werden. Der Dispatcher und die native Konfiguration benötigen hierfür keine Änderung oder neuen Development Build. Gezielte Prüfung: 47 SQL-Assertions in `emergency_management.test.sql` und `emergency_always_on_duty.test.sql`, 20 UI-/Home-Hinweis-Prüfungen; keine vollständige E2E- oder Gerätesuite.
 
 ## Produktiv bereitstellen
 
