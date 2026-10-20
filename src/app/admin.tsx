@@ -30,7 +30,6 @@ import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrgani
 import { useAuth } from '@/features/auth/auth-context';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { supabase } from '@/features/auth/supabase';
-import { AdminBoardingPanel } from '@/features/bus-management/AdminBoardingPanel';
 import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
 import { AdminGeneralAlarmPanel } from '@/features/general-alarm/AdminGeneralAlarmPanel';
 import { useWakeUpCall } from '@/features/wake-up-call/wake-up-call-context';
@@ -349,7 +348,6 @@ function AdminContent() {
                 {expandedSections.transport ? (
                   <>
                     <AdminBusManagementPanel families={families} users={users} />
-                    {activeTrip ? <AdminBoardingPanel /> : null}
                   </>
                 ) : null}
               </View>

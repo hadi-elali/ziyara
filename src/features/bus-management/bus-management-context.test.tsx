@@ -15,8 +15,6 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import type { Mock } from 'jest-mock';
 
 import type {
-  BusBoarding,
-  BusBoardingResponse,
   Trip,
   TripBus,
   TripParticipant,
@@ -50,7 +48,6 @@ jest.mock('@/features/auth/supabase', () => ({
 }));
 
 type QueryResult<T> = { data: T; error: PostgrestError | null };
-type Deferred<T> = { promise: Promise<T>; resolve: (value: T) => void };
 type MockFunction = Mock<(...args: never[]) => unknown>;
 type MockChannel = { on: MockFunction; subscribe: MockFunction };
 type MockSupabase = {
@@ -87,28 +84,6 @@ const participant: TripParticipant = {
   trip_id: activeTrip.id,
   updated_at: '2026-08-27T08:02:00Z',
 };
-const activeBoarding: BusBoarding = {
-  closed_at: null,
-  created_by_profile_id: 1,
-  departure_at: '2026-08-27T09:00:00Z',
-  id: 40,
-  opened_at: '2026-08-27T08:30:00Z',
-  reminder_interval_minutes: 5,
-  title: 'Abfahrt Karbala',
-  trip_id: activeTrip.id,
-  urgent_before_minutes: 5,
-};
-const onWayResponse: BusBoardingResponse = {
-  boarding_id: activeBoarding.id,
-  created_at: '2026-08-27T08:31:00Z',
-  id: 50,
-  participant_id: participant.id,
-  status: 'on_way',
-  trip_id: activeTrip.id,
-  updated_at: '2026-08-27T08:31:00Z',
-  updated_by_profile_id: 7,
-};
-const boardedResponse: BusBoardingResponse = { ...onWayResponse, status: 'boarded' };
 const mockSupabase = supabase as unknown as MockSupabase;
 const responses = new Map<string, Promise<QueryResult<unknown>>[]>();
 const actEnvironmentGlobal = globalThis as typeof globalThis & {
@@ -117,20 +92,6 @@ const actEnvironmentGlobal = globalThis as typeof globalThis & {
 const originalActEnvironment = actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT;
 let currentContext: ReturnType<typeof useBusManagement> | null;
 let renderer: ReactTestRenderer | null;
-
-function deferred<T>(): Deferred<T> {
-  let resolver: ((value: T) => void) | null = null;
-  const promise = new Promise<T>((resolve) => {
-    resolver = resolve;
-  });
-  return {
-    promise,
-    resolve: (value) => {
-      if (!resolver) throw new Error('Deferred Promise fehlt.');
-      resolver(value);
-    },
-  };
-}
 
 function enqueue<T>(table: string, result: Promise<QueryResult<T>> | QueryResult<T>) {
   const queue = responses.get(table) ?? [];
@@ -144,13 +105,11 @@ function dequeue(table: string) {
   return result;
 }
 
-function queueSnapshot(response: BusBoardingResponse[] = [onWayResponse]) {
+function queueSnapshot() {
   enqueue('trips', { data: [activeTrip], error: null });
   enqueue('trip_buses', { data: [bus], error: null });
   enqueue('trip_participants', { data: [participant], error: null });
-  enqueue('bus_boardings', { data: activeBoarding, error: null });
-  enqueue('bus_boarding_responses', { data: response, error: null });
-  enqueue('bus_boarding_escalations', { data: [], error: null });
+
 }
 
 function Probe() {
@@ -187,7 +146,7 @@ async function renderLoadedProvider() {
       </BusManagementProvider>,
     );
   });
-  await waitFor(() => !context().isLoading && context().participants[0]?.status === 'on_way');
+  await waitFor(() => !context().isLoading && context().participants[0]?.id === participant.id);
 }
 
 describe('BusManagementProvider', () => {
@@ -234,12 +193,7 @@ describe('BusManagementProvider', () => {
       query.maybeSingle.mockImplementation(() => dequeue(table));
       return query;
     });
-    mockSupabase.rpc.mockImplementation((name: string) => {
-      if (name !== 'respond_to_bus_boarding') {
-        throw new Error(`Unerwartete RPC im Busmanagement-Test: ${name}`);
-      }
-      return Promise.resolve({ data: boardedResponse, error: null });
-    });
+
   });
 
   afterEach(async () => {
@@ -251,18 +205,18 @@ describe('BusManagementProvider', () => {
     actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT = originalActEnvironment;
   });
 
-  it('lädt Fahrt, Zuordnung und aktuellen Boarding-Status', async () => {
+  it('lädt Fahrt und Buszuordnung ohne Boarding-Abfragen', async () => {
     await renderLoadedProvider();
 
     expect(context()).toMatchObject({
-      activeBoarding,
       activeTrip,
       hasSyncError: false,
       isLoading: false,
     });
     expect(context().participants).toEqual([
-      expect.objectContaining({ bus_name: 'Bus 1', participant_code: 'BER01', status: 'on_way' }),
+      expect.objectContaining({ bus_name: 'Bus 1', participant_code: 'BER01' }),
     ]);
+    expect(mockSupabase.from.mock.calls.map(([table]) => table)).toEqual(['trips', 'trip_buses', 'trip_participants']);
   });
 
   it('behält den letzten Stand bei einem fehlgeschlagenen Hintergrundrefresh', async () => {
@@ -278,117 +232,11 @@ describe('BusManagementProvider', () => {
     await act(async () => context().refresh());
 
     expect(context()).toMatchObject({
-      activeBoarding,
       activeTrip,
       hasSyncError: true,
       syncErrorMessage: 'backend unavailable',
     });
-    expect(context().participants[0]).toMatchObject({ status: 'on_way' });
-  });
-
-  it('behält bei einer fehlgeschlagenen Statusmutation den bestätigten Serverstand', async () => {
-    await renderLoadedProvider();
-    const error = new PostgrestError({
-      code: 'XX000',
-      details: '',
-      hint: '',
-      message: 'mutation failed',
-    });
-    queueSnapshot();
-    mockSupabase.rpc.mockImplementationOnce(() =>
-      Promise.resolve({ data: null, error }),
-    );
-
-    await act(async () => {
-      const result = await context().setStatus(activeBoarding.id, participant.id, 'boarded');
-      expect(result.error).toBe(error);
-    });
-
-    expect(context()).toMatchObject({ hasSyncError: false, isRefreshing: false });
-    expect(context().participants[0]).toMatchObject({ status: 'on_way' });
-  });
-
-  it('erneuert eine abgelaufene Sitzung und speichert den Busstatus beim zweiten Versuch', async () => {
-    await renderLoadedProvider();
-    const permissionError = new PostgrestError({
-      code: '42501',
-      details: '',
-      hint: '',
-      message: 'permission denied for function respond_to_bus_boarding',
-    });
-    queueSnapshot([boardedResponse]);
-    mockSupabase.rpc.mockImplementationOnce(() =>
-      Promise.resolve({ data: null, error: permissionError }),
-    );
-
-    await act(async () => {
-      const result = await context().setStatus(activeBoarding.id, participant.id, 'boarded');
-      expect(result.error).toBeNull();
-    });
-
-    expect(mockSupabase.auth.refreshSession).toHaveBeenCalledTimes(1);
-    expect(mockSupabase.rpc).toHaveBeenCalledTimes(2);
-    expect(context().participants[0]).toMatchObject({ status: 'boarded' });
-  });
-
-  it('zeigt die gespeicherte Antwort optimistisch bis zum autoritativen Refresh', async () => {
-    await renderLoadedProvider();
-    const tripRefresh = deferred<QueryResult<Trip[]>>();
-    enqueue('trips', tripRefresh.promise);
-
-    let mutation: Promise<{ error: PostgrestError | null }> | null = null;
-    await act(async () => {
-      mutation = context().setStatus(activeBoarding.id, participant.id, 'boarded');
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(context().participants[0]).toMatchObject({ status: 'boarded' });
-    enqueue('trip_buses', { data: [bus], error: null });
-    enqueue('trip_participants', { data: [participant], error: null });
-    enqueue('bus_boardings', { data: activeBoarding, error: null });
-    enqueue('bus_boarding_responses', { data: [boardedResponse], error: null });
-    enqueue('bus_boarding_escalations', { data: [], error: null });
-
-    await act(async () => {
-      tripRefresh.resolve({ data: [activeTrip], error: null });
-      await mutation;
-    });
-
-    expect(mockSupabase.rpc).toHaveBeenCalledWith('respond_to_bus_boarding', {
-      p_boarding_id: activeBoarding.id,
-      p_participant_id: participant.id,
-      p_status: 'boarded',
-    });
-    expect(context().participants[0]).toMatchObject({ status: 'boarded' });
-  });
-
-  it('ignoriert einen älteren Refresh nach einer bestätigten Mutation', async () => {
-    await renderLoadedProvider();
-    const staleTrip = deferred<QueryResult<Trip[]>>();
-    enqueue('trips', staleTrip.promise);
-    await act(async () => {
-      void context().refresh();
-      await Promise.resolve();
-    });
-
-    queueSnapshot([boardedResponse]);
-    await act(async () => {
-      await context().setStatus(activeBoarding.id, participant.id, 'boarded');
-    });
-    expect(context().participants[0]).toMatchObject({ status: 'boarded' });
-
-    enqueue('trip_buses', { data: [bus], error: null });
-    enqueue('trip_participants', { data: [participant], error: null });
-    enqueue('bus_boardings', { data: activeBoarding, error: null });
-    enqueue('bus_boarding_responses', { data: [onWayResponse], error: null });
-    enqueue('bus_boarding_escalations', { data: [], error: null });
-    await act(async () => {
-      staleTrip.resolve({ data: [activeTrip], error: null });
-      await flush();
-    });
-
-    expect(context().participants[0]).toMatchObject({ status: 'boarded' });
+    expect(context().participants[0]).toMatchObject({ bus_name: 'Bus 1' });
   });
 
   it('bleibt ohne Sitzung offline-bereit und fragt Supabase nicht ab', async () => {
@@ -402,7 +250,7 @@ describe('BusManagementProvider', () => {
     });
     await waitFor(() => !context().isLoading);
 
-    expect(context()).toMatchObject({ activeBoarding: null, activeTrip: null, participants: [] });
+    expect(context()).toMatchObject({ activeTrip: null, participants: [] });
     expect(mockSupabase.from).not.toHaveBeenCalled();
   });
 
@@ -419,6 +267,6 @@ describe('BusManagementProvider', () => {
       await flush();
     });
 
-    expect(context()).toMatchObject({ activeBoarding: null, activeTrip: null, participants: [] });
+    expect(context()).toMatchObject({ activeTrip: null, participants: [] });
   });
 });

@@ -43,8 +43,9 @@ function isPlace(place: Place | undefined): place is Place {
 export default function HomeScreen() {
   const theme = useTheme();
   const { language, t } = useI18n();
-  const { session } = useAuth();
-  const { activeBoarding, participants: busParticipants } = useBusManagement();
+  const { profile, session } = useAuth();
+  const { participants: busParticipants } = useBusManagement();
+  const hasBusAssignment = busParticipants.some((participant) => participant.profile_id === profile?.id);
   const { activeCheck, currentResponse } = useGroupCheck();
   const { groups: tripGroups } = useTripGroups();
   const {
@@ -158,7 +159,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session && activeBoarding && busParticipants.length > 0 ? (
+      {session && hasBusAssignment ? (
         <View
           style={[
             styles.notice,
@@ -167,7 +168,7 @@ export default function HomeScreen() {
         >
           <ThemedText type="heading">{t("bus.homeTitle")}</ThemedText>
           <ThemedText themeColor="textSecondary">
-            {t("bus.homeBody", { count: busParticipants.length })}
+            {t("bus.homeBody")}
           </ThemedText>
           <Button
             icon="bus"

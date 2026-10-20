@@ -13,9 +13,11 @@ import { useBusManagement } from '@/features/bus-management/bus-management-conte
 import { shouldRetryBusStatusAfterSessionRefresh } from '@/features/bus-management/bus-management-state';
 import { useI18n } from '@/features/i18n/i18n';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
+import { useTripGroups } from '@/features/trip-groups/trip-group-context';
 import { useTheme } from '@/hooks/use-theme';
 
 type AssignmentChoice =
+  | { groupId: number; kind: 'group' }
   | { familyId: number; kind: 'family' }
   | { kind: 'person'; userId: string };
 
@@ -32,7 +34,6 @@ export function AdminBusManagementPanel({
   const { language, t } = useI18n();
   const { session } = useAuth();
   const {
-    activeBoarding,
     activeTrip,
     buses,
     hasSyncError,
@@ -42,6 +43,13 @@ export function AdminBusManagementPanel({
     syncErrorMessage,
     trips,
   } = useBusManagement();
+  const {
+    groups,
+    hasSyncError: hasGroupSyncError,
+    isLoading: areGroupsLoading,
+    refresh: refreshGroups,
+    syncErrorMessage: groupSyncErrorMessage,
+  } = useTripGroups();
   const [tripName, setTripName] = useState('');
   const [templateTripId, setTemplateTripId] = useState<number | null>(null);
   const [tripExpanded, setTripExpanded] = useState(true);
@@ -51,12 +59,14 @@ export function AdminBusManagementPanel({
   const [editingLeaderBusId, setEditingLeaderBusId] = useState<number | null>(null);
   const [replacementLeaderSearch, setReplacementLeaderSearch] = useState('');
   const [replacementLeaderUserId, setReplacementLeaderUserId] = useState<string | null>(null);
-  const [assignmentKind, setAssignmentKind] = useState<AssignmentChoice['kind']>('person');
+  const [assignmentKind, setAssignmentKind] = useState<AssignmentChoice['kind']>('group');
   const [assignmentSearch, setAssignmentSearch] = useState('');
   const [assignmentChoice, setAssignmentChoice] = useState<AssignmentChoice | null>(null);
+  const [groupLeaderChoice, setGroupLeaderChoice] = useState<{ groupId: number; userId: string } | null>(null);
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null);
   const [isWorking, setIsWorking] = useState(false);
   const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
+  const [assignmentSaved, setAssignmentSaved] = useState(false);
 
   const archivedTrips = useMemo(
     () => trips.filter((trip) => trip.archived_at !== null),
@@ -120,12 +130,27 @@ export function AdminBusManagementPanel({
       )
       .slice(0, 8);
   }, [assignmentSearch, families, language, users]);
+  const matchingGroups = useMemo(() => {
+    const normalized = assignmentSearch.trim().toLocaleLowerCase(language);
+    return groups.filter((group) =>
+      !normalized || group.name.toLocaleLowerCase(language).includes(normalized),
+    );
+  }, [assignmentSearch, groups, language]);
+  const selectedGroup = assignmentChoice?.kind === 'group'
+    ? groups.find((group) => group.id === assignmentChoice.groupId)
+    : null;
+  const selectedGroupLeader = selectedGroup?.leaders.length === 1
+    ? selectedGroup.leaders[0]
+    : selectedGroup?.leaders.find((leader) =>
+        groupLeaderChoice?.groupId === selectedGroup.id && leader.user_id === groupLeaderChoice.userId,
+      );
 
   const runAction = async (
     action: () => PromiseLike<{ error: unknown }>,
     onSuccess?: () => void,
   ) => {
     if (isWorking) return;
+    setAssignmentSaved(false);
     setActionErrorMessage(null);
     setIsWorking(true);
 
@@ -144,17 +169,28 @@ export function AdminBusManagementPanel({
       }
 
       if (result.error) {
-        setActionErrorMessage(getOriginalErrorMessage(result.error));
+        setActionErrorMessage(actionErrorText(result.error));
         await refresh();
       } else {
         onSuccess?.();
         await refresh();
       }
     } catch (error) {
-      setActionErrorMessage(getOriginalErrorMessage(error));
+      setActionErrorMessage(actionErrorText(error));
     } finally {
       setIsWorking(false);
     }
+  };
+
+  const actionErrorText = (error: unknown) => {
+    const message = getOriginalErrorMessage(error);
+    if (message === 'A group member leads another bus.') return t('bus.admin.groupLeaderConflict');
+    if (message === 'The group would split an existing family bus assignment.') return t('bus.admin.groupFamilyConflict');
+    if (message === 'The selected group has no accounts.') return t('bus.admin.groupEmpty');
+    if (message === 'The selected group has no leader.') return t('bus.admin.groupNoLeader');
+    if (message === 'Select a group leader to lead the bus.') return t('bus.admin.groupSelectBusLeader');
+    if (message === 'Selected group leader not found.') return t('bus.admin.groupLeaderChanged');
+    return message;
   };
 
   const createTrip = () => {
@@ -209,8 +245,19 @@ export function AdminBusManagementPanel({
 
   const saveAssignment = () => {
     if (!activeTrip || selectedBusId === null || !assignmentChoice) return;
+    if (assignmentChoice.kind === 'group' &&
+      (areGroupsLoading || hasGroupSyncError || !selectedGroup?.members.length || !selectedGroupLeader)) return;
+    setAssignmentSaved(false);
     const action =
-      assignmentChoice.kind === 'person'
+      assignmentChoice.kind === 'group'
+        ? () =>
+            supabase.rpc('admin_assign_trip_group', {
+              p_bus_id: selectedBusId,
+              p_group_id: assignmentChoice.groupId,
+              p_leader_user_id: selectedGroupLeader?.user_id ?? null,
+              p_trip_id: activeTrip.id,
+            })
+        : assignmentChoice.kind === 'person'
         ? () =>
             supabase.rpc('admin_assign_trip_person', {
               p_bus_id: selectedBusId,
@@ -225,8 +272,10 @@ export function AdminBusManagementPanel({
             });
 
     void runAction(action, () => {
+      setAssignmentSaved(true);
       setAssignmentSearch('');
       setAssignmentChoice(null);
+      setGroupLeaderChoice(null);
       setSelectedBusId(null);
     });
   };
@@ -346,7 +395,7 @@ export function AdminBusManagementPanel({
           </View>
         </Pressable>
         <Button
-          disabled={isWorking || Boolean(activeBoarding)}
+          disabled={isWorking}
           icon="close"
           label={t('bus.admin.archive')}
           onPress={confirmCloseTrip}
@@ -395,7 +444,6 @@ export function AdminBusManagementPanel({
             <Button
               disabled={
                 isWorking ||
-                Boolean(activeBoarding) ||
                 busName.trim().length < 2 ||
                 selectedLeaderUserId === null
               }
@@ -426,7 +474,7 @@ export function AdminBusManagementPanel({
                       </ThemedText>
                     </View>
                     <Button
-                      disabled={isWorking || Boolean(activeBoarding)}
+                      disabled={isWorking}
                       icon="settings"
                       label={t(
                         leader
@@ -478,11 +526,22 @@ export function AdminBusManagementPanel({
             </ThemedText>
             <View accessibilityRole="radiogroup" style={styles.chips}>
               <SelectionChip
+                label={t('bus.admin.group')}
+                onPress={() => {
+                  setAssignmentKind('group');
+                  setAssignmentChoice(null);
+                  setAssignmentSearch('');
+                  setAssignmentSaved(false);
+                }}
+                selected={assignmentKind === 'group'}
+              />
+              <SelectionChip
                 label={t('bus.admin.person')}
                 onPress={() => {
                   setAssignmentKind('person');
                   setAssignmentChoice(null);
                   setAssignmentSearch('');
+                  setAssignmentSaved(false);
                 }}
                 selected={assignmentKind === 'person'}
               />
@@ -492,6 +551,7 @@ export function AdminBusManagementPanel({
                   setAssignmentKind('family');
                   setAssignmentChoice(null);
                   setAssignmentSearch('');
+                  setAssignmentSaved(false);
                 }}
                 selected={assignmentKind === 'family'}
               />
@@ -499,16 +559,21 @@ export function AdminBusManagementPanel({
 
             <LabeledInput
               label={t(
-                assignmentKind === 'person'
+                assignmentKind === 'group'
+                  ? 'bus.admin.groupSearch'
+                  : assignmentKind === 'person'
                   ? 'bus.admin.personSearch'
                   : 'bus.admin.familySearch',
               )}
               onChangeText={(value) => {
                 setAssignmentSearch(value);
                 setAssignmentChoice(null);
+                setAssignmentSaved(false);
               }}
               placeholder={t(
-                assignmentKind === 'person'
+                assignmentKind === 'group'
+                  ? 'bus.admin.groupSearchPlaceholder'
+                  : assignmentKind === 'person'
                   ? 'bus.admin.personSearchPlaceholder'
                   : 'bus.admin.familySearchPlaceholder',
               )}
@@ -516,6 +581,24 @@ export function AdminBusManagementPanel({
             />
 
             <View style={styles.accountResults}>
+              {assignmentKind === 'group' && !areGroupsLoading && !hasGroupSyncError
+                ? matchingGroups.map((group) => (
+                    <ChoiceRow
+                      key={group.id}
+                      label={group.name}
+                      note={t('bus.admin.groupMembers', {
+                        count: group.members.length,
+                        people: group.members.reduce((sum, member) => sum + member.party_size, 0),
+                        leaders: group.leaders.map((leader) => leader.display_name).join(', '),
+                      })}
+                      onPress={() => {
+                        setAssignmentChoice({ kind: 'group', groupId: group.id });
+                        setGroupLeaderChoice(null);
+                        setAssignmentSaved(false);
+                      }}
+                      selected={assignmentChoice?.kind === 'group' && assignmentChoice.groupId === group.id}
+                    />
+                  )) : null}
               {assignmentKind === 'person'
                 ? matchingPeople.map((user) => (
                     <ChoiceRow
@@ -530,8 +613,8 @@ export function AdminBusManagementPanel({
                         assignmentChoice.userId === user.user_id
                       }
                     />
-                  ))
-                : matchingFamilies.map((family) => {
+                  )) : null}
+              {assignmentKind === 'family' ? matchingFamilies.map((family) => {
                     const members = users.filter((user) => user.family_id === family.id);
                     return (
                       <ChoiceRow
@@ -550,8 +633,61 @@ export function AdminBusManagementPanel({
                         }
                       />
                     );
-                  })}
+                  }) : null}
             </View>
+
+            {assignmentKind === 'group' ? (
+              areGroupsLoading ? (
+                <View style={styles.field}>
+                  <ActivityIndicator color={theme.accent} />
+                  <ThemedText type="small" themeColor="textSecondary">{t('tripGroups.loading')}</ThemedText>
+                </View>
+              ) : hasGroupSyncError ? (
+                <View style={styles.field}>
+                  <ThemedText type="small" themeColor="danger">{groupSyncErrorMessage}</ThemedText>
+                  <Button icon="refresh" label={t('bus.retry')} onPress={() => void refreshGroups()} variant="secondary" />
+                </View>
+              ) : matchingGroups.length === 0 ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t(groups.length === 0 ? 'bus.admin.noGroups' : 'bus.admin.noMatchingGroups')}
+                </ThemedText>
+              ) : null
+            ) : null}
+
+            {selectedGroup && !hasGroupSyncError && !areGroupsLoading ? (
+              <View style={styles.field}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('bus.admin.groupSelectedMembers', {
+                    names: selectedGroup.members.map((member) => member.display_name).join(', '),
+                  })}
+                </ThemedText>
+                {selectedGroup.leaders.length > 1 ? (
+                  <>
+                    <ThemedText type="smallBold">{t('bus.admin.groupSelectBusLeader')}</ThemedText>
+                    <View accessibilityRole="radiogroup" style={styles.chips}>
+                      {selectedGroup.leaders.map((leader) => (
+                        <SelectionChip
+                          key={leader.user_id}
+                          label={leader.display_name}
+                          onPress={() => {
+                            setGroupLeaderChoice({ groupId: selectedGroup.id, userId: leader.user_id });
+                            setAssignmentSaved(false);
+                          }}
+                          selected={selectedGroupLeader?.user_id === leader.user_id}
+                        />
+                      ))}
+                    </View>
+                  </>
+                ) : null}
+                {selectedGroupLeader ? (
+                  <ThemedText type="smallBold" themeColor="accent">
+                    {t('bus.admin.groupBecomesBusLeader', { name: selectedGroupLeader.display_name })}
+                  </ThemedText>
+                ) : selectedGroup.leaders.length === 0 ? (
+                  <ThemedText type="small" themeColor="danger">{t('bus.admin.groupNoLeader')}</ThemedText>
+                ) : null}
+              </View>
+            ) : null}
 
             {assignmentSearch.trim() &&
             assignmentKind === 'person' &&
@@ -574,24 +710,36 @@ export function AdminBusManagementPanel({
                 <SelectionChip
                   key={bus.id}
                   label={bus.name}
-                  onPress={() => setSelectedBusId(bus.id)}
+                  onPress={() => {
+                    setSelectedBusId(bus.id);
+                    setAssignmentSaved(false);
+                  }}
                   selected={selectedBusId === bus.id}
                 />
               ))}
             </View>
 
+            {buses.length === 0 ? (
+              <ThemedText type="small" themeColor="textSecondary">{t('bus.admin.createBusFirst')}</ThemedText>
+            ) : null}
             <Button
               disabled={
                 isWorking ||
-                Boolean(activeBoarding) ||
                 buses.length === 0 ||
                 selectedBusId === null ||
-                assignmentChoice === null
+                assignmentChoice === null ||
+                (assignmentKind === 'group' &&
+                  (areGroupsLoading || hasGroupSyncError || !selectedGroup?.members.length || !selectedGroupLeader))
               }
               icon="confirm"
-              label={t('bus.admin.saveAssignment')}
+              label={t(assignmentKind === 'group' ? 'bus.admin.saveGroupAssignment' : 'bus.admin.saveAssignment')}
               onPress={saveAssignment}
             />
+            {assignmentSaved ? (
+              <ThemedText accessibilityLiveRegion="polite" type="smallBold" themeColor="success">
+                {t('bus.admin.assignmentSaved')}
+              </ThemedText>
+            ) : null}
           </Card>
 
           <View style={styles.participantList}>

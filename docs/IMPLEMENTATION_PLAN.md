@@ -378,6 +378,7 @@ Acceptance criteria:
 
 - Admins create one active intermediate trip within the overall pilgrimage and named buses; every newly created bus requires a registered leader.
 - Admins assign either one registered person or an entire account family to a bus. After a family assignment, its members are not offered as individual choices.
+- Since 19 October 2026, whole independent groups are the default assignment choice. Show existing groups without requiring search, include all current members and leaders, and resolve them atomically through `admin_assign_trip_group`. Existing participant IDs and family units are preserved; a group leader becomes bus leader as described below; reject conflicting leaders, family splits, ended trips and open boarding without partial writes. Later group edits require explicit reimport; existing trip copying retains the resulting participant snapshot.
 - The active intermediate trip can be collapsed and ended. With none active, admins can start empty or copy buses, leaders and person/family assignments from an ended intermediate trip without copying boarding state.
 - Participant records keep an internal legacy key for relational compatibility, but the current workflow neither asks for nor displays that key.
 - Participants report `on_way`, `boarded` or `problem` only for their account-backed assignment.
@@ -391,7 +392,7 @@ Tests/checks:
 
 - Jest context/state and protected-route tests.
 - Fresh local migration rebuild, DB lint and pgTAP RLS/RPC/concurrency tests.
-- Playwright full-stack smoke from trip creation through boarding confirmation and close.
+- Existing Playwright smoke covers trip creation and assignment display. Boarding steps were removed on 19 October 2026.
 - Web, iOS and Android JavaScript exports.
 
 ## Phase 12: Trip destinations and navigation
@@ -409,8 +410,8 @@ Files:
 
 Acceptance criteria:
 
-- `Trips & buses` contains bus management and boarding without a current itinerary point.
-- The admin dashboard exposes trip destinations and navigation as its own section. Admins create, edit and archive multiple named destinations without an active intermediate trip and select coordinates on a platform-specific map or through one foreground location request.
+- `Trips & buses` contains bus management and group/person/family assignments. Boarding is removed as of 19 October 2026.
+- The admin dashboard exposes `Reiseziele auf Karte markieren` / `Mark trip destinations on the map` as its own section, with a corresponding Arabic label. Admins create, edit and archive multiple named destinations without an active intermediate trip and select coordinates on a platform-specific map or through one foreground location request.
 - Every signed-in account sees active destinations as distinct map markers, can open their list and use external navigation. Destinations remain visible when an intermediate trip ends or is deleted.
 - A validated user-scoped destination cache survives restart and initial read failures; a successful server response, including an empty list, replaces it authoritatively.
 - The client reads and subscribes only to navigation destinations in this provider. Realtime, focus and staggered fallback refreshes remain available without trip or participant reads.
@@ -422,7 +423,9 @@ Tests/checks:
 - TypeScript, lint, Expo dependency alignment, Expo Doctor and web export.
 - No database migration or new native dependency is required for the client removal.
 
-## Phase 13: General alarm and escalation
+## Phase 13: General alarm and escalation (historical boarding)
+
+Boarding was removed on 19 October 2026; the criteria below document the retained legacy backend. The current client only retains notifications for independent wake-up calls and emergencies. See the retirement section below.
 
 Files to create or modify:
 
@@ -620,7 +623,7 @@ Tests/checks:
 - Use the same trip terminology in creation, copy, archive, status and help text. Boarding instructions point directly to Trips & buses.
 - Group editing, empty and deletion copy describes registered accounts and families without an active-trip prerequisite. Remove obsolete group/trip prerequisites from the dictionaries.
 - Selected group leaders have a separate red X with a 44-point minimum touch target. Removing leadership requires confirmation on native and web; cancellation preserves the selection. The account remains selected as a member, and changes take effect when the group is saved. Leader search only adds leaders. Translate the confirmation and accessible button labels into all three languages.
-- Preserve separate group memberships, leaders, bus assignments and bus leaders. Assigning an entire group to a bus remains a possible future feature.
+- Preserve separate group memberships, leaders, bus assignments and bus leaders. Whole-group assignment is implemented by the 19 October extension below.
 - Update README, context, boarding documentation and existing E2E selectors. This copy change requires no route, backend, dependency or native configuration changes and no new development build.
 
 ## 19 October 2026: Complete and delete emergencies
@@ -630,3 +633,22 @@ Tests/checks:
 - Migration `20261019000000_manage_emergency_requests.sql` adds a shared completion timestamp and nullable actor reference, extends both read RPCs and preserves existing visibility. Completion is idempotent under a row lock; deletion cascades to recipients and private push logs. Personal read receipts remain independent.
 - Expose actions and status in both emergency inbox screens, show completion to senders and exclude completed emergencies from unread Home alerts. Provide translated pending/error states and Realtime/focus/fallback refreshes with stale-read invalidation after successful writes.
 - Apply and verify locally with focused authorization/lifecycle and action tests plus the required TypeScript, lint, SDK, Doctor and web checks. Per user request, no additional full coverage, E2E or device suite. Remote migration and client delivery remain required; no new native dependency or development build is needed.
+
+## 19 October 2026: Assign existing groups to buses
+
+- Default to whole groups from `Groups & group leaders` in the bus-assignment editor. Display leaders, account/person totals and the selected member list. Keep person and family assignment available, with German, English and Arabic loading, empty, error, boarding-lock and success states.
+- Migration `20261019010000_assign_organization_groups_to_buses.sql` adds an authenticated admin RPC using the existing group/bus transaction locks and a trip row lock shared with boarding creation/archival. Resolve current registered members, reuse assignment IDs and family markers, and reject bus-leader conflicts and family splits atomically. Group membership and leadership remain unchanged; the result is an explicit snapshot, including when copied to the next trip.
+- Run only focused assignment/authorization checks and the required TypeScript, lint, SDK, Doctor and web-export checks. Per user request, no extra coverage, full E2E or device suite. Apply locally; remote migration and client delivery remain pending. No native configuration or dependency change.
+
+## 19 October 2026: Remove boarding
+
+- Remove the admin boarding panel, participant status actions, countdowns and escalation UI. Home and `/bus` display bus assignments. Keep independent group import, wake-up calls and emergencies.
+- The bus provider reads/subscribes only to trips, buses and participants; remove boarding response mutations. The notification provider no longer depends on bus state and cancels old local boarding reminders on startup/user changes. Preserve device registration and wake-up/emergency push navigation.
+- Apply `20261019020000_retire_bus_boarding.sql` locally and before client rollout remotely. Close open boardings and revoke client execution of `admin_start_bus_boarding`, preserving historical data. The existing scheduler continues delivering independent wake-up calls without a Function redeploy.
+- Adapt existing tests and E2E steps to assignment-only behavior; no new suites or full coverage/E2E/device run per user request. Run required TypeScript, lint, SDK/Doctor and web-export checks. No dependency or native configuration change.
+
+## 19 October 2026: Group leader becomes bus leader
+
+- Importing a group also sets its sole leader as the bus leader automatically. When several group leaders exist, require one explicit choice. Show the incoming leader before saving; replacing a bus leader retains the previous leader's participant assignment.
+- Migration `20261019030000_use_group_leader_as_bus_leader.sql` adds a four-argument RPC that validates the current group leadership and saves membership assignments plus bus leadership atomically. Preserve admin checks, family units, participant IDs and conflicts with leaders of other buses. Keep the three-argument signature for older clients: infer only a sole leader and reject ambiguous choices. Existing trip copying preserves the assigned bus leader.
+- Apply locally and before updated-client delivery remotely. Existing assignments are not changed retroactively. Provide German, English and Arabic selection/validation text and update the domain RPC arguments. Use only the existing focused UI/SQL suites and required project checks; no full coverage/E2E/device run. No native or dependency changes.

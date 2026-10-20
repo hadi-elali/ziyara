@@ -4,6 +4,10 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(28);
 
+-- Retain historical dispatcher coverage without changing local travel data.
+update public.bus_boardings set closed_at = now() where closed_at is null;
+update public.trips set archived_at = now() where archived_at is null;
+
 select ok(
   (
     select count(*) = 3
@@ -127,6 +131,8 @@ select lives_ok(
   $$,
   'an admin links the physical participant to the app account'
 );
+-- New clients cannot start boarding; exercise historical server data as owner.
+reset role;
 select lives_ok(
   $$
     select public.admin_start_bus_boarding(
@@ -135,8 +141,9 @@ select lives_ok(
       now() + interval '15 minutes'
     )
   $$,
-  'an admin starts the general alarm through the boarding round'
+  'a database-owner fixture retains legacy dispatcher coverage'
 );
+set local role authenticated;
 
 reset role;
 select set_config(

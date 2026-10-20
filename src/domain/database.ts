@@ -1278,6 +1278,10 @@ export type Database = {
         Args: { p_bus_id: number; p_family_id: number; p_trip_id: number };
         Returns: TripParticipant[];
       };
+      admin_assign_trip_group: {
+        Args: { p_bus_id: number; p_group_id: number; p_trip_id: number; p_leader_user_id?: string | null };
+        Returns: TripParticipant[];
+      };
       admin_assign_trip_person: {
         Args: { p_bus_id: number; p_trip_id: number; p_user_id: string };
         Returns: TripParticipant;

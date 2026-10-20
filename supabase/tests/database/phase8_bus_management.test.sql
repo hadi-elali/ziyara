@@ -4,6 +4,10 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(24);
 
+-- Isolate historical fixtures without changing existing local travel data.
+update public.bus_boardings set closed_at = now() where closed_at is null;
+update public.trips set archived_at = now() where archived_at is null;
+
 select ok(
   (
     select count(*) = 5
@@ -146,7 +150,7 @@ select is(
   'BER01',
   'participant IDs are normalized before storage'
 );
-select lives_ok(
+select throws_ok(
   $$
     select public.admin_start_bus_boarding(
       (select id from public.trips where name = 'Phase 8 Ziyara'),
@@ -154,8 +158,18 @@ select lives_ok(
       now() + interval '15 minutes'
     )
   $$,
-  'an admin starts a boarding round'
+  '42501',
+  'permission denied for function admin_start_bus_boarding',
+  'retired boarding cannot be started by clients'
 );
+
+-- Historical fixtures retain coverage of the legacy response/RLS APIs.
+reset role;
+select public.admin_start_bus_boarding(
+  (select id from public.trips where name = 'Phase 8 Ziyara'),
+  'Historisches Boarding', now() + interval '15 minutes'
+);
+set local role authenticated;
 
 reset role;
 select set_config(

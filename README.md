@@ -48,31 +48,28 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 
 - Unter **Fahrten & Busse** werden einzelne Fahrten innerhalb der gesamten Ziyara verwaltet, zum Beispiel `Hotel → Karbala`.
 - Es kann eine Fahrt gleichzeitig aktiv sein, mit mehreren benannten Bussen. Für jeden neuen Bus ist eine registrierte Person als Busführer erforderlich; Personen und Familien erscheinen in den Auswahlfeldern erst nach einer Suche.
-- Personen werden über ihr registriertes Konto oder gemeinsam als ganze Kontofamilie einem Bus zugeordnet. Sobald eine Familie zugeordnet ist, werden ihre Mitglieder nicht zusätzlich als Einzelpersonen angeboten.
+- Vorhandene Gruppen einschließlich aller Leiter und Mitglieder können gemeinsam einem Bus zugeordnet werden. Einzelne registrierte Konten und ganze Kontofamilien bleiben zusätzlich auswählbar. Sobald eine Familie zugeordnet ist, werden ihre Mitglieder nicht zusätzlich als Einzelpersonen angeboten.
 - Eine aktive Fahrt lässt sich einklappen und beenden. Danach kann eine leere Fahrt erstellt oder die komplette Busanordnung einschließlich Führung und Personen-/Familienzuordnung aus einer beendeten Fahrt übernommen werden; alte Boardingstände werden nicht kopiert. Das Tagesprogramm bleibt davon unberührt.
-- Unter **Fahrten & Busse** werden Fahrten-, Bus- und Teilnehmerzuordnung sowie das Starten, Überwachen und Beenden des Boardings verwaltet.
-- Realtime, App-Fokus und ein gestaffelter Fallback-Refresh halten die Übersicht aktuell. Monotone Request-Versionen verhindern, dass ältere Reads einen gespeicherten Status zurücksetzen. Antwort und Schließen sperren dieselbe Boarding-Zeile und bleiben dadurch transaktional geordnet.
-- Bei einer abgelaufenen oder fehlenden Auth-Session erneuert der Client die Sitzung und wiederholt eine Teilnehmer- oder Admin-Statusmutation genau einmal für dieselbe User-ID. Endgültige Fehler laden den autoritativen Stand und unterscheiden Auth-, geschlossenes Boarding-, geänderte Zuordnungs-, Offline- und Serverzustände.
+- Unter **Fahrten & Busse** werden Fahrten-, Bus- und Teilnehmerzuordnung und Gruppenübernahme verwaltet.
+- Realtime, App-Fokus und ein gestaffelter Fallback-Refresh halten die Übersicht aktuell. Monotone Request-Versionen verhindern, dass ältere Abfragen einen neueren Stand zurücksetzen.
 
 ### Gruppen & Gruppenleitung
 
 - Ein einzelner Buchstabe oder eine Ziffer genügt als Gruppenname. Der Name bleibt ein Pflichtfeld mit höchstens 80 Zeichen. Dafür muss die Migration `20261015000000_allow_short_organization_group_names.sql` auch remote angewandt werden.
 - Unter **Gruppen & Gruppenleitung** erstellen, bearbeiten und löschen Admins Gruppen direkt aus registrierten Personen oder ganzen Kontofamilien. Die Gruppen bleiben bei wechselnden Fahrten bestehen und können ohne aktive Fahrt oder Buszuordnung angelegt werden. Jede Person gehört höchstens einer Gruppe; jede Gruppe erhält einen oder mehrere Leiter, die selbst Mitglieder sind.
 - Familien werden beim Speichern atomar in ihre aktuellen Konten aufgelöst; spätere Familienänderungen verändern gespeicherte Gruppenmitgliedschaften nicht automatisch. Ein Konflikt mit einer anderen Gruppe verhindert die gesamte Speicherung.
-- Gruppenzugehörigkeit und Buszuordnung werden getrennt gepflegt; Gruppenleiter und Busführer werden separat bestimmt. Eine Gruppe wird aktuell nicht automatisch einem Bus zugeordnet.
+- Unter **Fahrten & Busse** lassen sich vorhandene Gruppen samt sämtlichen aktuellen Mitgliedern und Leitern gemeinsam einem Bus zuordnen. Die Gruppe wird ohne erneutes Hinzufügen der einzelnen Personen übernommen; spätere Gruppenänderungen werden durch erneutes Zuordnen übernommen. Die Gruppenleitung übernimmt dabei automatisch die Busführung; bei mehreren Gruppenleitern wird einer ausgewählt. Der bisherige Busführer bleibt Mitreisender. Dafür müssen `20261019010000_assign_organization_groups_to_buses.sql` und `20261019030000_use_group_leader_as_bus_leader.sql` auch remote angewandt werden.
 - Auch ein Admin kann Mitglied oder Anführer sein. Auf Home und unter `/group` sieht er nur seine eigenen Gruppenzuordnungen; die vollständige Gruppenverwaltung bleibt im Adminbereich.
 - Der Admin kann den Anführer in der App nach seinem Standort fragen. Der Anführer sieht die Anfrage auf Home und entscheidet ausdrücklich zwischen einer einmaligen Freigabe und Ablehnung; erst nach Zustimmung wird die Vordergrund-Standortberechtigung angefragt.
 - Ein freigegebener Anführerstandort erscheint im Adminbereich auf einer kleinen Karte. Der Admin kann seinen eigenen aktuellen Standort nach separater Zustimmung lokal als zweiten Marker einblenden; diese Adminposition wird weder gespeichert noch geteilt.
 - Es gibt kein Live- oder Hintergrundtracking. Geteilte Koordinaten sind per RLS nur für Anführer und Admins und höchstens 15 Minuten lesbar; erneute Anfragen sowie Gruppenänderung oder -löschung entfernen die zuvor gespeicherte Position.
 - Gruppen, Mitgliedschaften und Standortanfragen werden per Realtime, App-Fokus und gestaffeltem Fallback aktualisiert. Alle Mutationen laufen über serverseitig authentifizierte RPCs.
 
-### Fahrten & Busse: Boarding
+### Boarding entfernt
 
-- Unter **Fahrten & Busse** verwaltet der Admin Buszuordnungen und Boarding. Der frühere aktuelle Programmpunkt samt Teilnehmeransicht ist entfernt. Weckrufe werden im getrennten Punkt **Weckruf** verwaltet.
-- Ein offenes Boarding führt jede zugeordnete Person durch `Gelesen` → `Ich bin unterwegs` → `Im Bus`; `Problem` bleibt als Ausnahmeweg verfügbar.
-- Nach fünf Minuten ohne nächste Stufe werden native lokale Erinnerungen geplant. Ein geschützter Dispatcher beansprucht zusätzlich höchstens einen Expo-Push-Versuch je Gerät, Teilnehmer, Stufe und Fünf-Minuten-Fenster.
-- Das separate Generalalarm-Panel zeigt bestätigte und fehlende Personen, alle ausstehenden Namen, die Schließbereitschaft jedes Busses und eine ausdrücklich protokollierte manuelle Eskalation.
-- Push-Tokens und Versandversuche sind nicht clientlesbar. Ein Expo-Ticket gilt nur als Annahme durch den Push-Dienst, nie als garantierte Zustellung oder garantiertes Aufwecken.
+- Seit 19. Oktober 2026 enthält die App keine Boarding-Eröffnung, Teilnehmerstatus, Countdowns, Eskalationen oder Boarding-Erinnerungen. Home und **Mein Bus** zeigen die aktuelle Buszuordnung; **Weckruf** und Notfälle bleiben verfügbar.
+- `20261019020000_retire_bus_boarding.sql` schließt vorhandene offene Runden und entzieht Clients das Startrecht. Die Migration ist lokal angewandt und muss vor Auslieferung remote angewandt werden, damit keine alten Runden Busänderungen sperren oder weiter Push auslösen. Historische Daten bleiben erhalten.
+- Der vorhandene Minutenscheduler bleibt für geplante Weckrufe aktiv; alte lokale Boarding-Erinnerungen werden beim App-Start entfernt. Die Änderung benötigt keinen neuen Development Build.
 
 ### Tagesprogramm
 
@@ -82,9 +79,9 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Angemeldete Nutzer sehen das heutige Programm kompakt im grünen Home-Bereich. Ein Tipp öffnet das geschützte Wochenprogramm mit heute und den nächsten sechs Tagen, getrennten Tageskarten und gegliederten Ablaufpunkten. Der letzte erfolgreiche, benutzergebundene Stand wird lokal gespeichert und beim nächsten Start sofort angezeigt, während Realtime, App-Fokus und ein gestaffelter Fallback-Refresh ihn im Hintergrund aktualisieren.
 - RLS gibt das reiseweite Programm allen angemeldeten Konten frei, auch wenn keine aktive Fahrt besteht oder das Konto keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
 
-### Reiseziele & Navigation
+### Reiseziele auf Karte markieren
 
-- Unter **Reiseziele & Navigation** legen Admins unabhängig von Fahrten mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
+- Unter **Reiseziele auf Karte markieren** legen Admins unabhängig von Fahrten mehrere benannte Ziele an, setzen deren Standort per Karte, verschiebbarem Marker oder aktuellem Gerätestandort und bearbeiten oder entfernen sie später.
 - Alle aktiven Reiseziele erscheinen angemeldeten Nutzern als rote Marker auf der nativen und der Webkarte und sind einzeln über externe Navigation erreichbar. Verknüpfte Katalogorte bleiben separat sichtbar.
 - Ein validierter, benutzergebundener AsyncStorage-Cache hält den letzten erfolgreichen Reisezielstand über App-Neustarts hinweg sichtbar, falls der erste Serverabruf fehlschlägt; ein erfolgreicher Supabase-Abruf bleibt maßgeblich und entfernt überholte Ziele.
 - Historische Programmpunktdaten und ihre RPCs bleiben zur Kompatibilität mit älteren Clients erhalten. Der aktuelle Client liest sie nicht und sendet keine vorgemerkten Treffpunktmeldungen mehr.
@@ -197,7 +194,7 @@ Die Kernarchitektur und die automatisierten lokalen Prüfungen sind stabil, die 
 - aktualisierten Client verteilen und Tagesprogramm-Realtime/Zeitzone auf kleinen Zielgeräten prüfen
 - Registrierung, Kofferänderung und Familienverwaltung mit mehreren Testkonten auf dem aktuellen Client prüfen; die zugehörigen Migrationen sind bereits remote vorhanden
 - Wegen der angepassten iOS-Berechtigungsbeschreibung einen neuen nativen Build erstellen und Reisegruppen einschließlich Adminmitgliedschaft, Anfrage, Ablehnung, einmaliger Standortfreigabe sowie 15-Minuten-Ablauf auf echten iOS-/Android-Geräten prüfen
-- aktuelle iOS-/Android-Preview-Builds aus Commit `aabf955` oder neuer erstellen und installieren, Push in der App aktivieren und Generalalarm sowie beide Notfallwege auf echten Geräten unter Vordergrund, Hintergrund, Gerätesperre und schwachem Netz prüfen
+- aktuelle iOS-/Android-Preview-Builds aus Commit `aabf955` oder neuer erstellen und installieren, Push in der App aktivieren und Weckrufe sowie beide Notfallwege auf echten Geräten unter Vordergrund, Hintergrund, Gerätesperre und schwachem Netz prüfen
 - die vollständige CI auf dem finalen Commit erfolgreich ausführen
 - SDK-kompatible Fixes für die verbleibenden High-/Moderate-Auditmeldungen übernehmen, sobald Expo/Metro sie bereitstellt
 

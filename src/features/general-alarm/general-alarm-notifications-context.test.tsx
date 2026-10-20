@@ -15,7 +15,6 @@ import {
 const mockRouter = { push: jest.fn() };
 let mockRootState: { key: string } | undefined;
 const mockAuthState = { isAdmin: false, isLoading: false, session: { user: { id: 'user-1' } } };
-const mockBusState = { activeBoarding: null, participants: [] };
 const mockI18n = { language: 'de', t: (key: string) => key };
 
 jest.mock('expo-router', () => ({
@@ -23,7 +22,6 @@ jest.mock('expo-router', () => ({
   useRootNavigationState: () => mockRootState,
 }));
 jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => mockAuthState }));
-jest.mock('@/features/bus-management/bus-management-context', () => ({ useBusManagement: () => mockBusState }));
 jest.mock('@/features/i18n/i18n', () => ({ useI18n: () => mockI18n }));
 jest.mock('@/features/general-alarm/useNotificationPreference', () => ({
   useNotificationsDisabled: () => {

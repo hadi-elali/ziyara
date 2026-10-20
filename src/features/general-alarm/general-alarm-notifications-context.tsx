@@ -10,7 +10,6 @@ import {
 } from 'react';
 
 import { useAuth } from '@/features/auth/auth-context';
-import { useBusManagement } from '@/features/bus-management/bus-management-context';
 import {
   cancelGeneralAlarmReminders,
   inspectGeneralAlarmNotificationState,
@@ -20,11 +19,9 @@ import {
   subscribeToEmergencyNotificationResponses,
   subscribeToGeneralAlarmNotificationResponses,
   subscribeToWakeUpCallNotificationResponses,
-  syncGeneralAlarmReminders,
   unregisterGeneralAlarmNotifications,
 } from '@/features/general-alarm/general-alarm-notifications';
 import type { GeneralAlarmNotificationState } from '@/features/general-alarm/general-alarm-notifications.types';
-import { buildGeneralAlarmReminderPlans } from '@/features/general-alarm/general-alarm-reminders';
 import { useNotificationsDisabled } from '@/features/general-alarm/useNotificationPreference';
 import { useI18n } from '@/features/i18n/i18n';
 import type { ProtectedRoutePath } from '@/features/navigation/routes';
@@ -54,9 +51,8 @@ const GeneralAlarmNotificationsContext =
 export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildren) {
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
-  const { isAdmin, isLoading: isAuthLoading, session } = useAuth();
-  const { activeBoarding, participants } = useBusManagement();
-  const { language, t } = useI18n();
+  const { isLoading: isAuthLoading, session } = useAuth();
+  const { language } = useI18n();
   const [notificationsDisabled, setNotificationsDisabled, preferenceLoaded] =
     useNotificationsDisabled();
   const [notificationState, setNotificationState] = useState(initialState);
@@ -124,47 +120,9 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
   }, [language, notificationsDisabled, preferenceLoaded, session?.user.id]);
 
   useEffect(() => {
-    if (
-      !session?.user.id ||
-      isAdmin ||
-      notificationsDisabled ||
-      !notificationState.permissionGranted ||
-      !activeBoarding
-    ) {
-      void cancelGeneralAlarmReminders();
-      return;
-    }
-
-    const plans = buildGeneralAlarmReminderPlans(activeBoarding, participants);
-    const reminders = plans.flatMap((plan) =>
-      plan.fireDates.map((fireDate) => ({
-        boardingId: plan.boardingId,
-        body: t(`generalAlarm.notification.reminder.${plan.nextStatus}`, {
-          name: plan.participantName,
-        }),
-        fireDate,
-        nextStatus: plan.nextStatus,
-        participantId: plan.participantId,
-        title: t('generalAlarm.notification.title'),
-      })),
-    );
-
-    void syncGeneralAlarmReminders(reminders).catch((error) => {
-      setNotificationState((current) => ({
-        availability: 'error',
-        errorMessage: getOriginalErrorMessage(error),
-        permissionGranted: current.permissionGranted,
-      }));
-    });
-  }, [
-    activeBoarding,
-    isAdmin,
-    notificationState.permissionGranted,
-    notificationsDisabled,
-    participants,
-    session?.user.id,
-    t,
-  ]);
+    // Remove reminders scheduled by earlier app versions after boarding removal.
+    void cancelGeneralAlarmReminders();
+  }, [session?.user.id]);
 
   const enable = useCallback(async () => {
     if (isWorking) return;

@@ -164,7 +164,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await member.context.close();
   });
 
-  test('Busmanagement von Zuordnung bis Boarding-Bestätigung', async ({ browser }) => {
+  test('Buszuordnung für die aktuelle Fahrt', async ({ browser }) => {
     const admin = await openAuthenticatedPage(browser, adminEmail, adminPassword);
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
@@ -179,33 +179,18 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await admin.page.getByText(adminName, { exact: true }).last().click();
     await admin.page.getByRole('button', { name: 'Bus mit Führer anlegen' }).click();
     await expect(admin.page.getByText(`Busführer: ${adminName}`, { exact: true })).toBeVisible();
+    await admin.page.getByRole('radio', { name: 'Einzelne Person', exact: true }).click();
     await admin.page.getByLabel('Person suchen', { exact: true }).fill(memberName);
     await admin.page.getByText(memberName, { exact: true }).last().click();
     await admin.page.getByRole('radio', { name: 'Bus 1' }).click();
     await admin.page.getByRole('button', { name: 'Zuordnung speichern' }).click();
     await expect(admin.page.getByText(memberName, { exact: true }).last()).toBeVisible();
 
-    await admin.page.getByLabel('Abfahrtsmeldung', { exact: true }).fill('Abfahrt vom E2E Hotel');
-    await admin.page
-      .getByRole('button', { name: 'Boarding starten', exact: true })
-      .click();
-    await expect(admin.page.getByText('Abfahrt vom E2E Hotel')).toBeVisible();
-
-    await member.page.getByRole('button', { name: 'Busstatus öffnen' }).click();
-    await expect(member.page.getByText('Abfahrt vom E2E Hotel')).toBeVisible();
+    await member.page.goto('/bus');
+    await expect(member.page.getByText('E2E Ziyara Reise')).toBeVisible();
     await expect(member.page.getByText(memberName, { exact: true })).toBeVisible();
-    await member.page.getByRole('button', { name: 'Gelesen' }).click();
-    await member.page.getByRole('button', { name: 'Unterwegs' }).click();
-    await member.page.getByRole('button', { name: 'Im Bus' }).click();
-    await expect(member.page.getByText('Dein Busstatus wurde gespeichert.')).toBeVisible();
-    await expect(admin.page.getByText('Im Bus').first()).toBeVisible();
+    await expect(member.page.getByText('Bus 1', { exact: true })).toBeVisible();
 
-    await admin.page
-      .getByRole('button', { name: 'Boarding beenden', exact: true })
-      .click();
-    await expect(
-      admin.page.getByRole('button', { name: 'Boarding starten', exact: true }),
-    ).toBeVisible();
     await admin.context.close();
     await member.context.close();
   });
@@ -254,7 +239,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
     await admin.page.goto('/admin');
-    await admin.page.getByRole('button', { name: /Reiseziele & Navigation/u }).click();
+    await admin.page.getByRole('button', { name: /Reiseziele auf Karte markieren/u }).click();
     await admin.page.getByLabel('Name des Reiseziels').fill('E2E Tor 3');
     await admin.page.getByLabel('Breitengrad des Treffpunkts').fill('32.617');
     await admin.page.getByLabel('Längengrad des Treffpunkts').fill('44.033');
