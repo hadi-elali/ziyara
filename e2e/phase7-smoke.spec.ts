@@ -45,7 +45,10 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
 
   test('Registrierung und Login', async ({ page }) => {
     await page.goto('/register');
-    await page.getByPlaceholder('Dein Name').fill(memberName);
+    const [firstName, ...surname] = memberName.split(' ');
+    await page.getByLabel('Vorname', { exact: true }).fill(firstName);
+    await page.getByLabel('Nachname', { exact: true }).fill(surname.join(' '));
+    await page.getByLabel('Alter (Jahre)', { exact: true }).fill('32');
     await page.getByRole('radio', { name: 'Bruder' }).click();
     await page.getByRole('radio', { name: /Nur ich/u }).click();
     await page.getByPlaceholder('name@beispiel.de').fill(memberEmail);
@@ -201,7 +204,10 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
 
     await admin.page.goto('/admin');
     await admin.page.getByRole('button', { name: /Tagesprogramm/u }).click();
-    await admin.page.getByRole('radio', { name: '2 Tage' }).click();
+    await admin.page.getByLabel('Erster Tag (JJJJ-MM-TT)').fill(
+      new Date().toLocaleDateString('sv-SE'),
+    );
+    await admin.page.getByRole('button', { name: 'Weiteren Tag hinzufügen' }).click();
 
     const titles = admin.page.getByLabel('Überschrift (optional)');
     const programs = admin.page.getByLabel('Programm');
@@ -217,7 +223,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await expect(member.page.getByText('Tagesprogramm', { exact: true })).toBeVisible();
     await expect(member.page.getByText('Heute', { exact: true })).toBeVisible();
     await expect(member.page.getByText('E2E Heute', { exact: true })).toBeVisible();
-    await member.page.getByRole('button', { name: 'Wochenprogramm öffnen' }).click();
+    await member.page.getByRole('button', { name: 'Tagesprogramm öffnen' }).click();
     await expect(member.page.getByText('E2E Morgen', { exact: true })).toBeVisible();
 
     await member.page.route('**/rest/v1/daily_programs*', (route) =>

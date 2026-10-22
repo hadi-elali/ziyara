@@ -45,10 +45,10 @@ describe('Weckruf-Push-Diagnose', () => {
     });
     expect(deps.sendNotifications).toHaveBeenCalledWith([
       expect.objectContaining({
-        channelId: 'general-alarm',
+        channelId: 'wake-up-calls-v1',
         data: { kind: 'wake_up_call', callId: claim.call_id, route: '/alarm' },
         priority: 'high',
-        sound: 'default',
+        sound: 'weckruf.wav',
         title: 'Weckruf',
       }),
     ]);

@@ -732,28 +732,39 @@ export type Database = {
       };
       profiles: {
         Insert: {
+          age?: number | string | null;
           created_at?: string;
-          display_name: string;
+          display_name?: string;
           family_id?: number | null;
           id?: never;
           luggage_count?: number;
           member_type?: MemberType | null;
+          name?: string;
           party_size?: number;
           role?: AppRole;
           sim_card_count?: number;
+          surname?: string | null;
           updated_at?: string;
           user_id: string;
         };
         Relationships: [];
-        Row: UserProfile;
+        Row: UserProfile & {
+          // Remote stores age as text; fresh local schemas use smallint.
+          age: number | string | null;
+          name: string;
+          surname: string | null;
+        };
         Update: {
+          age?: number | string | null;
           display_name?: string;
           family_id?: number | null;
           luggage_count?: number;
           member_type?: MemberType | null;
+          name?: string;
           party_size?: number;
           role?: AppRole;
           sim_card_count?: number;
+          surname?: string | null;
           updated_at?: string;
         };
       };

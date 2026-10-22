@@ -181,6 +181,26 @@ function PlaceImageCarousel({ images }: PlaceImageCarouselProps) {
                   {t("common.sourcePrefix", { source: image.source.title })}
                 </ThemedText>
               </Pressable>
+              {image.source.author ? (
+                <ThemedText type="small">© {image.source.author}</ThemedText>
+              ) : null}
+              {image.source.license ? (
+                <Pressable
+                  accessibilityRole="link"
+                  hitSlop={8}
+                  onPress={() => {
+                    const licenseUrl = image.source.license?.url;
+                    if (licenseUrl) {
+                      void Linking.openURL(licenseUrl).catch(() => undefined);
+                    }
+                  }}
+                  style={styles.sourceLink}
+                >
+                  <ThemedText type="smallBold" themeColor="accent">
+                    {image.source.license.name}
+                  </ThemedText>
+                </Pressable>
+              ) : null}
             </View>
           </View>
         ))}

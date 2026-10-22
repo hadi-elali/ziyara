@@ -1,5 +1,7 @@
 import type { Place, PlaceImage } from '@/domain/types';
 
+import { additionalPlaceImages } from '@/data/placeImages';
+
 const openingReview = 'Lokale Prüfung vor Veröffentlichung erforderlich.';
 const accessibilityReview = 'Barrierefreiheit muss vor Ort geprüft werden.';
 const commonTips = [
@@ -256,7 +258,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['tall-al-zaynabiyya'],
     sourceReferences: ['karbala-center-tall-zaynabiyya', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },
@@ -279,7 +281,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['kaff-al-abbas'],
     sourceReferences: ['karbala-center-kaff-al-abbas', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },
@@ -302,7 +304,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['maqam-ali-al-akbar'],
     sourceReferences: ['imam-hussain-maqam-ali-al-akbar', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },
@@ -332,7 +334,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['maqam-abdullah-al-radi'],
     sourceReferences: ['karbala-guide-abdullah-al-radi', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },
@@ -355,7 +357,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['maqam-imam-al-mahdi-karbala'],
     sourceReferences: ['islamicpedia-maqam-imam-mahdi', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },
@@ -477,7 +479,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['house-imam-ali'],
     sourceReferences: ['imam-hussain-house-imam-ali', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },
@@ -523,7 +525,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['kumayl-ibn-ziyad'],
     sourceReferences: ['iraq-tourism-kumayl', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },
@@ -569,7 +571,7 @@ export const allPlaces: Place[] = [
     visitingTips: commonTips,
     openingInfo: openingReview,
     accessibilityNotes: accessibilityReview,
-    images: [],
+    images: additionalPlaceImages['sayyid-muhammad'],
     sourceReferences: ['imam-hussain-sayyid-muhammad', 'editorial-review-required'],
     verificationStatus: 'needs_review',
   },

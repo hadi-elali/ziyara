@@ -37,7 +37,7 @@ export function addDaysToISODate(value: string, days: number) {
 }
 
 export function dailyProgramDateRange(startDate: string, count: number) {
-  if (!Number.isInteger(count) || count < 1 || count > 14) return [];
+  if (!Number.isSafeInteger(count) || count < 1) return [];
 
   const dates: string[] = [];
   for (let offset = 0; offset < count; offset += 1) {
@@ -51,12 +51,15 @@ export function dailyProgramDateRange(startDate: string, count: number) {
 export function visibleDailyPrograms(
   programs: DailyProgram[],
   today = localISODate(),
-  limit = 14,
 ) {
   return programs
     .filter((program) => program.program_date >= today)
-    .sort((left, right) => left.program_date.localeCompare(right.program_date))
-    .slice(0, limit);
+    .sort((left, right) => left.program_date.localeCompare(right.program_date));
+}
+
+export function nextDailyProgramDate(programs: DailyProgram[], today = localISODate()) {
+  const lastProgram = visibleDailyPrograms(programs, today).at(-1);
+  return lastProgram ? (addDaysToISODate(lastProgram.program_date, 1) ?? today) : today;
 }
 
 export function splitProgramDetails(details: string) {

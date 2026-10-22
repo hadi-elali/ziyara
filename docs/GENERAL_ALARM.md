@@ -8,6 +8,20 @@ Am 9. Oktober 2026 wurden beide Migrationen `20261008000000_independent_groups_a
 
 Seit dem 19. Oktober 2026 ist Boarding aus dem aktuellen Client entfernt: keine Statusfolge, Eröffnung, Eskalation oder lokale Erinnerungsplanung. `20261019020000_retire_bus_boarding.sql` ist lokal angewandt und schließt bei Remote-Anwendung offene Runden sowie das Startrecht älterer Clients. Historische Tabellen und Antwort-/Dispatcher-RPCs bleiben erhalten; ohne offene Runden entstehen keine Boarding-Pushaufträge. Der bestehende Minutenscheduler muss für geplante Weckrufe aktiv bleiben. Die App entfernt beim Start bereits geplante lokale Boarding-Erinnerungen. Die folgenden Angaben dokumentieren die bisherige Einrichtung und den weiterhin verwendeten Pushbetrieb.
 
+## Eigener Weckruf-Ton vom 22. Oktober 2026
+
+Sofortige und geplante Weckrufe verwenden die vom Projektinhaber bereitgestellte Aufnahme `assets/sounds/weckruf.mp3`. Für die native Benachrichtigung ist die vollständige, etwa 11,05 Sekunden lange Aufnahme als `assets/sounds/weckruf.wav` (Linear PCM, 16 Bit, 44,1 kHz, Stereo) konvertiert und im `expo-notifications`-Plugin unter `sounds` eingetragen. iOS erfordert ein unterstütztes Benachrichtigungsformat und weniger als 30 Sekunden; eine MP3-Datei genügt dort nicht. Siehe [Apple: Custom Alert Sounds](https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/SupportingNotificationsinYourApp.html) und [Expo SDK 57: Custom Notification Sounds](https://docs.expo.dev/versions/v57.0.0/sdk/notifications/#set-custom-notification-sounds).
+
+Der gemeinsame Weckruf-Dispatcher sendet `sound: 'weckruf.wav'` und `channelId: 'wake-up-calls-v1'`. Die App richtet diesen Android-Kanal vor Berechtigungs- und Tokenabfragen mit demselben Ton ein. Eine neue ID ist erforderlich, weil Android den Ton eines bereits erstellten Kanals nicht mehr durch App-Code ändern lässt. Der bisherige Kanal `general-alarm` bleibt für ältere Dispatcher und historische Erinnerungen mit Standardton verfügbar; er heißt nun „Erinnerungen der Reiseleitung“. Notfälle behalten ihren eigenen Kanal und Standardton. Benachrichtigungsberechtigungen, Lautlos-/Fokusmodus und die Nutzereinstellungen gelten weiterhin.
+
+Konvertierung bei einem späteren Austausch der Quelldatei (Ausgabedatei vorher bewusst ersetzen):
+
+```bash
+ffmpeg -nostdin -n -i assets/sounds/weckruf.mp3 -map_metadata -1 -c:a pcm_s16le assets/sounds/weckruf.wav
+```
+
+Bereitstellung dieser Tonänderung steht aus: **Neue native iOS-/Android-Builds erstellen, installieren und einmal mit aktivierten Mitteilungen öffnen, danach beide Functions `dispatch-wake-up-call` und `dispatch-general-alarm` bereitstellen.** Beide bündeln denselben Weckruf-Dispatcher, daher betrifft die Änderung auch geplante Weckrufe. Alte Builds enthalten weder den Ton noch den neuen Android-Kanal; für sie ist der neue Ton nicht verfügbar und Android kann die Nachricht bei fehlendem Kanal verwerfen. Deshalb den Serverwechsel mit der Client-Auslieferung abstimmen. Ein OTA-/JavaScript-Update reicht für das native Ton-Asset nicht aus. Keine zusätzliche Datenbankmigration, Abhängigkeit oder Scheduleränderung nötig. Kein Remote-Deployment oder Test-Push in diesem Auftrag ausgeführt; reale Wiedergabe auf iOS/Android bleibt zu prüfen.
+
 ## Produktionsaktivierung
 
 Code allein aktiviert keinen produktiven Push-Kanal. Vor Nutzung mit der Reisegruppe sind diese Schritte erforderlich:

@@ -40,7 +40,8 @@
         "expo-notifications",
         {
           "icon": "./assets/images/logo.png",
-          "color": "#798F7A"
+          "color": "#798F7A",
+          "sounds": ["./assets/sounds/weckruf.wav"]
         }
       ],
       [

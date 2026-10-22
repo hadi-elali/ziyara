@@ -74,10 +74,10 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 ### Tagesprogramm
 
 - Das **Tagesprogramm** ist von Gruppen und Fahrten unabhängig und gilt für die gesamte Ziyara. Es kann auch ohne aktive Fahrt geplant und gelesen werden.
-- Admins wählen im eigenen Punkt **Tagesprogramm** einen Starttag und planen wahlweise einen, zwei, drei, fünf oder sieben aufeinanderfolgende Tage in einem Formular.
+- Admins ergänzen im eigenen Punkt **Tagesprogramm** über **Weiteren Tag hinzufügen** beliebig viele aufeinanderfolgende Tage. Neue Planungen beginnen nach dem letzten veröffentlichten Tag; das Startdatum bleibt frei wählbar. Beim Ergänzen bleiben vorhandene Eingaben erhalten.
 - Jeder Tag erhält eine optionale Überschrift und einen freien organisatorischen Ablauf. Alle ausgewählten Tage werden atomar gespeichert; ein bereits veröffentlichter Tag kann später geändert werden.
-- Angemeldete Nutzer sehen das heutige Programm kompakt im grünen Home-Bereich. Ein Tipp öffnet das geschützte Wochenprogramm mit heute und den nächsten sechs Tagen, getrennten Tageskarten und gegliederten Ablaufpunkten. Der letzte erfolgreiche, benutzergebundene Stand wird lokal gespeichert und beim nächsten Start sofort angezeigt, während Realtime, App-Fokus und ein gestaffelter Fallback-Refresh ihn im Hintergrund aktualisieren.
-- RLS gibt das reiseweite Programm allen angemeldeten Konten frei, auch wenn keine aktive Fahrt besteht oder das Konto keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich.
+- Angemeldete Nutzer sehen das heutige Programm kompakt im grünen Home-Bereich. Ein Tipp öffnet das geschützte Tagesprogramm mit heute und allen veröffentlichten kommenden Tagen, getrennten Tageskarten und gegliederten Ablaufpunkten. Der letzte erfolgreiche, benutzergebundene Stand wird lokal gespeichert und beim nächsten Start sofort angezeigt, während Realtime, App-Fokus und ein gestaffelter Fallback-Refresh ihn im Hintergrund aktualisieren.
+- RLS gibt das reiseweite Programm allen angemeldeten Konten frei, auch wenn keine aktive Fahrt besteht oder das Konto keinem Bus zugeordnet ist. Veröffentlichen ist ausschließlich über die serverseitig geprüfte Admin-RPC möglich. Die additive Migration `20261022020000_allow_extensible_daily_program.sql` hebt die bisherige Batchgrenze von 14 Tagen auf und muss vor Auslieferung remote angewandt werden.
 
 ### Reiseziele auf Karte markieren
 

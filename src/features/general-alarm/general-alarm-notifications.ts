@@ -49,12 +49,24 @@ function getProjectId() {
 async function ensureAndroidChannels() {
   if (Platform.OS !== 'android' || !Notifications) return;
 
+  // Channel sounds are immutable on Android. Use a new ID for the bundled wake-up tone.
+  // Keep this ID and filename aligned with _shared/wake-up-dispatch/handler.ts.
+  await Notifications.setNotificationChannelAsync('wake-up-calls-v1', {
+    description: 'Weckrufe der Reiseleitung',
+    enableVibrate: true,
+    importance: Notifications.AndroidImportance.HIGH,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    name: 'Weckrufe',
+    showBadge: true,
+    sound: 'weckruf.wav',
+    vibrationPattern: [0, 300, 180, 300],
+  });
   await Notifications.setNotificationChannelAsync(channelId, {
     description: 'Weckrufe und Erinnerungen der Reiseleitung',
     enableVibrate: true,
     importance: Notifications.AndroidImportance.HIGH,
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-    name: 'Weckrufe',
+    name: 'Erinnerungen der Reiseleitung',
     showBadge: true,
     sound: 'default',
     vibrationPattern: [0, 300, 180, 300],

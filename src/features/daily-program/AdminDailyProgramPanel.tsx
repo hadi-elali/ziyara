@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -9,16 +9,16 @@ import type { DailyProgramInput } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useDailyProgram } from '@/features/daily-program/daily-program-context';
 import {
+  addDaysToISODate,
   dailyProgramDateRange,
   localISODate,
+  nextDailyProgramDate,
   parseLocalISODate,
   visibleDailyPrograms,
 } from '@/features/daily-program/daily-program-state';
 import { useI18n } from '@/features/i18n/i18n';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
-
-const dayCountOptions = [1, 2, 3, 5, 7] as const;
 
 function draftsForRange(
   startDate: string,
@@ -39,22 +39,23 @@ export function AdminDailyProgramPanel() {
   const theme = useTheme();
   const { language, t } = useI18n();
   const { hasSyncError, isLoading, programs, refresh, syncErrorMessage } = useDailyProgram();
-  const [startDate, setStartDate] = useState(localISODate);
+  const [selectedStartDate, setStartDate] = useState<string | null>(null);
+  const startDate = selectedStartDate ?? nextDailyProgramDate(programs);
   const [dayCount, setDayCount] = useState<number>(1);
   const [drafts, setDrafts] = useState<DailyProgramInput[]>([]);
-  const [isDirty, setIsDirty] = useState(false);
+  const [hasLocalDrafts, setHasLocalDrafts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'saved'>('idle');
   const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isDirty) return;
+    if (hasLocalDrafts) return;
     const syncTimeout = setTimeout(
       () => setDrafts(draftsForRange(startDate, dayCount, programs)),
       0,
     );
     return () => clearTimeout(syncTimeout);
-  }, [dayCount, isDirty, programs, startDate]);
+  }, [dayCount, hasLocalDrafts, programs, startDate]);
 
   const upcomingPrograms = useMemo(
     () => visibleDailyPrograms(programs, localISODate()),
@@ -65,7 +66,8 @@ export function AdminDailyProgramPanel() {
     startDateValid &&
     drafts.length === dayCount &&
     drafts.every(
-      (draft) =>
+      (draft, index) =>
+        draft.program_date === addDaysToISODate(startDate, index) &&
         draft.details.trim().length >= 2 &&
         draft.details.trim().length <= 4000 &&
         (draft.title.trim().length === 0 ||
@@ -75,7 +77,7 @@ export function AdminDailyProgramPanel() {
   const changeRange = (nextStartDate: string, nextDayCount: number) => {
     setStartDate(nextStartDate);
     setDayCount(nextDayCount);
-    setIsDirty(false);
+    setHasLocalDrafts(false);
     setSaveState('idle');
     setSaveErrorMessage(null);
   };
@@ -85,18 +87,45 @@ export function AdminDailyProgramPanel() {
     key: 'details' | 'title',
     value: string,
   ) => {
+    setStartDate(startDate);
     setDrafts((current) =>
       current.map((draft) =>
         draft.program_date === programDate ? { ...draft, [key]: value } : draft,
       ),
     );
-    setIsDirty(true);
+    setHasLocalDrafts(true);
+    setSaveState('idle');
+    setSaveErrorMessage(null);
+  };
+
+  const addDay = () => {
+    if (!startDateValid || isSaving) return;
+    setStartDate(startDate);
+    const extendedDrafts = draftsForRange(startDate, dayCount + 1, programs);
+    setDrafts((current) =>
+      extendedDrafts.map((draft) =>
+        current.find((existing) => existing.program_date === draft.program_date) ?? draft,
+      ),
+    );
+    setDayCount(extendedDrafts.length);
+    setHasLocalDrafts(true);
+    setSaveState('idle');
+    setSaveErrorMessage(null);
+  };
+
+  const removeLastDay = () => {
+    if (dayCount <= 1 || isSaving) return;
+    setDrafts((current) => current.slice(0, -1));
+    setDayCount((current) => current - 1);
+    setHasLocalDrafts(true);
     setSaveState('idle');
     setSaveErrorMessage(null);
   };
 
   const savePrograms = async () => {
     if (!formValid || isSaving) return;
+    setStartDate(startDate);
+    setHasLocalDrafts(true);
     setIsSaving(true);
     setSaveState('idle');
     setSaveErrorMessage(null);
@@ -114,7 +143,6 @@ export function AdminDailyProgramPanel() {
         setSaveErrorMessage(error.message);
       } else {
         await refresh();
-        setIsDirty(false);
         setSaveState('saved');
       }
     } catch (error) {
@@ -161,6 +189,7 @@ export function AdminDailyProgramPanel() {
             accessibilityLabel={t('dailyProgram.admin.startDate')}
             autoCapitalize="none"
             autoCorrect={false}
+            editable={!isSaving}
             onChangeText={(value) => changeRange(value, dayCount)}
             placeholder="2026-08-28"
             placeholderTextColor={theme.textSecondary}
@@ -183,23 +212,6 @@ export function AdminDailyProgramPanel() {
           ) : null}
         </View>
 
-        <View style={styles.field}>
-          <ThemedText type="smallBold">{t('dailyProgram.admin.numberOfDays')}</ThemedText>
-          <View accessibilityRole="radiogroup" style={styles.chips}>
-            {dayCountOptions.map((count) => (
-              <DayCountChip
-                key={count}
-                label={t(
-                  count === 1 ? 'dailyProgram.admin.day' : 'dailyProgram.admin.days',
-                  { count },
-                )}
-                onPress={() => changeRange(startDate, count)}
-                selected={dayCount === count}
-              />
-            ))}
-          </View>
-        </View>
-
         {drafts.map((draft, index) => (
           <View
             key={draft.program_date}
@@ -213,12 +225,14 @@ export function AdminDailyProgramPanel() {
               </ThemedText>
             </View>
             <LabeledInput
+              editable={!isSaving}
               label={t('dailyProgram.admin.title')}
               onChangeText={(value) => updateDraft(draft.program_date, 'title', value)}
               placeholder={t('dailyProgram.admin.titlePlaceholder')}
               value={draft.title}
             />
             <LabeledInput
+              editable={!isSaving}
               label={t('dailyProgram.admin.details')}
               multiline
               onChangeText={(value) => updateDraft(draft.program_date, 'details', value)}
@@ -227,6 +241,23 @@ export function AdminDailyProgramPanel() {
             />
           </View>
         ))}
+
+        <Button
+          disabled={!startDateValid || isSaving}
+          icon="plus"
+          label={t('dailyProgram.admin.addDay')}
+          onPress={addDay}
+          variant="secondary"
+        />
+        {dayCount > 1 ? (
+          <Button
+            disabled={isSaving}
+            icon="minus"
+            label={t('dailyProgram.admin.removeLastDay')}
+            onPress={removeLastDay}
+            variant="ghost"
+          />
+        ) : null}
 
         <Button
           disabled={!formValid || isSaving}
@@ -272,6 +303,7 @@ export function AdminDailyProgramPanel() {
                 </ThemedText>
               </View>
               <Button
+                disabled={isSaving}
                 icon="confirm"
                 label={t('dailyProgram.admin.edit')}
                 onPress={() => changeRange(program.program_date, 1)}
@@ -296,12 +328,14 @@ function formatProgramDate(value: string, language: string) {
 }
 
 function LabeledInput({
+  editable,
   label,
   multiline = false,
   onChangeText,
   placeholder,
   value,
 }: {
+  editable: boolean;
   label: string;
   multiline?: boolean;
   onChangeText: (value: string) => void;
@@ -315,6 +349,7 @@ function LabeledInput({
       <ThemedText type="smallBold">{label}</ThemedText>
       <TextInput
         accessibilityLabel={label}
+        editable={editable}
         multiline={multiline}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -337,49 +372,7 @@ function LabeledInput({
   );
 }
 
-function DayCountChip({
-  label,
-  onPress,
-  selected,
-}: {
-  label: string;
-  onPress: () => void;
-  selected: boolean;
-}) {
-  const theme = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        {
-          backgroundColor: selected ? theme.accent : theme.backgroundElement,
-          borderColor: selected ? theme.accent : theme.border,
-        },
-        pressed && styles.pressed,
-      ]}>
-      <ThemedText type="smallBold" style={selected ? { color: theme.background } : undefined}>
-        {label}
-      </ThemedText>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  chip: {
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: Spacing.three,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-  },
   container: {
     gap: Spacing.three,
   },
@@ -419,9 +412,6 @@ const styles = StyleSheet.create({
   },
   multilineInput: {
     minHeight: 120,
-  },
-  pressed: {
-    opacity: 0.72,
   },
   publishedCard: {
     alignItems: 'center',

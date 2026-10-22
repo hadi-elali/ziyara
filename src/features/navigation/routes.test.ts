@@ -188,7 +188,7 @@ describe('protected navigation', () => {
     });
   });
 
-  it('führt das Wochenprogramm als geschützte interne Route', () => {
+  it('führt das Tagesprogramm als geschützte interne Route', () => {
     expect(dailyProgramRoute()).toBe('/program');
     expect(protectedRoutePaths).toContain('/program');
     expect(loginRoute(dailyProgramRoute())).toEqual({

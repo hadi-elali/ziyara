@@ -444,6 +444,7 @@ Files to create or modify:
 Acceptance criteria:
 
 - Since 8 October 2026, the standalone `Wake-up call` dashboard section sends immediately or schedules multiple messages without a trip, bus or group dependency. As clarified on 14 October, date/time entry, editing and display use the sender's current device time zone, including the offset for the scheduled date. Scheduling still stores an absolute UTC instant; existing calls retain their activation time. Future calls can be edited or cancelled. The authenticated server scheduler activates due calls and captures recipients at activation. Users acknowledge once; admins see acknowledgement totals and close the call. The former departure alarm remains a separate boarding workflow under `Trips & buses`.
+- Since 22 October 2026, immediate and scheduled wake-up pushes use the supplied `assets/sounds/weckruf.mp3` recording, converted in full to iOS-compatible PCM `weckruf.wav` and bundled through the notifications plugin. Match `sound: 'weckruf.wav'` and the new immutable Android channel `wake-up-calls-v1` in the client and shared dispatcher. Keep emergency sounds unchanged. Install and open new native builds before deploying both wake-up dispatcher Functions; old builds lack the new sound/channel. No schema, dependency or cron change. See `docs/GENERAL_ALARM.md` for conversion and rollout.
 - Participants confirm `read`, `on_way` and `boarded` in sequence for their account-backed assignment; `problem` remains available as an exception path.
 - A missing next stage becomes due after five minutes. Native clients reconcile bounded local reminders, while an idempotent server dispatcher claims at most one Expo push attempt per device, participant, stage and reminder window.
 - Push tokens are never client-readable. Registration is profile-bound, dispatch requires a verified admin or scheduler secret, and privileged claims/completions are limited to `service_role`.
@@ -471,16 +472,17 @@ Files to create or modify:
 - `src/features/i18n/i18n.tsx`
 - `supabase/migrations/20260828130000_add_daily_program.sql`
 - `supabase/migrations/20260922000000_separate_daily_program_from_intermediate_trips.sql`
+- `supabase/migrations/20261022020000_allow_extensible_daily_program.sql`
 - `supabase/tests/database/daily_program.test.sql`
 - `e2e/phase7-smoke.spec.ts`
 
 Acceptance criteria:
 
-- Admins can publish one day or prepare multiple consecutive days in one form, with an optional heading and a separate organizational program for each date.
+- Admins can publish one day or append any number of consecutive days with “Add another day”, preserving existing form entries. New planning starts after the latest published date, with an editable start date. A last added day can be deselected without deleting published data. Each date has an optional heading and a separate organizational program; saving remains atomic. The additive migration `20261022020000_allow_extensible_daily_program.sql` removes the former fourteen-day batch limit without changing authorization or existing rows.
 - The daily program covers the complete pilgrimage and stays independent of the individual trips managed under Trips & buses.
 - One row per calendar date is updated atomically through an authenticated admin RPC; direct client writes remain unavailable.
 - Every signed-in account can read the whole-journey program without an active intermediate trip or bus assignment.
-- Home shows a compact preview of today's program. Opening it shows today and the next six days in separate day sections with structured agenda lines.
+- Home shows a compact preview of today's program. Opening it shows today and all published upcoming days in chronological sections with structured agenda lines, without a seven- or fourteen-day display limit.
 - The last validated per-user program snapshot is available immediately after restart while the server refresh continues in the background; an empty successful response remains authoritative.
 - Realtime, app focus and staggered fallback refreshes retain the last visible data during background read failures.
 - Calendar helpers use local dates and reject invalid ISO dates without shifting a day through UTC conversion.
@@ -490,7 +492,7 @@ Tests/checks:
 
 - Jest context and local-date helper tests plus the public offline-provider test.
 - Local migration, DB lint and pgTAP tests for anonymous denial, authenticated reads, admin-only batch writes and same-date updates.
-- Playwright full-stack smoke for two-day admin publication through the signed-in Home display.
+- Playwright full-stack smoke selectors reflect appending a second day and opening the full program. The full-stack suite was not run for the 22 October extension.
 - TypeScript, lint, Expo Doctor and web export.
 
 ## Phase 15: Trip groups and consent-based leader location
@@ -545,6 +547,8 @@ Files to create or modify:
 
 Acceptance criteria:
 
+- Since 22 October 2026, registration requires separate first and last names, saved as `profiles.name` and `profiles.surname` by the auth signup trigger. Migration `20261022000000_add_registration_first_and_last_names.sql` supports both the legacy `display_name` schema and the supplied `name`/`surname` schema, retaining `display_name` for existing reads and RPCs. Preserve unsplit legacy names and nullable legacy surnames. Apply the migration before client rollout.
+- Registration also requires age in completed years (an integer from 0 to 120). The separate migration `20261022010000_add_registration_age.sql` stores validated auth metadata in nullable `profiles.age`; preserve `null` for existing accounts and older clients without an age. This records age at registration rather than a date of birth. Apply after the name migration.
 - Registration requires a luggage count from `0` to `50`; the value covers every person represented by the account. Existing accounts default to `0`.
 - Registration accepts a required SIM-card count from `0` to `50`; the value covers every person represented by the account. Existing accounts default to `0`.
 - Signed-in users can update only their own luggage count from the account page reached through Settings.

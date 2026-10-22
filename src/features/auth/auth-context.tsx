@@ -72,7 +72,9 @@ type AuthContextValue = {
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<AuthResult>;
   signUp: (
-    displayName: string,
+    firstName: string,
+    surname: string,
+    age: number,
     email: string,
     password: string,
     memberType: MemberType,
@@ -491,7 +493,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signUp = useCallback(
     async (
-      displayName: string,
+      firstName: string,
+      surname: string,
+      age: number,
       email: string,
       password: string,
       memberType: MemberType,
@@ -504,7 +508,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
         password,
         options: {
           data: {
-            display_name: displayName,
+            age,
+            display_name: `${firstName.trim()} ${surname.trim()}`.slice(0, 80),
+            name: firstName.trim(),
+            surname: surname.trim(),
             luggage_count: luggageCount,
             member_type: memberType,
             party_size: partySize,

@@ -62,8 +62,8 @@ export function DailyProgramHome() {
 
   return (
     <Pressable
-      accessibilityHint={t('dailyProgram.openWeekHint')}
-      accessibilityLabel={t('dailyProgram.openWeekAccessibility')}
+      accessibilityHint={t('dailyProgram.openProgramHint')}
+      accessibilityLabel={t('dailyProgram.openProgramAccessibility')}
       accessibilityRole="button"
       onPress={() => router.push(dailyProgramRoute())}
       style={({ pressed }) => [styles.preview, pressed && styles.pressed]}>
@@ -116,7 +116,7 @@ export function DailyProgramHome() {
 
       <View style={styles.openRow}>
         <ThemedText style={styles.openLabel} type="smallBold">
-          {t('dailyProgram.openWeek')}
+          {t('dailyProgram.openProgram')}
         </ThemedText>
         <SymbolIcon color={heroText} name="chevron" size={20} />
       </View>

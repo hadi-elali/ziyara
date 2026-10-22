@@ -26,6 +26,7 @@ import { LuggageCountField } from "@/features/auth/LuggageCountField";
 import { getPartySize, PartySizeField } from "@/features/auth/PartySizeField";
 import { SimCardCountField } from "@/features/auth/SimCardCountField";
 import { useAuth } from "@/features/auth/auth-context";
+import { getAge } from "@/features/auth/age";
 import { getLuggageCount } from "@/features/auth/luggage-count";
 import { getSimCardCount } from "@/features/auth/sim-card-count";
 import { useI18n } from "@/features/i18n/i18n";
@@ -55,7 +56,9 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
   const { t } = useI18n();
   const { signIn, signUp } = useAuth();
   const { completeOnboarding } = useOnboarding();
-  const [displayName, setDisplayName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [surname, setSurname] = useState("");
+  const [age, setAge] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -80,7 +83,9 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
     setFeedback(null);
 
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedName = displayName.trim();
+    const normalizedName = firstName.trim();
+    const normalizedSurname = surname.trim();
+    const normalizedAge = getAge(age);
     const normalizedLuggageCount = getLuggageCount(luggageCount);
     const normalizedSimCardCount = getSimCardCount(simCardCount);
     const normalizedPartySize =
@@ -91,8 +96,18 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
       return;
     }
 
-    if (isRegister && normalizedName.length < 2) {
+    if (isRegister && (normalizedName.length < 2 || normalizedName.length > 80)) {
       showFeedback(t("auth.validation.name"), true);
+      return;
+    }
+
+    if (isRegister && !normalizedSurname) {
+      showFeedback(t("auth.validation.surname"), true);
+      return;
+    }
+
+    if (isRegister && normalizedAge === null) {
+      showFeedback(t("auth.validation.age"), true);
       return;
     }
 
@@ -156,6 +171,8 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
 
         const result = await signUp(
           normalizedName,
+          normalizedSurname,
+          normalizedAge ?? 0,
           normalizedEmail,
           password,
           memberType,
@@ -269,14 +286,15 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                 {isRegister ? (
                   <>
                     <View style={styles.field}>
-                      <ThemedText type="smallBold">{t("auth.name")}</ThemedText>
+                      <ThemedText type="smallBold">{t("auth.firstName")}</ThemedText>
                       <TextInput
+                        accessibilityLabel={t("auth.firstName")}
                         autoCapitalize="words"
-                        autoComplete="name"
+                        autoComplete="given-name"
                         editable={!isSubmitting}
                         maxLength={80}
-                        onChangeText={setDisplayName}
-                        placeholder={t("auth.namePlaceholder")}
+                        onChangeText={setFirstName}
+                        placeholder={t("auth.firstNamePlaceholder")}
                         placeholderTextColor={theme.textSecondary}
                         style={[
                           styles.input,
@@ -286,8 +304,55 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                             color: theme.text,
                           },
                         ]}
-                        textContentType="name"
-                        value={displayName}
+                        textContentType="givenName"
+                        value={firstName}
+                      />
+                    </View>
+
+                    <View style={styles.field}>
+                      <ThemedText type="smallBold">{t("auth.surname")}</ThemedText>
+                      <TextInput
+                        accessibilityLabel={t("auth.surname")}
+                        autoCapitalize="words"
+                        autoComplete="family-name"
+                        editable={!isSubmitting}
+                        onChangeText={setSurname}
+                        placeholder={t("auth.surnamePlaceholder")}
+                        placeholderTextColor={theme.textSecondary}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: theme.background,
+                            borderColor: theme.border,
+                            color: theme.text,
+                          },
+                        ]}
+                        textContentType="familyName"
+                        value={surname}
+                      />
+                    </View>
+
+                    <View style={styles.field}>
+                      <ThemedText type="smallBold">{t("auth.age")}</ThemedText>
+                      <TextInput
+                        accessibilityLabel={t("auth.age")}
+                        autoComplete="off"
+                        editable={!isSubmitting}
+                        inputMode="numeric"
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        onChangeText={setAge}
+                        placeholder={t("auth.agePlaceholder")}
+                        placeholderTextColor={theme.textSecondary}
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: theme.background,
+                            borderColor: theme.border,
+                            color: theme.text,
+                          },
+                        ]}
+                        value={age}
                       />
                     </View>
 

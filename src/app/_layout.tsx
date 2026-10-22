@@ -144,7 +144,7 @@ function RootNavigation() {
             <Stack.Screen name="alarm" options={{ title: t('wakeUp.title') }} />
             <Stack.Screen name="bus" options={{ title: t('bus.navTitle') }} />
             <Stack.Screen name="group" options={{ title: t('tripGroups.navTitle') }} />
-            <Stack.Screen name="program" options={{ title: t('dailyProgram.weekTitle') }} />
+            <Stack.Screen name="program" options={{ title: t('dailyProgram.overviewTitle') }} />
             <Stack.Screen name="sources" options={{ title: t('nav.sources') }} />
             <Stack.Screen
               name="question-round"

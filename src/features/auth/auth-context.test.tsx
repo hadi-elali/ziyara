@@ -791,6 +791,8 @@ describe('AuthProvider profile synchronization', () => {
       await expect(
         getAuthValue().signUp(
           'Testprofil',
+          'Nachname',
+          32,
           'new@example.com',
           'Passwort123',
           'sister',
@@ -804,7 +806,10 @@ describe('AuthProvider profile synchronization', () => {
       email: 'new@example.com',
       options: {
         data: {
-          display_name: 'Testprofil',
+          age: 32,
+          display_name: 'Testprofil Nachname',
+          name: 'Testprofil',
+          surname: 'Nachname',
           luggage_count: 4,
           member_type: 'sister',
           party_size: 3,

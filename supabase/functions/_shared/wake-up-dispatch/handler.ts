@@ -10,9 +10,9 @@ type WakeUpPushNotification = {
   to: string;
   title: string;
   body: string;
-  sound: 'default';
+  sound: 'weckruf.wav';
   priority: 'high';
-  channelId: 'general-alarm';
+  channelId: 'wake-up-calls-v1';
   data: { kind: 'wake_up_call'; callId: number; route: '/alarm' };
 };
 
@@ -74,9 +74,9 @@ export async function dispatchWakeUpNotifications(
           ? 'Wake-up call'
           : 'Weckruf',
         body: claim.message,
-        sound: 'default',
+        sound: 'weckruf.wav',
         priority: 'high',
-        channelId: 'general-alarm',
+        channelId: 'wake-up-calls-v1',
         data: { kind: 'wake_up_call', callId: claim.call_id, route: '/alarm' },
       })));
       expoHttpStatus = response.status;

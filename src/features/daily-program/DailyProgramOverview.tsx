@@ -8,17 +8,17 @@ import { Spacing } from '@/constants/theme';
 import type { DailyProgram } from '@/domain/database';
 import { useDailyProgram } from '@/features/daily-program/daily-program-context';
 import {
-  dailyProgramDateRange,
   localISODate,
   parseLocalISODate,
   splitProgramDetails,
+  visibleDailyPrograms,
 } from '@/features/daily-program/daily-program-state';
 import { useI18n } from '@/features/i18n/i18n';
 import { useTheme } from '@/hooks/use-theme';
 
 const timePrefixPattern = /^(\d{1,2}[:.]\d{2}(?:\s*Uhr)?)\s*(?:[-–—:]\s*)?(.+)$/iu;
 
-export function DailyProgramWeek() {
+export function DailyProgramOverview() {
   const theme = useTheme();
   const { language, t } = useI18n();
   const {
@@ -31,8 +31,14 @@ export function DailyProgramWeek() {
     syncErrorMessage,
   } = useDailyProgram();
   const today = localISODate();
-  const weekDates = dailyProgramDateRange(today, 7);
-  const lastDate = weekDates.at(-1) ?? today;
+  const upcomingPrograms = visibleDailyPrograms(programs, today);
+  const programDates = [
+    today,
+    ...upcomingPrograms
+      .map((program) => program.program_date)
+      .filter((date) => date !== today),
+  ];
+  const lastDate = programDates.at(-1) ?? today;
   const programsByDate = new Map(
     programs.map((program) => [program.program_date, program]),
   );
@@ -44,16 +50,18 @@ export function DailyProgramWeek() {
           <ThemedText type="eyebrow" themeColor="accent">
             {t('dailyProgram.homeTitle')}
           </ThemedText>
-          <ThemedText type="title">{t('dailyProgram.weekTitle')}</ThemedText>
+          <ThemedText type="title">{t('dailyProgram.overviewTitle')}</ThemedText>
           <ThemedText themeColor="textSecondary">
-            {t('dailyProgram.weekIntro')}
+            {t('dailyProgram.overviewIntro')}
           </ThemedText>
-          <ThemedText type="smallBold" themeColor="accent">
-            {t('dailyProgram.weekRange', {
-              end: formatRangeDate(lastDate, language),
-              start: formatRangeDate(today, language),
-            })}
-          </ThemedText>
+          {upcomingPrograms.length > 0 ? (
+            <ThemedText type="smallBold" themeColor="accent">
+              {t('dailyProgram.dateRange', {
+                end: formatRangeDate(lastDate, language),
+                start: formatRangeDate(today, language),
+              })}
+            </ThemedText>
+          ) : null}
         </View>
         {isRefreshing ? <ActivityIndicator color={theme.accent} /> : null}
       </View>
@@ -88,7 +96,7 @@ export function DailyProgramWeek() {
 
           {hasProgramSnapshot || !hasSyncError ? (
             <View style={styles.dayList}>
-              {weekDates.map((date) => (
+              {programDates.map((date) => (
                 <ProgramDay
                   date={date}
                   isToday={date === today}

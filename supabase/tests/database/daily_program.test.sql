@@ -2,7 +2,10 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(15);
+select plan(23);
+
+-- Isolate counts from any existing local program; this transaction is rolled back.
+delete from public.daily_programs;
 
 select has_table(
   'public',
@@ -170,6 +173,67 @@ select is(
   ),
   '11:00 Neue Abfahrt',
   'the edited program is stored for that date'
+);
+
+select lives_ok(
+  $$
+    select public.admin_upsert_daily_programs(
+      (select jsonb_agg(jsonb_build_object(
+        'program_date', current_date + day_offset,
+        'title', 'Weiterer Tag',
+        'details', '09:00 Treffpunkt'
+      )) from generate_series(3, 31) as day_offset)
+    )
+  $$,
+  'an admin can publish more than fourteen days in one atomic batch'
+);
+select is(
+  (select count(*) from public.daily_programs),
+  32::bigint,
+  'the full program extends beyond one week and fourteen days'
+);
+select is(
+  (select details from public.daily_programs where program_date = current_date + 1),
+  '11:00 Neue Abfahrt',
+  'adding more days preserves already published entries'
+);
+select throws_ok(
+  $$ select public.admin_upsert_daily_programs('[]'::jsonb) $$,
+  '22023',
+  'At least one daily program is required.',
+  'an empty program batch is rejected'
+);
+select throws_ok(
+  $$
+    select public.admin_upsert_daily_programs(jsonb_build_array(
+      jsonb_build_object('program_date', current_date + 32, 'details', 'Erster Eintrag'),
+      jsonb_build_object('program_date', current_date + 32, 'details', 'Doppelter Eintrag')
+    ))
+  $$,
+  '22023',
+  'Each program date may occur only once.',
+  'duplicate dates in one batch are rejected'
+);
+select is(
+  (select count(*) from public.daily_programs),
+  32::bigint,
+  'rejected duplicate dates do not add any entries'
+);
+select throws_ok(
+  $$
+    select public.admin_upsert_daily_programs(jsonb_build_array(
+      jsonb_build_object('program_date', current_date + 32, 'details', 'Gültiger Ablauf'),
+      jsonb_build_object('program_date', current_date + 33, 'details', '')
+    ))
+  $$,
+  '23514',
+  null,
+  'a batch with an invalid day is rejected'
+);
+select is(
+  (select count(*) from public.daily_programs),
+  32::bigint,
+  'an invalid day rolls back the entire batch'
 );
 
 select * from finish();

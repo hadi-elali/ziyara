@@ -80,6 +80,11 @@ export type PlaceImage = {
   source: {
     title: string;
     url: string;
+    author?: string;
+    license?: {
+      name: string;
+      url: string;
+    };
   };
 };
 

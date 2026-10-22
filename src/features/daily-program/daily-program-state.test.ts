@@ -5,6 +5,7 @@ import {
   addDaysToISODate,
   dailyProgramDateRange,
   localISODate,
+  nextDailyProgramDate,
   parseLocalISODate,
   splitProgramDetails,
   visibleDailyPrograms,
@@ -43,9 +44,13 @@ describe('daily program date helpers', () => {
     expect(addDaysToISODate('2026-12-31', 1)).toBe('2027-01-01');
   });
 
-  it('begrenzt Sammelbearbeitungen auf vierzehn Tage', () => {
+  it('erlaubt mehr als vierzehn Tage und weist ungültige Anzahlen zurück', () => {
+    expect(dailyProgramDateRange('2026-08-28', 31)).toHaveLength(31);
+    expect(dailyProgramDateRange('2026-08-28', 31).at(-1)).toBe('2026-09-27');
     expect(dailyProgramDateRange('2026-08-28', 0)).toEqual([]);
-    expect(dailyProgramDateRange('2026-08-28', 15)).toEqual([]);
+    expect(dailyProgramDateRange('2026-08-28', 1.5)).toEqual([]);
+    expect(dailyProgramDateRange('2026-08-28', Infinity)).toEqual([]);
+    expect(dailyProgramDateRange('2026-02-29', 1)).toEqual([]);
   });
 
   it('zeigt nur heute und kommende Programme chronologisch an', () => {
@@ -58,9 +63,26 @@ describe('daily program date helpers', () => {
           program(4, '2026-08-29'),
         ],
         '2026-08-28',
-        2,
       ).map((item) => item.id),
-    ).toEqual([2, 4]);
+    ).toEqual([2, 4, 3]);
+  });
+
+  it('zeigt auch Programme nach dem vierzehnten Tag an', () => {
+    const programs = dailyProgramDateRange('2026-08-28', 31).map((date, index) =>
+      program(index + 1, date),
+    );
+    expect(visibleDailyPrograms(programs, '2026-08-28')).toHaveLength(31);
+  });
+
+  it('setzt die Planung nach dem letzten veröffentlichten Tag fort', () => {
+    expect(nextDailyProgramDate([], '2026-12-30')).toBe('2026-12-30');
+    expect(nextDailyProgramDate([program(1, '2026-12-29')], '2026-12-30')).toBe('2026-12-30');
+    expect(
+      nextDailyProgramDate(
+        [program(2, '2026-12-31'), program(1, '2026-12-30')],
+        '2026-12-30',
+      ),
+    ).toBe('2027-01-01');
   });
 
   it('teilt mehrzeilige Programme in sichtbare Ablaufpunkte', () => {
