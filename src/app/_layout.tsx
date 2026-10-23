@@ -20,9 +20,13 @@ import { DailyProgramProvider } from '@/features/daily-program/daily-program-con
 import { AppErrorBoundary } from '@/features/errors/AppErrorBoundary';
 import { GroupCheckProvider, useGroupCheck } from '@/features/group-check/group-check-context';
 import { GeneralAlarmNotificationsProvider } from '@/features/general-alarm/general-alarm-notifications-context';
+import { HomeLockScreen } from '@/features/home-lock/HomeLockScreen';
+import { useHomeLock } from '@/features/home-lock/use-home-lock';
 import { AppI18nProvider, useI18n } from '@/features/i18n/i18n';
 import { isStartupNavigationPending, isStartupRouteReady } from '@/features/navigation/startup-state';
+import { useEmergencyBackNavigation } from '@/features/navigation/use-emergency-back-navigation';
 import { useOnboarding } from '@/features/onboarding/onboarding-state';
+import { useScreenCaptureProtection } from '@/features/privacy/use-screen-capture-protection';
 import { QuestionRoundProvider } from '@/features/question-round/question-round-context';
 import { AppThemeProvider, useThemeMode } from '@/features/theme/theme-mode';
 import { TripGuidanceProvider } from '@/features/trip-guidance/trip-guidance-context';
@@ -32,6 +36,8 @@ import { TripGroupProvider } from '@/features/trip-groups/trip-group-context';
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
+  useScreenCaptureProtection();
+
   return (
     <AppErrorBoundary>
       <AppI18nProvider>
@@ -63,6 +69,7 @@ export default function RootLayout() {
 
 function RootNavigation() {
   const pathname = usePathname();
+  const isHomeLocked = useHomeLock();
   const { loaded: isThemeLoaded, resolvedTheme: scheme } = useThemeMode();
   const colors = Colors[scheme];
   const { loaded: isLanguageLoaded, t } = useI18n();
@@ -104,6 +111,10 @@ function RootNavigation() {
     isAuthLoading,
     isGroupCheckBlocking: isBlocking,
   });
+  const goBackFromEmergency = useEmergencyBackNavigation(
+    pathname,
+    isStartupPending ? '/startup' : canAccessAppRoutes ? '/' : '/check-in',
+  );
 
   useEffect(() => {
     if (!hasHiddenSplash.current && hasNavigationLayout && isLocalStateLoaded && isStartupReady) {
@@ -115,6 +126,19 @@ function RootNavigation() {
   if (!isLanguageLoaded || !isOnboardingLoaded || !isThemeLoaded) {
     return null;
   }
+
+  const emergencyBackOptions = {
+    headerBackVisible: false,
+    headerLeft: () => (
+      <Button
+        icon="back"
+        label={t('common.back')}
+        onPress={goBackFromEmergency}
+        size="compact"
+        variant="ghost"
+      />
+    ),
+  };
 
   return (
     <GestureHandlerRootView onLayout={() => setHasNavigationLayout(true)} style={{ flex: 1 }}>
@@ -182,10 +206,13 @@ function RootNavigation() {
             name="reset-password"
             options={{ title: t('nav.resetPassword') }}
           />
-          <Stack.Screen name="emergency" options={{ title: t('emergency.navTitle') }} />
+          <Stack.Screen
+            name="emergency"
+            options={{ ...emergencyBackOptions, title: t('emergency.navTitle') }}
+          />
           <Stack.Screen
             name="emergency-dashboard"
-            options={{ title: t('emergencyDashboard.navTitle') }}
+            options={{ ...emergencyBackOptions, title: t('emergencyDashboard.navTitle') }}
           />
           <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
         </Stack>
@@ -210,6 +237,7 @@ function RootNavigation() {
           />
         </View>
       ) : null}
+      <HomeLockScreen locked={isHomeLocked && canAccessAppRoutes} pathname={pathname} />
     </GestureHandlerRootView>
   );
 }

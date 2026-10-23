@@ -96,7 +96,7 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
       return;
     }
 
-    if (isRegister && (normalizedName.length < 2 || normalizedName.length > 80)) {
+    if (isRegister && (normalizedName.length < 1 || normalizedName.length > 80)) {
       showFeedback(t("auth.validation.name"), true);
       return;
     }

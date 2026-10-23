@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Spacing } from '@/constants/theme';
 import type { AdminGroupCheckResult } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
@@ -244,18 +245,21 @@ export function AdminGroupCheckPanel() {
               </View>
               <View style={styles.resultsGrid}>
                 <ResultColumn
+                  key={`yes:${checkId}`}
                   color={theme.success}
                   emptyLabel={t('groupCheck.noConfirmed')}
                   group={resultSummary.yes}
                   title={t('groupCheck.resultYes')}
                 />
                 <ResultColumn
+                  key={`no:${checkId}`}
                   color={theme.danger}
                   emptyLabel={t('groupCheck.noDeclined')}
                   group={resultSummary.no}
                   title={t('groupCheck.resultNo')}
                 />
                 <ResultColumn
+                  key={`open:${checkId}`}
                   color={theme.warning}
                   emptyLabel={t('groupCheck.noOpen')}
                   group={resultSummary.open}
@@ -344,35 +348,63 @@ function ResultColumn({
   group: GroupCheckResultGroup;
   title: string;
 }) {
-  const { t } = useI18n();
+  const { isRTL, t } = useI18n();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const accountCountLabel = t('groupCheck.accountCount', { count: group.accountCount });
+  const representedPeopleLabel = t('groupCheck.representedPeopleCount', {
+    count: group.representedPeople,
+  });
 
   return (
     <View style={styles.resultColumn}>
-      <ThemedText type="heading" style={{ color }}>
-        {title}
-      </ThemedText>
-      <View style={styles.resultCounts}>
-        <ThemedText type="tinyBold" themeColor="textSecondary">
-          {t('groupCheck.accountCount', { count: group.accountCount })}
-        </ThemedText>
-        <ThemedText type="tinyBold" themeColor="textSecondary">
-          {t('groupCheck.representedPeopleCount', { count: group.representedPeople })}
-        </ThemedText>
-      </View>
-      {group.results.length > 0 ? (
-        group.results.map((result, index) => (
-          <View key={`${result.display_name}-${index}`} style={styles.name}>
-            <ThemedText>{result.display_name}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('groupCheck.accountPartySize', { count: result.party_size })}
+      <Pressable
+        accessibilityLabel={[
+          t(isExpanded ? 'groupCheck.hideNames' : 'groupCheck.showNames', { status: title }),
+          accountCountLabel,
+          representedPeopleLabel,
+        ].join('. ')}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isExpanded }}
+        onPress={() => setIsExpanded((expanded) => !expanded)}
+        style={({ pressed }) => [
+          styles.resultHeader,
+          isRTL && styles.resultHeaderRTL,
+          pressed && styles.pressed,
+        ]}>
+        <View style={styles.resultHeaderText}>
+          <ThemedText type="heading" style={{ color }}>
+            {title}
+          </ThemedText>
+          <View style={styles.resultCounts}>
+            <ThemedText type="tinyBold" themeColor="textSecondary">
+              {accountCountLabel}
+            </ThemedText>
+            <ThemedText type="tinyBold" themeColor="textSecondary">
+              {representedPeopleLabel}
             </ThemedText>
           </View>
-        ))
-      ) : (
-        <ThemedText type="small" themeColor="textSecondary">
-          {emptyLabel}
-        </ThemedText>
-      )}
+        </View>
+        <View
+          style={{ transform: [{ rotate: isExpanded ? '90deg' : isRTL ? '180deg' : '0deg' }] }}>
+          <SymbolIcon color={color} name="chevron" size={20} />
+        </View>
+      </Pressable>
+      {isExpanded ? (
+        group.results.length > 0 ? (
+          group.results.map((result, index) => (
+            <View key={`${result.display_name}-${index}`} style={styles.name}>
+              <ThemedText>{result.display_name}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('groupCheck.accountPartySize', { count: result.party_size })}
+              </ThemedText>
+            </View>
+          ))
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {emptyLabel}
+          </ThemedText>
+        )
+      ) : null}
     </View>
   );
 }
@@ -414,6 +446,24 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.two,
     minWidth: 180,
+  },
+  resultHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.two,
+    minHeight: 48,
+    paddingVertical: Spacing.one,
+  },
+  resultHeaderRTL: {
+    flexDirection: 'row-reverse',
+  },
+  resultHeaderText: {
+    flex: 1,
+    gap: Spacing.two,
+    minWidth: 0,
+  },
+  pressed: {
+    opacity: 0.72,
   },
   name: {
     borderBottomWidth: StyleSheet.hairlineWidth,

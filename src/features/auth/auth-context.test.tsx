@@ -10,6 +10,8 @@ import {
 } from '@jest/globals';
 import * as Linking from 'expo-linking';
 import {
+  AuthApiError,
+  AuthRetryableFetchError,
   FunctionsHttpError,
   PostgrestError,
   type AuthChangeEvent,
@@ -17,13 +19,13 @@ import {
   type User,
 } from '@supabase/supabase-js';
 import { useEffect } from 'react';
-import { AppState, type AppStateStatus, type NativeEventSubscription } from 'react-native';
+import { AppState, Platform, type AppStateStatus, type NativeEventSubscription } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import type { Mock } from 'jest-mock';
 
 import type { UserProfile } from '@/domain/database';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
-import { supabase } from '@/features/auth/supabase';
+import { readPersistedSession, supabase } from '@/features/auth/supabase';
 
 jest.mock('expo-linking', () => ({
   addEventListener: jest.fn(),
@@ -32,6 +34,7 @@ jest.mock('expo-linking', () => ({
 }));
 
 jest.mock('@/features/auth/supabase', () => ({
+  readPersistedSession: jest.fn(),
   supabase: {
     auth: {
       exchangeCodeForSession: jest.fn(),
@@ -96,6 +99,7 @@ type Deferred<T> = {
 };
 
 const mockSupabase = supabase as unknown as MockSupabase;
+const mockReadPersistedSession = jest.mocked(readPersistedSession);
 const mockLinking = Linking as unknown as {
   addEventListener: MockFunction;
   createURL: MockFunction;
@@ -267,6 +271,7 @@ describe('AuthProvider profile synchronization', () => {
     renderer = null;
 
     jest.clearAllMocks();
+    mockReadPersistedSession.mockResolvedValue(null);
     mockLinking.addEventListener.mockImplementation(() => ({ remove: jest.fn() }));
     mockLinking.createURL.mockImplementation(() => 'ziyara:///reset-password');
     mockLinking.getInitialURL.mockImplementation(() => Promise.resolve(null));
@@ -432,6 +437,115 @@ describe('AuthProvider profile synchronization', () => {
       session: null,
     });
     expect(mockSupabase.from).not.toHaveBeenCalled();
+    expect(mockReadPersistedSession).not.toHaveBeenCalled();
+  });
+
+  it.each(['android', 'ios'] as const)(
+    'erhält auf %s nach einer Pause die Anmeldung bei einem temporären Refreshfehler',
+    async (platform) => {
+      jest.replaceProperty(Platform, 'OS', platform);
+      const storedSession = { ...createSession('user-a'), expires_at: 1 };
+      const profile = createProfile('user-a');
+      mockReadPersistedSession.mockResolvedValue(storedSession);
+      mockSupabase.auth.getSession.mockImplementation(async () => {
+        authStateChangeCallback?.('INITIAL_SESSION', null);
+        return { data: { session: null }, error: new AuthRetryableFetchError('Offline', 0) };
+      });
+      profileResponses.push(
+        Promise.resolve({ data: null, error: createPostgrestError('Netzwerkfehler') }),
+      );
+
+      await renderAuthProvider();
+      await waitForCondition(() => getAuthValue().hasProfileError);
+
+      expect(getAuthValue()).toMatchObject({ session: storedSession, profile: null, isAdmin: false });
+      expect(mockSupabase.auth.signOut).not.toHaveBeenCalled();
+      expect(mockSupabase.auth.setSession).not.toHaveBeenCalled();
+
+      // Once the SDK refresh succeeds, retry the failed profile read automatically.
+      profileResponses.push(Promise.resolve({ data: profile, error: null }));
+      await emitAuthState(
+        { ...createSession('user-a'), access_token: 'renewed-access' },
+        'TOKEN_REFRESHED',
+      );
+      await waitForCondition(() => getAuthValue().profile?.user_id === 'user-a');
+      expect(getAuthValue()).toMatchObject({ hasProfileError: false, isLoading: false, profile });
+    },
+  );
+
+  it('lässt eine verspätete leere INITIAL_SESSION keine neuere Anmeldung überschreiben', async () => {
+    const profile = createProfile('user-a');
+    await renderAuthProvider();
+    await loadInitialProfile(profile);
+    await emitAuthState(null, 'INITIAL_SESSION');
+    expect(getAuthValue()).toMatchObject({ profile, isLoading: false });
+    expect(getAuthValue().session?.user.id).toBe('user-a');
+  });
+
+  it('erneuert Tokens ohne Profil, Adminrechte oder Navigation zwischenzeitlich zu verlieren', async () => {
+    const profile = createProfile('user-a', { role: 'admin' });
+    const refresh = createDeferred<ProfileQueryResponse>();
+    await renderAuthProvider();
+    await loadInitialProfile(profile);
+    profileResponses.push(refresh.promise);
+
+    await emitAuthState(
+      { ...createSession('user-a'), access_token: 'renewed-access' },
+      'TOKEN_REFRESHED',
+    );
+    await waitForCondition(() => getAuthValue().isRefreshing);
+    expect(getAuthValue()).toMatchObject({ isAdmin: true, isLoading: false, profile });
+
+    await act(async () => {
+      refresh.resolve({ data: profile, error: null });
+      await flushAsyncWork();
+    });
+  });
+
+  it('stellt eine vom Server abgelehnte Session nicht aus dem Speicher wieder her', async () => {
+    mockReadPersistedSession.mockResolvedValue(createSession('user-a'));
+    mockSupabase.auth.getSession.mockImplementation(async () => ({
+      data: { session: null },
+      error: new AuthApiError('Refresh Token Not Found', 400, 'refresh_token_not_found'),
+    }));
+
+    await renderAuthProvider();
+    expect(getAuthValue()).toMatchObject({ isLoading: false, session: null, isAdmin: false });
+    expect(mockReadPersistedSession).not.toHaveBeenCalled();
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+  });
+
+  it.each(['SIGNED_OUT', 'SIGNED_IN'] as const)(
+    'verwirft einen verspäteten Speicherstand nach %s',
+    async (event) => {
+      const stored = createDeferred<Session | null>();
+      mockReadPersistedSession.mockReturnValue(stored.promise);
+      mockSupabase.auth.getSession.mockImplementation(async () => ({
+        data: { session: null },
+        error: new AuthRetryableFetchError('Server vorübergehend nicht erreichbar', 503),
+      }));
+      await renderAuthProvider();
+      expect(mockReadPersistedSession).toHaveBeenCalledTimes(1);
+
+      const nextSession = event === 'SIGNED_IN' ? createSession('user-b') : null;
+      if (nextSession) {
+        profileResponses.push(Promise.resolve({ data: createProfile('user-b'), error: null }));
+      }
+      await emitAuthState(nextSession, event);
+      await act(async () => {
+        stored.resolve(createSession('user-a'));
+        await flushAsyncWork();
+      });
+      expect(getAuthValue().session).toEqual(nextSession);
+    },
+  );
+
+  it('behandelt einen abgelehnten Session-Start ohne unbehandeltes Promise', async () => {
+    mockSupabase.auth.getSession.mockImplementation(() =>
+      Promise.reject(new Error('Speicher nicht verfügbar')),
+    );
+    await renderAuthProvider();
+    expect(getAuthValue()).toMatchObject({ isLoading: false, session: null });
   });
 
   it('behält Profil und Navigation während App-Resume erhalten', async () => {
@@ -605,6 +719,7 @@ describe('AuthProvider profile synchronization', () => {
       await getAuthValue().signOut();
     });
 
+    expect(mockSupabase.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
     expect(getAuthValue()).toMatchObject({
       hasProfileError: false,
       isAdmin: false,

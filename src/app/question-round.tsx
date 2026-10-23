@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Keyboard, StyleSheet, TextInput, View } from 'react-native';
 
@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { Spacing } from '@/constants/theme';
 import { RequireAuth } from '@/features/auth/RequireAuth';
+import { useAuth } from '@/features/auth/auth-context';
 import { useI18n } from '@/features/i18n/i18n';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useQuestionRound } from '@/features/question-round/question-round-context';
@@ -24,8 +25,10 @@ export default function QuestionRoundScreen() {
 function QuestionRoundContent() {
   const theme = useTheme();
   const { isRTL, t } = useI18n();
+  const { profile } = useAuth();
   const {
     activeRound,
+    canSubmitQuestion,
     hasSyncError,
     isLoading,
     refresh,
@@ -42,7 +45,7 @@ function QuestionRoundContent() {
     return <Redirect href="/" />;
   }
 
-  if (!activeRound) {
+  if (isLoading || !activeRound) {
     return (
       <Screen safeAreaEdges={['right', 'bottom', 'left']}>
         <Card style={styles.card}>
@@ -66,8 +69,35 @@ function QuestionRoundContent() {
     );
   }
 
+  if (!canSubmitQuestion) {
+    return (
+      <Screen safeAreaEdges={['right', 'bottom', 'left']}>
+        <Card style={styles.card}>
+          <ThemedText type="heading">{t('questionRound.participationDenied')}</ThemedText>
+          <ThemedText themeColor="textSecondary">
+            {t(
+              !activeRound.target_member_type
+                ? 'questionRound.audienceMissing'
+                : !profile?.member_type
+                  ? 'questionRound.memberTypeMissing'
+                  : activeRound.target_member_type === 'brother'
+                    ? 'questionRound.onlyBrothers'
+                    : 'questionRound.onlySisters',
+            )}
+          </ThemedText>
+          <Button
+            icon="back"
+            label={t('common.back')}
+            onPress={() => router.replace('/')}
+            variant="secondary"
+          />
+        </Card>
+      </Screen>
+    );
+  }
+
   const submit = async () => {
-    if (!activeRound || isSubmitting) {
+    if (!activeRound || !canSubmitQuestion || isSubmitting) {
       return;
     }
 
@@ -107,6 +137,13 @@ function QuestionRoundContent() {
     <Screen safeAreaEdges={['right', 'bottom', 'left']}>
       <View style={styles.intro}>
         <ThemedText type="title">{t('questionRound.userTitle')}</ThemedText>
+        <ThemedText type="smallBold">
+          {t(
+            activeRound.target_member_type === 'brother'
+              ? 'questionRound.audience.brother'
+              : 'questionRound.audience.sister',
+          )}
+        </ThemedText>
         <ThemedText themeColor="textSecondary">{t('questionRound.userBody')}</ThemedText>
       </View>
 
@@ -182,7 +219,7 @@ function QuestionRoundContent() {
         ) : null}
 
         <Button
-          disabled={isSubmitting || !activeRound}
+          disabled={isSubmitting || !canSubmitQuestion}
           icon="question"
           label={t('questionRound.submit')}
           onPress={() => void submit()}

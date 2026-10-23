@@ -30,7 +30,7 @@ update public.question_rounds set closed_at = now() where closed_at is null;
 insert into auth.users (id, email, raw_user_meta_data) values
   ('13000000-0000-0000-0000-000000000001', 'scholar-admin@example.invalid', '{"display_name":"Scholar Test Admin"}'),
   ('13000000-0000-0000-0000-000000000002', 'scholar@example.invalid', '{"display_name":"Scholar Test","role":"scholar"}'),
-  ('13000000-0000-0000-0000-000000000003', 'scholar-user@example.invalid', '{"display_name":"Scholar Test User"}'),
+  ('13000000-0000-0000-0000-000000000003', 'scholar-user@example.invalid', '{"display_name":"Scholar Test User","member_type":"brother"}'),
   ('13000000-0000-0000-0000-000000000004', 'scholar-medical@example.invalid', '{"display_name":"Scholar Test Medical"}'),
   ('13000000-0000-0000-0000-000000000005', 'scholar-organization@example.invalid', '{"display_name":"Scholar Test Organization"}');
 update public.profiles set role = 'admin' where user_id = '13000000-0000-0000-0000-000000000001';
@@ -51,7 +51,7 @@ select lives_ok(
   'an admin can assign the scholar role through the existing RPC'
 );
 select ok(public.can_manage_question_rounds(), 'admins retain question management access');
-select lives_ok($$ select public.open_question_round() $$, 'admins can still start a round');
+select lives_ok($$ select public.open_question_round('brother') $$, 'admins can still start a round');
 reset role;
 select is(
   (select role::text from public.profiles where user_id = '13000000-0000-0000-0000-000000000002'),
@@ -129,9 +129,9 @@ select is(
 
 select set_config('request.jwt.claim.sub', '13000000-0000-0000-0000-000000000002', true);
 set local role authenticated;
-select lives_ok($$ select public.open_question_round() $$, 'scholars can start a new round');
+select lives_ok($$ select public.open_question_round('brother') $$, 'scholars can start a new round');
 select throws_ok(
-  $$ select public.open_question_round() $$, '23505', 'A question round is already open.',
+  $$ select public.open_question_round('brother') $$, '23505', 'A question round is already open.',
   'scholars cannot open a second concurrent round'
 );
 reset role;
@@ -143,7 +143,7 @@ set local role authenticated;
 select ok(not public.can_manage_question_rounds(), 'medical staff cannot manage questions');
 select is((select count(*) from public.anonymous_questions), 0::bigint, 'medical staff cannot read question texts');
 select throws_ok(
-  $$ select public.open_question_round() $$, '42501', 'Admin or scholar access required.',
+  $$ select public.open_question_round('brother') $$, '42501', 'Admin or scholar access required.',
   'medical staff cannot open rounds'
 );
 select throws_ok(
@@ -161,7 +161,7 @@ set local role authenticated;
 select ok(not public.can_manage_question_rounds(), 'organization staff cannot manage questions');
 select is((select count(*) from public.anonymous_questions), 0::bigint, 'organization staff cannot read question texts');
 select throws_ok(
-  $$ select public.open_question_round() $$, '42501', 'Admin or scholar access required.',
+  $$ select public.open_question_round('brother') $$, '42501', 'Admin or scholar access required.',
   'organization staff cannot open rounds'
 );
 select throws_ok(
@@ -178,7 +178,7 @@ select set_config('request.jwt.claim.sub', '13000000-0000-0000-0000-000000000003
 set local role authenticated;
 select is((select count(*) from public.anonymous_questions), 0::bigint, 'participants cannot read question texts');
 select throws_ok(
-  $$ select public.open_question_round() $$, '42501', 'Admin or scholar access required.',
+  $$ select public.open_question_round('brother') $$, '42501', 'Admin or scholar access required.',
   'participants cannot open rounds'
 );
 select throws_ok(
@@ -214,7 +214,7 @@ reset role;
 select set_config('request.jwt.claim.sub', '', true);
 set local role authenticated;
 select throws_ok(
-  $$ select public.open_question_round() $$, '42501', 'Admin or scholar access required.',
+  $$ select public.open_question_round('brother') $$, '42501', 'Admin or scholar access required.',
   'question management also requires a valid authenticated account'
 );
 reset role;

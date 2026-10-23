@@ -5,7 +5,7 @@ import { AppState, type NativeEventSubscription } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import type { Mock } from 'jest-mock';
 
-import type { QuestionRound } from '@/domain/database';
+import type { MemberType, QuestionRound, UserProfile } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import {
   QuestionRoundProvider,
@@ -13,9 +13,13 @@ import {
 } from '@/features/question-round/question-round-context';
 
 const mockSession = { user: { id: 'question-user' } } as Session;
+let mockProfile: Pick<UserProfile, 'member_type' | 'user_id'> | null = {
+  member_type: 'brother',
+  user_id: 'question-user',
+};
 
 jest.mock('@/features/auth/auth-context', () => ({
-  useAuth: () => ({ isLoading: false, session: mockSession }),
+  useAuth: () => ({ isLoading: false, profile: mockProfile, session: mockSession }),
 }));
 
 jest.mock('@/features/auth/supabase', () => ({
@@ -42,6 +46,7 @@ const activeRound: QuestionRound = {
   closed_at: null,
   created_at: '2026-08-26T10:00:00.000Z',
   id: 42,
+  target_member_type: 'brother',
 };
 const syncError = new PostgrestError({
   code: 'PGRST001',
@@ -149,6 +154,7 @@ describe('QuestionRoundProvider', () => {
   });
 
   beforeEach(() => {
+    mockProfile = { member_type: 'brother', user_id: mockSession.user.id };
     appStateListener = null;
     channelListener = null;
     currentContext = null;
@@ -213,6 +219,7 @@ describe('QuestionRoundProvider', () => {
 
     expect(getContext()).toMatchObject({
       activeRound,
+      canSubmitQuestion: true,
       hasSyncError: false,
       isLoading: false,
       syncErrorKind: null,
@@ -246,6 +253,44 @@ describe('QuestionRoundProvider', () => {
       syncErrorKind: 'server',
       syncErrorMessage: 'backend unavailable',
     });
+  });
+
+  it.each<[MemberType | null, MemberType | null, boolean]>([
+    ['brother', 'brother', true],
+    ['sister', 'sister', true],
+    ['brother', 'sister', false],
+    ['sister', 'brother', false],
+    ['brother', null, false],
+    [null, 'brother', false],
+    [null, null, false],
+  ])('prüft Zielgruppe %s und Kontozuordnung %s', async (audience, memberType, allowed) => {
+    mockProfile = { member_type: memberType, user_id: mockSession.user.id };
+    await renderProvider({ data: { ...activeRound, target_member_type: audience }, error: null });
+
+    expect(getContext().canSubmitQuestion).toBe(allowed);
+  });
+
+  it('sperrt die Teilnahme ohne Profil oder bei einem fremden Profil', async () => {
+    mockProfile = null;
+    await renderProvider();
+    expect(getContext().canSubmitQuestion).toBe(false);
+
+    mockProfile = { member_type: 'brother', user_id: 'previous-user' };
+    await act(async () => {
+      renderer?.update(<QuestionRoundProvider><QuestionRoundProbe /></QuestionRoundProvider>);
+    });
+    expect(getContext().canSubmitQuestion).toBe(false);
+  });
+
+  it('aktualisiert die Teilnahme bei einer Profiländerung ohne erneuten Rundenabruf', async () => {
+    await renderProvider();
+    mockProfile = { member_type: 'sister', user_id: mockSession.user.id };
+    await act(async () => {
+      renderer?.update(<QuestionRoundProvider><QuestionRoundProbe /></QuestionRoundProvider>);
+    });
+
+    expect(getContext().canSubmitQuestion).toBe(false);
+    expect(mockSupabase.from).toHaveBeenCalledTimes(1);
   });
 
   it('ignoriert ein verspätetes Ergebnis eines älteren Refreshs', async () => {

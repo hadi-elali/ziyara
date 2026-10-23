@@ -138,7 +138,7 @@ values
   (
     '20000000-0000-0000-0000-000000000003',
     'phase5-concurrent-questions@example.invalid',
-    '{"display_name":"Phase 5 Concurrent Questions"}'::jsonb
+    '{"display_name":"Phase 5 Concurrent Questions","member_type":"brother"}'::jsonb
   ),
   (
     '20000000-0000-0000-0000-000000000004',
@@ -153,9 +153,9 @@ where user_id in (
   '20000000-0000-0000-0000-000000000002'
 );
 
-insert into public.question_rounds (id)
+insert into public.question_rounds (id, target_member_type)
 overriding system value
-values (960000000000000001);
+values (960000000000000001, 'brother');
 
 select plan(15);
 

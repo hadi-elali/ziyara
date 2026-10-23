@@ -26,6 +26,7 @@ function participant(
 ): TripParticipant {
   return {
     assignment_family_id: null,
+    is_on_bus: null,
     bus_id: busId,
     created_at: '2026-08-27T00:00:00Z',
     display_name: `Person ${id}`,

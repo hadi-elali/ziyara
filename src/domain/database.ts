@@ -2,6 +2,10 @@ export type AppRole = 'admin' | 'medical_staff' | 'organization_team' | 'scholar
 export type BusBoardingStatus = 'boarded' | 'on_way' | 'problem' | 'read';
 export type EmergencyTeam = 'medical' | 'travel';
 export type MemberType = 'brother' | 'sister';
+export type AppLock = {
+  id: number;
+  lock: boolean | null;
+};
 export type TripGroupLocationStatus = 'declined' | 'pending' | 'shared';
 export type TripGuidanceStatus =
   | 'almost_there'
@@ -35,6 +39,14 @@ export type AdminUserSummary = {
   party_size: number;
   role: AppRole;
   sim_card_count: number;
+  user_id: string;
+};
+
+export type AdminTripBusMember = {
+  bus_id: number | null;
+  display_name: string;
+  is_on_bus: boolean | null;
+  participant_id: number | null;
   user_id: string;
 };
 
@@ -73,6 +85,7 @@ export type QuestionRound = {
   closed_at: string | null;
   created_at: string;
   id: number;
+  target_member_type: MemberType | null;
 };
 
 export type AnonymousQuestion = {
@@ -129,6 +142,7 @@ export type RoleAssignmentAudit = {
 
 export type Trip = {
   archived_at: string | null;
+  bus_setup_deleted_at: string | null;
   created_at: string;
   created_by_profile_id: number | null;
   id: number;
@@ -166,6 +180,7 @@ export type TripParticipant = {
   created_at: string;
   display_name: string;
   id: number;
+  is_on_bus: boolean | null;
   participant_code: string;
   profile_id: number | null;
   trip_id: number;
@@ -475,6 +490,7 @@ export type TripGuidanceResponse = {
 export type Database = {
   public: {
     Tables: {
+      lock_app: { Row: AppLock; Insert: never; Update: never; Relationships: [] };
       organization_groups: { Row: OrganizationGroup; Insert: never; Update: never; Relationships: [] };
       organization_group_members: { Row: Pick<OrganizationGroupMember, 'group_id' | 'user_id' | 'is_leader'>; Insert: never; Update: never; Relationships: [] };
       organization_group_location_requests: { Row: OrganizationGroupLocationRequest; Insert: never; Update: never; Relationships: [] };
@@ -857,11 +873,13 @@ export type Database = {
           closed_at?: string | null;
           created_at?: string;
           id?: never;
+          target_member_type?: MemberType | null;
         };
         Relationships: [];
         Row: QuestionRound;
         Update: {
           closed_at?: string | null;
+          target_member_type?: MemberType | null;
         };
       };
       question_submission_limits: {
@@ -988,6 +1006,7 @@ export type Database = {
           bus_id?: number | null;
           created_at?: string;
           display_name: string;
+          is_on_bus?: boolean | null;
           id?: never;
           participant_code: string;
           profile_id?: number | null;
@@ -1000,6 +1019,7 @@ export type Database = {
           assignment_family_id?: number | null;
           bus_id?: number | null;
           display_name?: string;
+          is_on_bus?: boolean | null;
           participant_code?: string;
           profile_id?: number | null;
           updated_at?: string;
@@ -1034,6 +1054,7 @@ export type Database = {
       trips: {
         Insert: {
           archived_at?: string | null;
+          bus_setup_deleted_at?: string | null;
           created_at?: string;
           created_by_profile_id?: number | null;
           id?: never;
@@ -1043,6 +1064,7 @@ export type Database = {
         Row: Trip;
         Update: {
           archived_at?: string | null;
+          bus_setup_deleted_at?: string | null;
           name?: string;
         };
       };
@@ -1162,6 +1184,10 @@ export type Database = {
       };
       admin_copy_trip_bus_setup: {
         Args: { p_name: string; p_source_trip_id: number };
+        Returns: Trip;
+      };
+      admin_delete_trip_bus_setup: {
+        Args: { p_trip_id: number };
         Returns: Trip;
       };
       admin_delete_trip_group: {
@@ -1297,6 +1323,22 @@ export type Database = {
         Args: { p_bus_id: number; p_trip_id: number; p_user_id: string };
         Returns: TripParticipant;
       };
+      admin_move_trip_person: {
+        Args: { p_bus_id: number; p_trip_id: number; p_user_id: string };
+        Returns: TripParticipant;
+      };
+      admin_trip_bus_roster: {
+        Args: { p_trip_id: number };
+        Returns: AdminTripBusMember[];
+      };
+      select_trip_bus: {
+        Args: { p_bus_id: number; p_trip_id: number };
+        Returns: TripParticipant;
+      };
+      set_trip_bus_presence: {
+        Args: { p_bus_id: number; p_is_on_bus: boolean; p_trip_id: number };
+        Returns: TripParticipant;
+      };
       admin_upsert_account_family: {
         Args: {
           p_family_id?: number | null;
@@ -1398,7 +1440,7 @@ export type Database = {
         Returns: boolean;
       };
       open_question_round: {
-        Args: never;
+        Args: { p_target_member_type: MemberType };
         Returns: QuestionRound;
       };
       is_trip_member: {

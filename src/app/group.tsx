@@ -178,8 +178,16 @@ function GroupContent() {
                 {group.members.map((member) => (
                   <View
                     key={member.user_id}
-                    style={[styles.member, { borderColor: theme.border }]}>
-                    <ThemedText type="smallBold">
+                    style={[
+                      styles.member,
+                      {
+                        backgroundColor: member.is_leader ? theme.accentSoft : undefined,
+                        borderColor: member.is_leader ? theme.accent : theme.border,
+                      },
+                    ]}>
+                    <ThemedText
+                      type="smallBold"
+                      themeColor={member.is_leader ? 'accent' : 'text'}>
                       {member.display_name}{member.party_size > 1 ? ` · ${t('tripGroups.memberCount', { count: member.party_size })}` : ''}
                     </ThemedText>
                     {member.is_leader ? (
@@ -293,11 +301,13 @@ const styles = StyleSheet.create({
   members: { gap: Spacing.one },
   member: {
     alignItems: 'center',
+    borderRadius: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: Spacing.two,
     justifyContent: 'space-between',
     minHeight: 44,
+    paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
   },
   locationRequest: {

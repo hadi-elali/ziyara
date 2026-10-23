@@ -113,9 +113,11 @@ export function AdminTripGroupPanel(
   const selectedLeaders = participants.filter((participant) =>
     leaderIds.has(participant.id)
   );
-  const selectedParticipants = participants.filter((participant) =>
-    selectedParticipantIds.has(participant.id)
-  );
+  const selectedParticipants = participants
+    .filter((participant) => selectedParticipantIds.has(participant.id))
+    .sort((left, right) =>
+      Number(leaderIds.has(right.id)) - Number(leaderIds.has(left.id))
+    );
 
   const resetEditor = () => {
     setEditingGroupId(null);
@@ -534,7 +536,7 @@ export function AdminTripGroupPanel(
                           return (
                             <Pressable
                               accessibilityLabel={isLeader
-                                ? participant.display_name
+                                ? `${participant.display_name} · ${t('tripGroups.leader')}`
                                 : t('tripGroups.admin.removeMember', {
                                   name: participant.display_name,
                                 })}
@@ -545,17 +547,23 @@ export function AdminTripGroupPanel(
                               style={({ pressed }) => [
                                 styles.selectedMemberChip,
                                 {
-                                  backgroundColor: theme.accentSoft,
-                                  borderColor: theme.accent,
+                                  backgroundColor: isLeader
+                                    ? theme.accentSoft
+                                    : theme.background,
+                                  borderColor: isLeader ? theme.accent : theme.border,
                                 },
                                 pressed && styles.pressed,
                               ]}
                             >
-                              <ThemedText type='tinyBold' themeColor='accent'>
+                              <ThemedText
+                                type='tinyBold'
+                                themeColor={isLeader ? 'accent' : 'text'}
+                              >
                                 {participant.display_name}
+                                {isLeader ? ` · ${t('tripGroups.leader')}` : ''}
                               </ThemedText>
                               <SymbolIcon
-                                color={theme.accent}
+                                color={isLeader ? theme.accent : theme.textSecondary}
                                 name={isLeader ? 'account' : 'close'}
                                 size={16}
                               />
@@ -760,11 +768,22 @@ export function AdminTripGroupPanel(
                         key={member.user_id}
                         style={[
                           styles.memberChip,
-                          { backgroundColor: theme.backgroundElement },
+                          {
+                            backgroundColor: member.is_leader
+                              ? theme.accentSoft
+                              : theme.backgroundElement,
+                            borderColor: member.is_leader
+                              ? theme.accent
+                              : theme.backgroundElement,
+                          },
                         ]}
                       >
-                        <ThemedText type='tinyBold'>
+                        <ThemedText
+                          type='tinyBold'
+                          themeColor={member.is_leader ? 'accent' : 'text'}
+                        >
                           {member.display_name}
+                          {member.is_leader ? ` · ${t('tripGroups.leader')}` : ''}
                           {member.party_size > 1
                             ? ` · ${
                               t('tripGroups.memberCount', {
@@ -1067,6 +1086,7 @@ const styles = StyleSheet.create({
   memberChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.one },
   memberChip: {
     borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
   },

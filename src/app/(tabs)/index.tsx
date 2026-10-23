@@ -44,7 +44,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const { language, t } = useI18n();
   const { profile, session } = useAuth();
-  const { participants: busParticipants } = useBusManagement();
+  const { activeTrip: activeBusTrip, participants: busParticipants } = useBusManagement();
   const hasBusAssignment = busParticipants.some((participant) => participant.profile_id === profile?.id);
   const { activeCheck, currentResponse } = useGroupCheck();
   const { groups: tripGroups } = useTripGroups();
@@ -58,6 +58,7 @@ export default function HomeScreen() {
   const colors = Colors[scheme];
   const {
     activeRound,
+    canSubmitQuestion,
     hasSyncError: hasQuestionRoundSyncError,
     refresh: refreshQuestionRound,
     syncErrorMessage: questionRoundSyncErrorMessage,
@@ -159,7 +160,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session && hasBusAssignment ? (
+      {session && activeBusTrip ? (
         <View
           style={[
             styles.notice,
@@ -168,7 +169,7 @@ export default function HomeScreen() {
         >
           <ThemedText type="heading">{t("bus.homeTitle")}</ThemedText>
           <ThemedText themeColor="textSecondary">
-            {t("bus.homeBody")}
+            {t(hasBusAssignment ? "bus.homeBody" : "bus.selection.homeBody")}
           </ThemedText>
           <Button
             icon="bus"
@@ -217,7 +218,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session && activeRound ? (
+      {session && activeRound && canSubmitQuestion ? (
         <View
           style={[
             styles.notice,
@@ -225,6 +226,13 @@ export default function HomeScreen() {
           ]}
         >
           <ThemedText type="heading">{t("questionRound.homeTitle")}</ThemedText>
+          <ThemedText type="smallBold">
+            {t(
+              activeRound.target_member_type === 'brother'
+                ? 'questionRound.audience.brother'
+                : 'questionRound.audience.sister',
+            )}
+          </ThemedText>
           <ThemedText themeColor="textSecondary">
             {t("questionRound.homeBody")}
           </ThemedText>

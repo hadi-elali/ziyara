@@ -38,6 +38,41 @@ const useLanguageState = createPersistentState<Language>(
 
 const dictionaries: Record<Language, Record<string, string>> = {
   de: {
+    "bus.admin.deleteTemplate": "Anordnung löschen",
+    "bus.admin.deleteTemplateTitle": "Anordnung „{name}“ löschen?",
+    "bus.admin.deleteTemplateBody": "Diese Busanordnung wird aus der Auswahl entfernt und kann danach nicht mehr in eine neue Fahrt übernommen werden.",
+    "bus.admin.templateDeleted": "Die Anordnung wurde gelöscht.",
+    "bus.admin.templateUnavailable": "Diese Anordnung ist nicht mehr verfügbar. Die Auswahl wurde aktualisiert. Wähle erneut.",
+    "bus.presence.title": "Bist du bereits im Bus?",
+    "bus.presence.onBus": "Im Bus",
+    "bus.presence.notOnBus": "Noch nicht im Bus",
+    "bus.presence.unanswered": "Noch keine Rückmeldung",
+    "bus.presence.saved": "Deine Rückmeldung wurde gespeichert.",
+    "bus.presence.error": "Deine Rückmeldung konnte nicht gespeichert werden. Versuche es erneut.",
+    "bus.presence.resetHint": "Du kannst deine Rückmeldung ändern. Bei einem Buswechsel bestätigst du erneut.",
+    "bus.presence.summary": "Im Bus: {onBus} · Noch nicht: {notOnBus} · Ohne Rückmeldung: {unanswered}",
+    "bus.selection.title": "Wähle deinen Bus",
+    "bus.selection.body": "Wähle den Bus, zu dem du gehörst. Du kannst jederzeit wechseln. Deine Auswahl gilt nur für dein Konto; eine bisherige Busführung wird beim Wechsel aufgehoben.",
+    "bus.selection.current": "Dein Bus: {bus}",
+    "bus.selection.choose": "{bus} auswählen",
+    "bus.selection.change": "Zu {bus} wechseln",
+    "bus.selection.selected": "{bus} · Dein Bus",
+    "bus.selection.saved": "Deine Buszuordnung wurde gespeichert.",
+    "bus.selection.saving": "Busdaten werden gespeichert …",
+    "bus.selection.error": "Die Buszuordnung konnte nicht gespeichert werden. Versuche es erneut.",
+    "bus.selection.changed": "Die Fahrt oder der Bus ist nicht mehr verfügbar. Die Übersicht wurde aktualisiert.",
+    "bus.selection.noTripTitle": "Aktuell keine Fahrt",
+    "bus.selection.noTripBody": "Sobald die Reiseleitung eine Fahrt und Busse angelegt hat, kannst du hier deinen Bus wählen.",
+    "bus.selection.noBuses": "Die Reiseleitung hat für diese Fahrt noch keine Busse angelegt.",
+    "bus.selection.homeBody": "Für die aktuelle Fahrt kannst du jetzt deinen Bus selbst auswählen.",
+    "bus.admin.rosterTitle": "Wer ist in welchem Bus?",
+    "bus.admin.rosterBody": "Öffne einen Bus, um die Namen zu sehen und einzelne Personen zu verschieben. Nutzer können ihren Bus auch selbst wählen und wechseln.",
+    "bus.admin.unassigned": "Noch ohne Bus",
+    "bus.admin.rosterSection": "{name} · {count} Konten",
+    "bus.admin.rosterCount": "{count} Konten",
+    "bus.admin.rosterEmpty": "Keine Personen in dieser Liste.",
+    "bus.admin.movePerson": "{name} verschieben",
+    "bus.admin.moveTo": "In {bus} verschieben",
     "wakeUp.alreadyDue":
       "Dieser Weckruf ist bereits fällig und kann nicht mehr geändert werden. Die Liste wird aktualisiert.",
     "wakeUp.now": "Jetzt",
@@ -68,7 +103,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.active": "Weckruf aktiv",
     "wakeUp.inactive": "Kein aktiver Weckruf",
     "wakeUp.close": "Weckruf beenden",
-    "wakeUp.acknowledge": "Ich bin wach",
+    "wakeUp.acknowledge": "Bestätigen",
     "wakeUp.acknowledged": "Du hast den Weckruf bestätigt.",
     "wakeUp.confirmations": "{confirmed} von {total} Konten haben bestätigt.",
     "wakeUp.pushFailed":
@@ -77,7 +112,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Aktiviere Mitteilungen, um Weckrufe auch außerhalb der App zu erhalten. Der Ton richtet sich nach deinen Geräteeinstellungen.",
     "wakeUp.enableNotifications": "Mitteilungen aktivieren",
     "admin.transport.title": "Fahrten & Busse",
-    "admin.transport.description": "Einzelne Fahrten planen und Gruppen, Familien oder Personen Bussen zuordnen.",
+    "admin.transport.description": "Fahrten und Busse anlegen, die Buswahl einsehen und Personen verschieben.",
     "tripGroups.groupCount": "{count} Gruppen",
     "tripGroups.admin.families": "Familien hinzufügen",
     "tripGroups.admin.familiesBody":
@@ -243,9 +278,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.delete": "Löschen",
     "emergency.deleting": "Wird gelöscht …",
     "emergency.deleteTitle": "Notfall endgültig löschen?",
-    "emergency.deleteBody": "Die Meldung wird für den Absender und alle Empfänger dauerhaft entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "emergency.deleteBody":
+      "Die Meldung wird für den Absender und alle Empfänger dauerhaft entfernt. Dies kann nicht rückgängig gemacht werden.",
     "emergency.cancel": "Abbrechen",
-    "emergency.actionError": "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    "emergency.actionError":
+      "Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.",
     "emergency.markReadError":
       "Der Lesestatus konnte nicht gespeichert werden.",
     "emergencyDashboard.navTitle": "Notfall-Dashboard",
@@ -331,42 +368,51 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.accountPartySize": "Dieses Konto vertritt {count} Personen",
     "bus.admin.actionError":
       "Die Busaktion konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
-    "bus.admin.addBus": "Bus mit Führer anlegen",
+    "bus.admin.addBus": "Bus anlegen",
     "bus.admin.archive": "Fahrt beenden",
     "bus.admin.archiveBody":
       "Die Fahrt wird beendet. Busse, Führer und Zuordnungen bleiben erhalten und können in die nächste Fahrt übernommen werden. Das Tagesprogramm bleibt unverändert.",
     "bus.admin.archiveConfirm": "Fahrt beenden",
     "bus.admin.archiveTitle": "Aktive Fahrt beenden?",
     "bus.admin.assignmentTitle": "Gruppen und Personen zuordnen",
-    "bus.admin.assignmentBody": "Wähle eine vorhandene Gruppe und den Bus. Alle aktuellen Mitglieder werden gemeinsam übernommen; die Gruppenleitung wird dabei Busführer und ersetzt die bisherige Busführung. Bei mehreren Gruppenleitern wählst du einen aus. Spätere Gruppenänderungen übernimmst du durch erneutes Zuordnen.",
+    "bus.admin.assignmentBody":
+      "Wähle eine vorhandene Gruppe und den Bus. Alle aktuellen Mitglieder werden gemeinsam übernommen; die Gruppenleitung wird dabei Busführer und ersetzt die bisherige Busführung. Bei mehreren Gruppenleitern wählst du einen aus. Spätere Gruppenänderungen übernimmst du durch erneutes Zuordnen.",
     "bus.admin.group": "Ganze Gruppe",
     "bus.admin.groupSearch": "Gruppe auswählen oder suchen",
     "bus.admin.groupSearchPlaceholder": "Nach Gruppenname suchen …",
-    "bus.admin.groupMembers": "{count} Konten · {people} Personen · Gruppenleitung: {leaders}",
-    "bus.admin.groupSelectedMembers": "Diese Mitglieder werden gemeinsam übernommen: {names}",
+    "bus.admin.groupMembers":
+      "{count} Konten · {people} Personen · Gruppenleitung: {leaders}",
+    "bus.admin.groupSelectedMembers":
+      "Diese Mitglieder werden gemeinsam übernommen: {names}",
     "bus.admin.groupSelectBusLeader": "Gruppenleiter als Busführer auswählen",
     "bus.admin.groupBecomesBusLeader": "Busführer nach der Übernahme: {name}",
-    "bus.admin.groupNoLeader": "Diese Gruppe hat keine Gruppenleitung. Ergänze sie zuerst unter „Gruppen & Gruppenleitung“.",
-    "bus.admin.groupLeaderChanged": "Die ausgewählte Gruppenleitung hat sich geändert. Lade die Gruppen neu und wähle erneut.",
-    "bus.admin.noGroups": "Noch keine Gruppen vorhanden. Lege sie zuerst unter „Gruppen & Gruppenleitung“ an.",
+    "bus.admin.groupNoLeader":
+      "Diese Gruppe hat keine Gruppenleitung. Ergänze sie zuerst unter „Gruppen & Gruppenleitung“.",
+    "bus.admin.groupLeaderChanged":
+      "Die ausgewählte Gruppenleitung hat sich geändert. Lade die Gruppen neu und wähle erneut.",
+    "bus.admin.noGroups":
+      "Noch keine Gruppen vorhanden. Lege sie zuerst unter „Gruppen & Gruppenleitung“ an.",
     "bus.admin.noMatchingGroups": "Keine Gruppe passt zur Suche.",
     "bus.admin.saveGroupAssignment": "Gruppe dem Bus zuordnen",
     "bus.admin.assignmentSaved": "Buszuordnung gespeichert.",
-    "bus.admin.createBusFirst": "Lege zuerst oben einen Bus mit Busführer an.",
-    "bus.admin.assignmentBoardingLocked": "Schließe das laufende Boarding, bevor du Zuordnungen änderst.",
-    "bus.admin.groupLeaderConflict": "Ein Gruppenmitglied führt bereits einen anderen Bus. Ändere zuerst dessen Busführer, bevor du die Gruppe verschiebst.",
-    "bus.admin.groupFamilyConflict": "Die Zuordnung würde eine bereits gemeinsam zugeordnete Familie auf mehrere Busse aufteilen. Ordne zuerst die ganze Familie diesem Bus zu.",
-    "bus.admin.groupEmpty": "Die gewählte Gruppe hat keine Mitglieder. Prüfe sie unter „Gruppen & Gruppenleitung“.",
+    "bus.admin.createBusFirst": "Lege zuerst oben einen Bus an.",
+    "bus.admin.assignmentBoardingLocked":
+      "Schließe das laufende Boarding, bevor du Zuordnungen änderst.",
+    "bus.admin.groupLeaderConflict":
+      "Ein Gruppenmitglied führt bereits einen anderen Bus. Ändere zuerst dessen Busführer, bevor du die Gruppe verschiebst.",
+    "bus.admin.groupFamilyConflict":
+      "Die Zuordnung würde eine bereits gemeinsam zugeordnete Familie auf mehrere Busse aufteilen. Ordne zuerst die ganze Familie diesem Bus zu.",
+    "bus.admin.groupEmpty":
+      "Die gewählte Gruppe hat keine Mitglieder. Prüfe sie unter „Gruppen & Gruppenleitung“.",
     "bus.admin.boardingTitle": "Bezeichnung der Abfahrt",
     "bus.admin.boardingTitlePlaceholder": "Zum Beispiel: Abfahrt vom Hotel",
     "bus.admin.busName": "Busname",
     "bus.admin.busNamePlaceholder": "Zum Beispiel: Bus 1",
     "bus.admin.busEmpty": "Diesem Bus ist noch niemand zugeordnet.",
-    "bus.admin.busLeader": "Busführer auswählen",
-    "bus.admin.busLeaderMissing": "Busführer fehlt",
+    "bus.admin.busLeader": "Busführer auswählen (optional)",
+    "bus.admin.busLeaderMissing": "Kein Busführer festgelegt",
     "bus.admin.busLeaderName": "Busführer: {name}",
-    "bus.admin.busLeaderRequired":
-      "Jeder neue Bus benötigt eine registrierte Person als Busführer. Sie wird dem Bus automatisch zugeordnet.",
+    "bus.admin.busLeaderRequired": "Lege die Busse an; Nutzer wählen ihren Bus selbst. Eine Busführung kannst du optional festlegen.",
     "bus.admin.busesTitle": "Busse",
     "bus.admin.cancel": "Abbrechen",
     "bus.admin.changeBusLeader": "Führer ändern",
@@ -387,8 +433,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.noParticipantsTitle": "Noch keine Zuordnungen",
     "bus.admin.noFamiliesAvailable":
       "Es sind noch keine Kontofamilien verfügbar.",
-    "bus.admin.noPeopleAvailable":
-      "Keine einzelne Person passt zur Auswahl. Mitglieder bereits zugeordneter Familien werden hier ausgeblendet.",
+    "bus.admin.noPeopleAvailable": "Keine registrierte Person passt zur Suche.",
     "bus.admin.person": "Einzelne Person",
     "bus.admin.personSearch": "Person suchen",
     "bus.admin.personSearchPlaceholder": "Nach registriertem Namen suchen …",
@@ -412,8 +457,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.homeTitle": "Mein Bus",
     "bus.loading": "Buszuordnung wird geladen …",
     "bus.navTitle": "Mein Bus",
-    "bus.noAssignmentBody":
-      "Dein Konto ist noch keinem Bus zugeordnet. Wende dich an die Reiseleitung.",
+    "bus.noAssignmentBody": "Du kannst deinen Bus für die aktuelle Fahrt selbst auswählen und später wechseln.",
     "bus.noAssignmentTitle": "Keine Buszuordnung",
     "bus.noBoardingBody":
       "Deine Zuordnung ist sichtbar. Aktuell läuft keine Abfrage.",
@@ -590,6 +634,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.resultNo": "Nein",
     "groupCheck.resultOpen": "Noch offen",
     "groupCheck.resultYes": "Ja",
+    "groupCheck.showNames": "{status}: Namen anzeigen",
+    "groupCheck.hideNames": "{status}: Namen ausblenden",
     "groupCheck.start": "Frage stellen",
     "groupCheck.submitError":
       "Deine Antwort konnte nicht gespeichert werden. Versuche es erneut.",
@@ -604,6 +650,21 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "questionRound.adminError":
       "Die Fragerunde konnte nicht aktualisiert werden. Prüfe die Verbindung und versuche es erneut.",
     "questionRound.adminTitle": "Anonyme Fragerunde",
+    "questionRound.audienceTitle": "Für wen ist die Fragerunde?",
+    "questionRound.audienceBody":
+      "Wähle Brüder oder Schwestern. Nur Konten mit der passenden Zuordnung können Fragen stellen.",
+    "questionRound.audience.brother": "Für Brüder",
+    "questionRound.audience.sister": "Für Schwestern",
+    "questionRound.audienceMissing":
+      "Diese Fragerunde hat noch keine Zielgruppe. Die Verwaltung muss sie schließen und für Brüder oder Schwestern neu öffnen.",
+    "questionRound.audienceUnknown": "Zielgruppe nicht festgelegt",
+    "questionRound.participationDenied": "Teilnahme nicht möglich",
+    "questionRound.memberTypeMissing":
+      "Für dein Konto ist keine Zuordnung als Bruder oder Schwester hinterlegt. Bitte wende dich an die Reiseleitung.",
+    "questionRound.onlyBrothers":
+      "An dieser Fragerunde können nur Brüder Fragen stellen.",
+    "questionRound.onlySisters":
+      "An dieser Fragerunde können nur Schwestern Fragen stellen.",
     "questionRound.anonymousBody":
       "In der Fragentabelle werden weder dein Name noch deine Konto- oder Profil-ID gespeichert. Zum Missbrauchsschutz wird getrennt nur die Anzahl deiner Einsendungen für die laufende Runde gezählt; diese Zählung wird beim Schließen gelöscht. Schreibe keine persönlichen Daten in den Fragetext.",
     "questionRound.anonymousTitle": "Anonyme Einreichung",
@@ -695,10 +756,10 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.leaderSearch": "Anführer suchen",
     "tripGroups.admin.memberSearch": "Gruppenmitglied suchen",
     "tripGroups.admin.searchPlaceholder": "Nach Namen suchen …",
-    "tripGroups.admin.selectedLeader":
-      "Als Gruppenleiter ausgewählt",
+    "tripGroups.admin.selectedLeader": "Als Gruppenleiter ausgewählt",
     "tripGroups.admin.removeLeader": "{name} als Gruppenleiter entfernen",
-    "tripGroups.admin.removeLeaderTitle": "„{name}“ als Gruppenleiter entfernen?",
+    "tripGroups.admin.removeLeaderTitle":
+      "„{name}“ als Gruppenleiter entfernen?",
     "tripGroups.admin.removeLeaderBody":
       "Die Person bleibt als Gruppenmitglied ausgewählt. Die Änderung wird erst beim Speichern der Gruppe übernommen.",
     "tripGroups.admin.removeLeaderConfirm": "Entfernen",
@@ -768,8 +829,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.organization.groups.description":
       "Untergruppen bilden und Gruppenanführer bestimmen.",
     "admin.organization.overview.activeTrip": "Aktive Fahrt",
-    "admin.organization.overview.noActiveTrip":
-      "Noch keine aktive Fahrt",
+    "admin.organization.overview.noActiveTrip": "Noch keine aktive Fahrt",
     "admin.organization.overview.buses": "Busse",
     "admin.organization.overview.participants": "Teilnehmer",
     "admin.organization.overview.groups": "Gruppen",
@@ -836,7 +896,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Für diesen Tag ist noch kein Programm veröffentlicht.",
     "dailyProgram.openProgram": "Gesamtes Programm ansehen",
     "dailyProgram.openProgramAccessibility": "Tagesprogramm öffnen",
-    "dailyProgram.openProgramHint": "Zeigt heute und alle veröffentlichten kommenden Tage.",
+    "dailyProgram.openProgramHint":
+      "Zeigt heute und alle veröffentlichten kommenden Tage.",
     "dailyProgram.retry": "Erneut versuchen",
     "dailyProgram.syncErrorTitle": "Tagesprogramm nicht synchronisiert",
     "dailyProgram.today": "Heute",
@@ -1005,7 +1066,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.firstName": "Vorname",
     "auth.age": "Alter (Jahre)",
     "auth.agePlaceholder": "Dein Alter in Jahren",
-    "auth.validation.age": "Gib dein Alter als ganze Zahl zwischen 0 und 120 ein.",
+    "auth.validation.age":
+      "Gib dein Alter als ganze Zahl zwischen 0 und 120 ein.",
     "auth.firstNamePlaceholder": "Dein Vorname",
     "auth.surname": "Nachname",
     "auth.surnamePlaceholder": "Dein Nachname",
@@ -1036,8 +1098,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.validation.accountCoverage": "Wähle aus, für wen dieses Konto gilt.",
     "auth.validation.email": "Gib eine gültige E-Mail-Adresse ein.",
     "auth.validation.memberType": "Wähle Bruder oder Schwester aus.",
-    "auth.validation.name":
-      "Der Vorname muss zwischen 2 und 80 Zeichen lang sein.",
+    "auth.validation.name": "Gib einen Vornamen mit 1 bis 80 Zeichen ein.",
     "auth.validation.surname": "Gib deinen Nachnamen ein.",
     "auth.validation.password":
       "Das Passwort muss mindestens 8 Zeichen lang sein.",
@@ -1279,10 +1340,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "settings.languageTitle": "Sprache",
     "settings.light": "Hell",
     "settings.notifications": "Mitteilungen",
-    "settings.notificationsBody": "Steuert Push-Mitteilungen für Weckrufe und Notfälle auf diesem Gerät.",
+    "settings.notificationsBody":
+      "Steuert Push-Mitteilungen für Weckrufe und Notfälle auf diesem Gerät.",
     "settings.notificationsGuestBody":
       "Melde dich an, um Mitteilungen für dieses Gerät zu verwalten.",
-    "settings.notificationsHint": "Schaltet Push-Mitteilungen für dieses Gerät ein oder aus.",
+    "settings.notificationsHint":
+      "Schaltet Push-Mitteilungen für dieses Gerät ein oder aus.",
     "settings.notificationsOpenSettings": "Geräteeinstellungen öffnen",
     "settings.notificationsTitle": "Mitteilungen erlauben",
     "settings.openAdmin": "Adminbereich öffnen",
@@ -1313,6 +1376,41 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Quellenregel",
   },
   en: {
+    "bus.admin.deleteTemplate": "Delete arrangement",
+    "bus.admin.deleteTemplateTitle": "Delete arrangement “{name}”?",
+    "bus.admin.deleteTemplateBody": "This bus arrangement will be removed from the selection and can no longer be copied to a new trip.",
+    "bus.admin.templateDeleted": "The arrangement has been deleted.",
+    "bus.admin.templateUnavailable": "This arrangement is no longer available. The selection has been refreshed. Please choose again.",
+    "bus.presence.title": "Are you already on the bus?",
+    "bus.presence.onBus": "On the bus",
+    "bus.presence.notOnBus": "Not on the bus yet",
+    "bus.presence.unanswered": "No response yet",
+    "bus.presence.saved": "Your response has been saved.",
+    "bus.presence.error": "Your response could not be saved. Please try again.",
+    "bus.presence.resetHint": "You can change your response. Confirm again after changing buses.",
+    "bus.presence.summary": "On board: {onBus} · Not yet: {notOnBus} · No response: {unanswered}",
+    "bus.selection.title": "Choose your bus",
+    "bus.selection.body": "Choose the bus you belong to. You can change buses at any time. Your choice applies only to your account; leaving a bus also vacates your leadership of that bus.",
+    "bus.selection.current": "Your bus: {bus}",
+    "bus.selection.choose": "Choose {bus}",
+    "bus.selection.change": "Move to {bus}",
+    "bus.selection.selected": "{bus} · Your bus",
+    "bus.selection.saved": "Your bus assignment has been saved.",
+    "bus.selection.saving": "Saving bus details …",
+    "bus.selection.error": "Your bus assignment could not be saved. Please try again.",
+    "bus.selection.changed": "The trip or bus is no longer available. The overview has been refreshed.",
+    "bus.selection.noTripTitle": "No active trip",
+    "bus.selection.noTripBody": "Once the organizers create a trip and buses, you can choose your bus here.",
+    "bus.selection.noBuses": "The organizers have not created any buses for this trip yet.",
+    "bus.selection.homeBody": "You can now choose your own bus for the current trip.",
+    "bus.admin.rosterTitle": "Who is in which bus?",
+    "bus.admin.rosterBody": "Expand a bus to see names and move individual people. Users can also choose and change their own bus.",
+    "bus.admin.unassigned": "No bus yet",
+    "bus.admin.rosterSection": "{name} · {count} accounts",
+    "bus.admin.rosterCount": "{count} accounts",
+    "bus.admin.rosterEmpty": "No people in this list.",
+    "bus.admin.movePerson": "Move {name}",
+    "bus.admin.moveTo": "Move to {bus}",
     "wakeUp.alreadyDue":
       "This wake-up call is already due and can no longer be edited. Refreshing the list.",
     "wakeUp.now": "Now",
@@ -1342,7 +1440,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.active": "Wake-up call active",
     "wakeUp.inactive": "No active wake-up call",
     "wakeUp.close": "End wake-up call",
-    "wakeUp.acknowledge": "I am awake",
+    "wakeUp.acknowledge": "Confirm",
     "wakeUp.acknowledged": "You acknowledged the wake-up call.",
     "wakeUp.confirmations":
       "{confirmed} of {total} accounts have acknowledged.",
@@ -1352,7 +1450,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Enable notifications to receive wake-up calls outside the app. Sound depends on your device settings.",
     "wakeUp.enableNotifications": "Enable notifications",
     "admin.transport.title": "Trips & buses",
-    "admin.transport.description": "Plan individual trips and assign groups, families or people to buses.",
+    "admin.transport.description": "Create trips and buses, view bus choices and move people.",
     "tripGroups.groupCount": "{count} groups",
     "tripGroups.admin.families": "Add families",
     "tripGroups.admin.familiesBody":
@@ -1513,7 +1611,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.delete": "Delete",
     "emergency.deleting": "Deleting …",
     "emergency.deleteTitle": "Permanently delete emergency?",
-    "emergency.deleteBody": "The report will be permanently removed for the sender and all recipients. This cannot be undone.",
+    "emergency.deleteBody":
+      "The report will be permanently removed for the sender and all recipients. This cannot be undone.",
     "emergency.cancel": "Cancel",
     "emergency.actionError": "The change could not be saved. Please try again.",
     "emergency.markReadError": "The read status could not be saved.",
@@ -1596,42 +1695,51 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.accountPartySize": "This account represents {count} people",
     "bus.admin.actionError":
       "The bus action could not be saved. Check your connection and try again.",
-    "bus.admin.addBus": "Create bus with leader",
+    "bus.admin.addBus": "Create bus",
     "bus.admin.archive": "End trip",
     "bus.admin.archiveBody":
       "The trip will end. Buses, leaders, and assignments remain available to copy into the next one. The daily program is unchanged.",
     "bus.admin.archiveConfirm": "End trip",
     "bus.admin.archiveTitle": "End active trip?",
     "bus.admin.assignmentTitle": "Assign groups and people",
-    "bus.admin.assignmentBody": "Choose an existing group and a bus. All current members are imported together, and a group leader replaces the current bus leader. If there are several group leaders, choose one. Import again to include later group changes.",
+    "bus.admin.assignmentBody":
+      "Choose an existing group and a bus. All current members are imported together, and a group leader replaces the current bus leader. If there are several group leaders, choose one. Import again to include later group changes.",
     "bus.admin.group": "Whole group",
     "bus.admin.groupSearch": "Select or search for a group",
     "bus.admin.groupSearchPlaceholder": "Search by group name…",
-    "bus.admin.groupMembers": "{count} accounts · {people} people · Group leaders: {leaders}",
-    "bus.admin.groupSelectedMembers": "These members will be imported together: {names}",
+    "bus.admin.groupMembers":
+      "{count} accounts · {people} people · Group leaders: {leaders}",
+    "bus.admin.groupSelectedMembers":
+      "These members will be imported together: {names}",
     "bus.admin.groupSelectBusLeader": "Choose a group leader to lead the bus",
     "bus.admin.groupBecomesBusLeader": "Bus leader after import: {name}",
-    "bus.admin.groupNoLeader": "This group has no leader. Add one under Groups & group leaders first.",
-    "bus.admin.groupLeaderChanged": "The selected group leader has changed. Refresh the groups and select again.",
-    "bus.admin.noGroups": "No groups yet. Create them first under Groups & group leaders.",
+    "bus.admin.groupNoLeader":
+      "This group has no leader. Add one under Groups & group leaders first.",
+    "bus.admin.groupLeaderChanged":
+      "The selected group leader has changed. Refresh the groups and select again.",
+    "bus.admin.noGroups":
+      "No groups yet. Create them first under Groups & group leaders.",
     "bus.admin.noMatchingGroups": "No groups match your search.",
     "bus.admin.saveGroupAssignment": "Assign group to bus",
     "bus.admin.assignmentSaved": "Bus assignment saved.",
-    "bus.admin.createBusFirst": "Create a bus with a bus leader above first.",
-    "bus.admin.assignmentBoardingLocked": "Close the active boarding before changing assignments.",
-    "bus.admin.groupLeaderConflict": "A group member already leads another bus. Change that bus's leader before moving the group.",
-    "bus.admin.groupFamilyConflict": "This would split an existing family assignment across buses. Assign the whole family to this bus first.",
-    "bus.admin.groupEmpty": "The selected group has no members. Check it under Groups & group leaders.",
+    "bus.admin.createBusFirst": "Create a bus above first.",
+    "bus.admin.assignmentBoardingLocked":
+      "Close the active boarding before changing assignments.",
+    "bus.admin.groupLeaderConflict":
+      "A group member already leads another bus. Change that bus's leader before moving the group.",
+    "bus.admin.groupFamilyConflict":
+      "This would split an existing family assignment across buses. Assign the whole family to this bus first.",
+    "bus.admin.groupEmpty":
+      "The selected group has no members. Check it under Groups & group leaders.",
     "bus.admin.boardingTitle": "Departure title",
     "bus.admin.boardingTitlePlaceholder": "For example: Departure from hotel",
     "bus.admin.busName": "Bus name",
     "bus.admin.busNamePlaceholder": "For example: Bus 1",
     "bus.admin.busEmpty": "No one has been assigned to this bus yet.",
-    "bus.admin.busLeader": "Select bus leader",
-    "bus.admin.busLeaderMissing": "Bus leader missing",
+    "bus.admin.busLeader": "Select bus leader (optional)",
+    "bus.admin.busLeaderMissing": "No bus leader selected",
     "bus.admin.busLeaderName": "Bus leader: {name}",
-    "bus.admin.busLeaderRequired":
-      "Every new bus requires a registered person as its leader. That person is assigned to the bus automatically.",
+    "bus.admin.busLeaderRequired": "Create the buses; users choose their own bus. You can optionally appoint a bus leader.",
     "bus.admin.busesTitle": "Buses",
     "bus.admin.cancel": "Cancel",
     "bus.admin.changeBusLeader": "Change leader",
@@ -1651,8 +1759,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Choose a group, a registered person or an entire family above.",
     "bus.admin.noParticipantsTitle": "No assignments yet",
     "bus.admin.noFamiliesAvailable": "No account families are available yet.",
-    "bus.admin.noPeopleAvailable":
-      "No individual person matches. Members of already assigned families are hidden here.",
+    "bus.admin.noPeopleAvailable": "No registered person matches your search.",
     "bus.admin.person": "Individual person",
     "bus.admin.personSearch": "Search person",
     "bus.admin.personSearchPlaceholder": "Search by registered name …",
@@ -1676,8 +1783,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.homeTitle": "My bus",
     "bus.loading": "Loading bus assignment …",
     "bus.navTitle": "My bus",
-    "bus.noAssignmentBody":
-      "Your account has not been assigned to a bus yet. Contact your trip leader.",
+    "bus.noAssignmentBody": "You can choose your own bus for the active trip and change it later.",
     "bus.noAssignmentTitle": "No bus assignment",
     "bus.noBoardingBody":
       "Your assignment is visible. There is no active check right now.",
@@ -1850,6 +1956,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.resultNo": "No",
     "groupCheck.resultOpen": "Still open",
     "groupCheck.resultYes": "Yes",
+    "groupCheck.showNames": "{status}: Show names",
+    "groupCheck.hideNames": "{status}: Hide names",
     "groupCheck.start": "Ask question",
     "groupCheck.submitError": "Your answer could not be saved. Try again.",
     "groupCheck.syncErrorBody":
@@ -1863,6 +1971,21 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "questionRound.adminError":
       "The question round could not be updated. Check your connection and try again.",
     "questionRound.adminTitle": "Anonymous question round",
+    "questionRound.audienceTitle": "Who is this question round for?",
+    "questionRound.audienceBody":
+      "Choose brothers or sisters. Only accounts with the matching assignment can submit questions.",
+    "questionRound.audience.brother": "For brothers",
+    "questionRound.audience.sister": "For sisters",
+    "questionRound.audienceMissing":
+      "This question round has no audience yet. An admin or scholar must close it and reopen it for brothers or sisters.",
+    "questionRound.audienceUnknown": "Audience not specified",
+    "questionRound.participationDenied": "Participation unavailable",
+    "questionRound.memberTypeMissing":
+      "Your account has no brother or sister assignment. Please contact the travel team.",
+    "questionRound.onlyBrothers":
+      "Only brothers can submit questions in this round.",
+    "questionRound.onlySisters":
+      "Only sisters can submit questions in this round.",
     "questionRound.anonymousBody":
       "Neither your name nor your account or profile ID is stored in the question table. For abuse prevention, only your submission count for the current round is tracked separately and deleted when the round closes. Do not include personal information in the question text.",
     "questionRound.anonymousTitle": "Anonymous submission",
@@ -1953,8 +2076,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.leaderSearch": "Search for a leader",
     "tripGroups.admin.memberSearch": "Search for a group member",
     "tripGroups.admin.searchPlaceholder": "Search by name …",
-    "tripGroups.admin.selectedLeader":
-      "Selected as group leader",
+    "tripGroups.admin.selectedLeader": "Selected as group leader",
     "tripGroups.admin.removeLeader": "Remove {name} as group leader",
     "tripGroups.admin.removeLeaderTitle": "Remove “{name}” as group leader?",
     "tripGroups.admin.removeLeaderBody":
@@ -2022,8 +2144,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "admin.organization.groups.description":
       "Create subgroups and choose group leaders.",
     "admin.organization.overview.activeTrip": "Active trip",
-    "admin.organization.overview.noActiveTrip":
-      "No active trip yet",
+    "admin.organization.overview.noActiveTrip": "No active trip yet",
     "admin.organization.overview.buses": "Buses",
     "admin.organization.overview.participants": "Participants",
     "admin.organization.overview.groups": "Groups",
@@ -2089,7 +2210,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "No program has been published for this day yet.",
     "dailyProgram.openProgram": "View the full program",
     "dailyProgram.openProgramAccessibility": "Open daily program",
-    "dailyProgram.openProgramHint": "Shows today and all published upcoming days.",
+    "dailyProgram.openProgramHint":
+      "Shows today and all published upcoming days.",
     "dailyProgram.retry": "Try again",
     "dailyProgram.syncErrorTitle": "Daily program not synchronized",
     "dailyProgram.today": "Today",
@@ -2252,7 +2374,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.firstName": "First name",
     "auth.age": "Age (years)",
     "auth.agePlaceholder": "Your age in years",
-    "auth.validation.age": "Enter your age as a whole number between 0 and 120.",
+    "auth.validation.age":
+      "Enter your age as a whole number between 0 and 120.",
     "auth.firstNamePlaceholder": "Your first name",
     "auth.surname": "Last name",
     "auth.surnamePlaceholder": "Your last name",
@@ -2283,8 +2406,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.validation.accountCoverage": "Choose who this account represents.",
     "auth.validation.email": "Enter a valid email address.",
     "auth.validation.memberType": "Choose brother or sister.",
-    "auth.validation.name":
-      "The first name must be between 2 and 80 characters long.",
+    "auth.validation.name": "Enter a first name with 1 to 80 characters.",
     "auth.validation.surname": "Enter your last name.",
     "auth.validation.password":
       "The password must be at least 8 characters long.",
@@ -2522,10 +2644,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "settings.languageTitle": "Language",
     "settings.light": "Light",
     "settings.notifications": "Notifications",
-    "settings.notificationsBody": "Controls push notifications for wake-up calls and emergencies on this device.",
+    "settings.notificationsBody":
+      "Controls push notifications for wake-up calls and emergencies on this device.",
     "settings.notificationsGuestBody":
       "Sign in to manage notifications for this device.",
-    "settings.notificationsHint": "Turns push notifications on or off for this device.",
+    "settings.notificationsHint":
+      "Turns push notifications on or off for this device.",
     "settings.notificationsOpenSettings": "Open device settings",
     "settings.notificationsTitle": "Allow notifications",
     "settings.openAdmin": "Open admin area",
@@ -2556,6 +2680,41 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Source Rule",
   },
   ar: {
+    "bus.admin.deleteTemplate": "حذف الترتيب",
+    "bus.admin.deleteTemplateTitle": "حذف الترتيب «{name}»؟",
+    "bus.admin.deleteTemplateBody": "سيُزال ترتيب الحافلات هذا من قائمة الاختيار ولن يمكن نسخه إلى تنقل جديد.",
+    "bus.admin.templateDeleted": "تم حذف الترتيب.",
+    "bus.admin.templateUnavailable": "لم يعد هذا الترتيب متاحًا. تم تحديث قائمة الاختيار. اختر مرة أخرى.",
+    "bus.presence.title": "هل أنت في الحافلة الآن؟",
+    "bus.presence.onBus": "في الحافلة",
+    "bus.presence.notOnBus": "لست في الحافلة بعد",
+    "bus.presence.unanswered": "لم يرد بعد",
+    "bus.presence.saved": "تم حفظ ردك.",
+    "bus.presence.error": "تعذّر حفظ ردك. حاول مرة أخرى.",
+    "bus.presence.resetHint": "يمكنك تغيير ردك. أكّد مرة أخرى بعد تغيير الحافلة.",
+    "bus.presence.summary": "في الحافلة: {onBus} · ليس بعد: {notOnBus} · دون رد: {unanswered}",
+    "bus.selection.title": "اختر حافلتك",
+    "bus.selection.body": "اختر الحافلة التي تنتمي إليها. يمكنك تغييرها في أي وقت. يخص الاختيار حسابك فقط، وعند انتقالك تُلغى قيادتك للحافلة السابقة إن كنت قائدها.",
+    "bus.selection.current": "حافلتك: {bus}",
+    "bus.selection.choose": "اختيار {bus}",
+    "bus.selection.change": "الانتقال إلى {bus}",
+    "bus.selection.selected": "{bus} · حافلتك",
+    "bus.selection.saved": "تم حفظ تعيين حافلتك.",
+    "bus.selection.saving": "جارٍ حفظ بيانات الحافلة…",
+    "bus.selection.error": "تعذّر حفظ تعيين الحافلة. حاول مرة أخرى.",
+    "bus.selection.changed": "لم يعد التنقل أو الحافلة متاحًا. تم تحديث القائمة.",
+    "bus.selection.noTripTitle": "لا يوجد تنقل نشط",
+    "bus.selection.noTripBody": "عندما ينشئ فريق التنظيم تنقلًا وحافلات، يمكنك اختيار حافلتك هنا.",
+    "bus.selection.noBuses": "لم ينشئ فريق التنظيم حافلات لهذا التنقل بعد.",
+    "bus.selection.homeBody": "يمكنك الآن اختيار حافلتك بنفسك للتنقل الحالي.",
+    "bus.admin.rosterTitle": "من في كل حافلة؟",
+    "bus.admin.rosterBody": "افتح قائمة الحافلة لرؤية الأسماء ونقل الأشخاص بشكل فردي. يمكن للمستخدمين أيضًا اختيار حافلتهم وتغييرها بأنفسهم.",
+    "bus.admin.unassigned": "دون حافلة بعد",
+    "bus.admin.rosterSection": "{name} · {count} حسابات",
+    "bus.admin.rosterCount": "{count} حسابات",
+    "bus.admin.rosterEmpty": "لا يوجد أشخاص في هذه القائمة.",
+    "bus.admin.movePerson": "نقل {name}",
+    "bus.admin.moveTo": "النقل إلى {bus}",
     "wakeUp.alreadyDue":
       "حان موعد هذا النداء ولا يمكن تعديله. جارٍ تحديث القائمة.",
     "wakeUp.now": "الآن",
@@ -2585,7 +2744,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "wakeUp.active": "نداء الإيقاظ نشط",
     "wakeUp.inactive": "لا يوجد نداء إيقاظ نشط",
     "wakeUp.close": "إنهاء نداء الإيقاظ",
-    "wakeUp.acknowledge": "أنا مستيقظ",
+    "wakeUp.acknowledge": "تأكيد",
     "wakeUp.acknowledged": "لقد أكدت استلام نداء الإيقاظ.",
     "wakeUp.confirmations": "أكد {confirmed} من أصل {total} حساباً.",
     "wakeUp.pushFailed":
@@ -2594,7 +2753,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "فعّل الإشعارات لتلقي نداءات الإيقاظ خارج التطبيق. يعتمد الصوت على إعدادات جهازك.",
     "wakeUp.enableNotifications": "تفعيل الإشعارات",
     "admin.transport.title": "التنقلات والحافلات",
-    "admin.transport.description": "خطط للتنقلات وعيّن المجموعات والعائلات والأشخاص للحافلات.",
+    "admin.transport.description": "إنشاء التنقلات والحافلات وعرض اختيارات الحافلات ونقل الأشخاص.",
     "tripGroups.groupCount": "{count} مجموعات",
     "tripGroups.admin.families": "إضافة عائلات",
     "tripGroups.admin.familiesBody":
@@ -2750,7 +2909,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "emergency.delete": "حذف",
     "emergency.deleting": "جارٍ الحذف …",
     "emergency.deleteTitle": "حذف البلاغ الطارئ نهائيًا؟",
-    "emergency.deleteBody": "سيُحذف البلاغ نهائيًا لدى المرسل وجميع المستلمين. لا يمكن التراجع عن ذلك.",
+    "emergency.deleteBody":
+      "سيُحذف البلاغ نهائيًا لدى المرسل وجميع المستلمين. لا يمكن التراجع عن ذلك.",
     "emergency.cancel": "إلغاء",
     "emergency.actionError": "تعذر حفظ التغيير. يرجى المحاولة مجددًا.",
     "emergency.markReadError": "تعذر حفظ حالة القراءة.",
@@ -2833,42 +2993,50 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.accountPartySize": "يمثل هذا الحساب {count} أشخاص",
     "bus.admin.actionError":
       "تعذر حفظ إجراء الحافلة. تحقق من الاتصال وحاول مرة أخرى.",
-    "bus.admin.addBus": "إنشاء حافلة مع قائد",
+    "bus.admin.addBus": "إنشاء حافلة",
     "bus.admin.archive": "إنهاء التنقل",
     "bus.admin.archiveBody":
       "سينتهي التنقل. تبقى الحافلات والقادة والتعيينات محفوظة للنسخ إلى التنقل التالي، ولا يتغير البرنامج اليومي.",
     "bus.admin.archiveConfirm": "إنهاء التنقل",
     "bus.admin.archiveTitle": "إنهاء التنقل النشط؟",
     "bus.admin.assignmentTitle": "تعيين المجموعات والأشخاص",
-    "bus.admin.assignmentBody": "اختر مجموعة موجودة وحافلة. يُعيَّن جميع الأعضاء الحاليين معًا، ويتولى قائد المجموعة قيادة الحافلة بدلًا من قائدها الحالي. إذا تعدد قادة المجموعة فاختر واحدًا منهم. أعد التعيين لتضمين تغييرات المجموعة اللاحقة.",
+    "bus.admin.assignmentBody":
+      "اختر مجموعة موجودة وحافلة. يُعيَّن جميع الأعضاء الحاليين معًا، ويتولى قائد المجموعة قيادة الحافلة بدلًا من قائدها الحالي. إذا تعدد قادة المجموعة فاختر واحدًا منهم. أعد التعيين لتضمين تغييرات المجموعة اللاحقة.",
     "bus.admin.group": "المجموعة كاملة",
     "bus.admin.groupSearch": "اختيار مجموعة أو البحث عنها",
     "bus.admin.groupSearchPlaceholder": "البحث باسم المجموعة…",
-    "bus.admin.groupMembers": "{count} حسابات · {people} أشخاص · قادة المجموعة: {leaders}",
+    "bus.admin.groupMembers":
+      "{count} حسابات · {people} أشخاص · قادة المجموعة: {leaders}",
     "bus.admin.groupSelectedMembers": "سيُضاف هؤلاء الأعضاء معًا: {names}",
     "bus.admin.groupSelectBusLeader": "اختر قائد مجموعة لقيادة الحافلة",
     "bus.admin.groupBecomesBusLeader": "قائد الحافلة بعد التعيين: {name}",
-    "bus.admin.groupNoLeader": "هذه المجموعة بلا قائد. أضف قائدًا أولًا في قسم المجموعات وقادتها.",
-    "bus.admin.groupLeaderChanged": "تغيّر قائد المجموعة المختار. حدّث المجموعات واختر مجددًا.",
-    "bus.admin.noGroups": "لا توجد مجموعات بعد. أنشئها أولًا في قسم المجموعات وقادتها.",
+    "bus.admin.groupNoLeader":
+      "هذه المجموعة بلا قائد. أضف قائدًا أولًا في قسم المجموعات وقادتها.",
+    "bus.admin.groupLeaderChanged":
+      "تغيّر قائد المجموعة المختار. حدّث المجموعات واختر مجددًا.",
+    "bus.admin.noGroups":
+      "لا توجد مجموعات بعد. أنشئها أولًا في قسم المجموعات وقادتها.",
     "bus.admin.noMatchingGroups": "لا توجد مجموعة تطابق البحث.",
     "bus.admin.saveGroupAssignment": "تعيين المجموعة للحافلة",
     "bus.admin.assignmentSaved": "تم حفظ تعيين الحافلة.",
-    "bus.admin.createBusFirst": "أنشئ أولًا حافلة مع قائدها أعلاه.",
-    "bus.admin.assignmentBoardingLocked": "أغلق الصعود الجاري قبل تغيير التعيينات.",
-    "bus.admin.groupLeaderConflict": "أحد أعضاء المجموعة يقود حافلة أخرى بالفعل. غيّر قائد تلك الحافلة قبل نقل المجموعة.",
-    "bus.admin.groupFamilyConflict": "سيؤدي هذا إلى تقسيم عائلة معيّنة معًا على عدة حافلات. عيّن العائلة كاملة لهذه الحافلة أولًا.",
-    "bus.admin.groupEmpty": "المجموعة المختارة بلا أعضاء. راجعها في قسم المجموعات وقادتها.",
+    "bus.admin.createBusFirst": "أنشئ حافلة أولًا أعلاه.",
+    "bus.admin.assignmentBoardingLocked":
+      "أغلق الصعود الجاري قبل تغيير التعيينات.",
+    "bus.admin.groupLeaderConflict":
+      "أحد أعضاء المجموعة يقود حافلة أخرى بالفعل. غيّر قائد تلك الحافلة قبل نقل المجموعة.",
+    "bus.admin.groupFamilyConflict":
+      "سيؤدي هذا إلى تقسيم عائلة معيّنة معًا على عدة حافلات. عيّن العائلة كاملة لهذه الحافلة أولًا.",
+    "bus.admin.groupEmpty":
+      "المجموعة المختارة بلا أعضاء. راجعها في قسم المجموعات وقادتها.",
     "bus.admin.boardingTitle": "عنوان المغادرة",
     "bus.admin.boardingTitlePlaceholder": "مثلاً: المغادرة من الفندق",
     "bus.admin.busName": "اسم الحافلة",
     "bus.admin.busNamePlaceholder": "مثلاً: الحافلة 1",
     "bus.admin.busEmpty": "لم يُعيّن أحد لهذه الحافلة بعد.",
-    "bus.admin.busLeader": "اختيار قائد الحافلة",
-    "bus.admin.busLeaderMissing": "قائد الحافلة غير محدد",
+    "bus.admin.busLeader": "اختيار قائد الحافلة (اختياري)",
+    "bus.admin.busLeaderMissing": "لم يُحدّد قائد للحافلة",
     "bus.admin.busLeaderName": "قائد الحافلة: {name}",
-    "bus.admin.busLeaderRequired":
-      "تتطلب كل حافلة جديدة شخصاً مسجلاً قائداً لها، ويُعيّن هذا الشخص للحافلة تلقائياً.",
+    "bus.admin.busLeaderRequired": "أنشئ الحافلات ليختار المستخدمون حافلتهم بأنفسهم. يمكنك تحديد قائد للحافلة اختياريًا.",
     "bus.admin.busesTitle": "الحافلات",
     "bus.admin.cancel": "إلغاء",
     "bus.admin.changeBusLeader": "تغيير القائد",
@@ -2884,11 +3052,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.familySearch": "البحث عن عائلة",
     "bus.admin.familySearchPlaceholder": "البحث باسم العائلة …",
     "bus.admin.minutes": "{count} دقيقة",
-    "bus.admin.noParticipantsBody": "اختر أعلاه مجموعة أو شخصًا مسجلًا أو عائلة كاملة.",
+    "bus.admin.noParticipantsBody":
+      "اختر أعلاه مجموعة أو شخصًا مسجلًا أو عائلة كاملة.",
     "bus.admin.noParticipantsTitle": "لا توجد تعيينات بعد",
     "bus.admin.noFamiliesAvailable": "لا توجد عائلات حسابات متاحة بعد.",
-    "bus.admin.noPeopleAvailable":
-      "لا يوجد شخص منفرد مطابق. أفراد العائلات المعيّنة مخفيون هنا.",
+    "bus.admin.noPeopleAvailable": "لا يوجد شخص مسجل يطابق البحث.",
     "bus.admin.person": "شخص منفرد",
     "bus.admin.personSearch": "البحث عن شخص",
     "bus.admin.personSearchPlaceholder": "البحث بالاسم المسجل …",
@@ -2912,8 +3080,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.homeTitle": "حافلتي",
     "bus.loading": "جارٍ تحميل تعيين الحافلة …",
     "bus.navTitle": "حافلتي",
-    "bus.noAssignmentBody":
-      "لم يُعيّن حسابك إلى حافلة بعد. تواصل مع إدارة الرحلة.",
+    "bus.noAssignmentBody": "يمكنك اختيار حافلتك للتنقل الحالي بنفسك وتغييرها لاحقًا.",
     "bus.noAssignmentTitle": "لا يوجد تعيين للحافلة",
     "bus.noBoardingBody": "تعيينك ظاهر، ولا يوجد تحقق نشط حالياً.",
     "bus.noBoardingTitle": "لا يوجد صعود نشط",
@@ -3077,6 +3244,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.resultNo": "لا",
     "groupCheck.resultOpen": "لم يُجب بعد",
     "groupCheck.resultYes": "نعم",
+    "groupCheck.showNames": "{status}: عرض الأسماء",
+    "groupCheck.hideNames": "{status}: إخفاء الأسماء",
     "groupCheck.start": "طرح السؤال",
     "groupCheck.submitError": "تعذر حفظ إجابتك. حاول مرة أخرى.",
     "groupCheck.syncErrorBody":
@@ -3089,6 +3258,19 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "questionRound.adminError":
       "تعذر تحديث جولة الأسئلة. تحقق من الاتصال وحاول مرة أخرى.",
     "questionRound.adminTitle": "جولة أسئلة مجهولة",
+    "questionRound.audienceTitle": "لمن جولة الأسئلة؟",
+    "questionRound.audienceBody":
+      "اختر الإخوة أو الأخوات. يمكن فقط للحسابات ذات التصنيف المطابق إرسال الأسئلة.",
+    "questionRound.audience.brother": "للإخوة",
+    "questionRound.audience.sister": "للأخوات",
+    "questionRound.audienceMissing":
+      "لم تُحدَّد الفئة لهذه الجولة بعد. يجب على المشرف أو العالم إغلاقها وإعادة فتحها مع اختيار الإخوة أو الأخوات.",
+    "questionRound.audienceUnknown": "الفئة غير محددة",
+    "questionRound.participationDenied": "المشاركة غير متاحة",
+    "questionRound.memberTypeMissing":
+      "لم يُحدَّد تصنيف حسابك كأخ أو أخت. يرجى التواصل مع فريق الرحلة.",
+    "questionRound.onlyBrothers": "يمكن للإخوة فقط طرح الأسئلة في هذه الجولة.",
+    "questionRound.onlySisters": "يمكن للأخوات فقط طرح الأسئلة في هذه الجولة.",
     "questionRound.anonymousBody":
       "لا يُحفظ اسمك ولا معرف حسابك أو ملفك في جدول الأسئلة. ولمنع إساءة الاستخدام يُحسب بشكل منفصل عدد مشاركاتك في الجولة الحالية فقط، ويُحذف هذا العداد عند إغلاق الجولة. لا تكتب بيانات شخصية داخل نص السؤال.",
     "questionRound.anonymousTitle": "إرسال مجهول",
@@ -3488,7 +3670,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.validation.accountCoverage": "اختر من يمثل هذا الحساب.",
     "auth.validation.email": "أدخل عنوان بريد إلكتروني صالحا.",
     "auth.validation.memberType": "اختر أخاً أو أختاً.",
-    "auth.validation.name": "يجب أن يتراوح الاسم الأول بين حرفين و80 حرفاً.",
+    "auth.validation.name": "أدخل اسماً أول من حرف واحد إلى 80 حرفاً.",
     "auth.validation.surname": "أدخل اسم عائلتك.",
     "auth.validation.password": "يجب ألا تقل كلمة المرور عن 8 أحرف.",
     "auth.validation.passwordMatch": "كلمتا المرور غير متطابقتين.",
@@ -3722,7 +3904,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "settings.languageTitle": "اللغة",
     "settings.light": "فاتح",
     "settings.notifications": "الإشعارات",
-    "settings.notificationsBody": "يتحكم بإشعارات التنبيه للاستيقاظ والطوارئ على هذا الجهاز.",
+    "settings.notificationsBody":
+      "يتحكم بإشعارات التنبيه للاستيقاظ والطوارئ على هذا الجهاز.",
     "settings.notificationsGuestBody":
       "سجّل الدخول لإدارة الإشعارات على هذا الجهاز.",
     "settings.notificationsHint": "يشغّل إشعارات هذا الجهاز أو يوقفها.",

@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Spacing } from '@/constants/theme';
-import type { AccountFamily, AdminUserSummary, TripBus } from '@/domain/database';
+import type { AccountFamily, AdminUserSummary } from '@/domain/database';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import { useBusManagement } from '@/features/bus-management/bus-management-context';
+import { AdminBusRoster } from '@/features/bus-management/AdminBusRoster';
 import { shouldRetryBusStatusAfterSessionRefresh } from '@/features/bus-management/bus-management-state';
 import { useI18n } from '@/features/i18n/i18n';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
@@ -40,6 +41,7 @@ export function AdminBusManagementPanel({
     isLoading,
     participants,
     refresh,
+    roster = [],
     syncErrorMessage,
     trips,
   } = useBusManagement();
@@ -61,28 +63,21 @@ export function AdminBusManagementPanel({
   const [replacementLeaderUserId, setReplacementLeaderUserId] = useState<string | null>(null);
   const [assignmentKind, setAssignmentKind] = useState<AssignmentChoice['kind']>('group');
   const [assignmentSearch, setAssignmentSearch] = useState('');
+  const [isAssignmentSearchOpen, setIsAssignmentSearchOpen] = useState(false);
   const [assignmentChoice, setAssignmentChoice] = useState<AssignmentChoice | null>(null);
   const [groupLeaderChoice, setGroupLeaderChoice] = useState<{ groupId: number; userId: string } | null>(null);
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null);
   const [isWorking, setIsWorking] = useState(false);
   const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
   const [assignmentSaved, setAssignmentSaved] = useState(false);
+  const [templateDeleted, setTemplateDeleted] = useState(false);
+  const [deletedTemplateIds, setDeletedTemplateIds] = useState<number[]>([]);
 
   const archivedTrips = useMemo(
-    () => trips.filter((trip) => trip.archived_at !== null),
-    [trips],
+    () => trips.filter((trip) => trip.archived_at !== null && trip.bus_setup_deleted_at === null && !deletedTemplateIds.includes(trip.id)),
+    [deletedTemplateIds, trips],
   );
-  const assignedFamilyIds = useMemo(
-    () =>
-      new Set(
-        participants.flatMap((participant) =>
-          participant.assignment_family_id === null
-            ? []
-            : [participant.assignment_family_id],
-        ),
-      ),
-    [participants],
-  );
+  const selectedTemplate = archivedTrips.find((trip) => trip.id === templateTripId) ?? null;
   const assignmentUnitCount = useMemo(() => {
     const familyIds = new Set<number>();
     let people = 0;
@@ -100,10 +95,6 @@ export function AdminBusManagementPanel({
     () => new Map(users.map((user) => [user.user_id, user])),
     [users],
   );
-  const familiesById = useMemo(
-    () => new Map(families.map((family) => [family.id, family])),
-    [families],
-  );
 
   const matchingLeaders = useMemo(
     () => matchingUsers(users, leaderSearch, language),
@@ -113,32 +104,34 @@ export function AdminBusManagementPanel({
     () => matchingUsers(users, replacementLeaderSearch, language),
     [language, replacementLeaderSearch, users],
   );
-  const matchingPeople = useMemo(() => {
-    const visibleUsers = users.filter(
-      (user) => user.family_id === null || !assignedFamilyIds.has(user.family_id),
-    );
-    return matchingUsers(visibleUsers, assignmentSearch, language);
-  }, [assignedFamilyIds, assignmentSearch, language, users]);
+  const matchingPeople = useMemo(
+    () => matchingUsers(users, assignmentSearch, language, true),
+    [assignmentSearch, language, users],
+  );
   const matchingFamilies = useMemo(() => {
     const normalized = assignmentSearch.trim().toLocaleLowerCase(language);
-    if (!normalized) return [];
     return families
       .filter((family) => users.some((user) => user.family_id === family.id))
       .filter(
         (family) =>
           family.name.toLocaleLowerCase(language).includes(normalized),
       )
-      .slice(0, 8);
+      .sort((left, right) => left.name.localeCompare(right.name, language));
   }, [assignmentSearch, families, language, users]);
   const matchingGroups = useMemo(() => {
     const normalized = assignmentSearch.trim().toLocaleLowerCase(language);
     return groups.filter((group) =>
       !normalized || group.name.toLocaleLowerCase(language).includes(normalized),
-    );
+    ).sort((left, right) => left.name.localeCompare(right.name, language));
   }, [assignmentSearch, groups, language]);
   const selectedGroup = assignmentChoice?.kind === 'group'
     ? groups.find((group) => group.id === assignmentChoice.groupId)
     : null;
+  const selectedAssignmentName = assignmentChoice?.kind === 'person'
+    ? usersById.get(assignmentChoice.userId)?.display_name
+    : assignmentChoice?.kind === 'family'
+      ? families.find((family) => family.id === assignmentChoice.familyId)?.name
+      : selectedGroup?.name;
   const selectedGroupLeader = selectedGroup?.leaders.length === 1
     ? selectedGroup.leaders[0]
     : selectedGroup?.leaders.find((leader) =>
@@ -151,6 +144,7 @@ export function AdminBusManagementPanel({
   ) => {
     if (isWorking) return;
     setAssignmentSaved(false);
+    setTemplateDeleted(false);
     setActionErrorMessage(null);
     setIsWorking(true);
 
@@ -190,7 +184,32 @@ export function AdminBusManagementPanel({
     if (message === 'The selected group has no leader.') return t('bus.admin.groupNoLeader');
     if (message === 'Select a group leader to lead the bus.') return t('bus.admin.groupSelectBusLeader');
     if (message === 'Selected group leader not found.') return t('bus.admin.groupLeaderChanged');
+    if (message === 'Saved bus setup not found.' || message === 'Closed source trip not found.') return t('bus.admin.templateUnavailable');
     return message;
+  };
+
+  const confirmDeleteTemplate = () => {
+    if (!selectedTemplate || isWorking) return;
+    const tripId = selectedTemplate.id;
+    Alert.alert(
+      t('bus.admin.deleteTemplateTitle', { name: selectedTemplate.name }),
+      t('bus.admin.deleteTemplateBody'),
+      [
+        { style: 'cancel', text: t('bus.admin.cancel') },
+        {
+          style: 'destructive',
+          text: t('bus.admin.deleteTemplate'),
+          onPress: () => void runAction(
+            () => supabase.rpc('admin_delete_trip_bus_setup', { p_trip_id: tripId }),
+            () => {
+              setDeletedTemplateIds((current) => [...current, tripId]);
+              setTemplateTripId(null);
+              setTemplateDeleted(true);
+            },
+          ),
+        },
+      ],
+    );
   };
 
   const createTrip = () => {
@@ -211,11 +230,14 @@ export function AdminBusManagementPanel({
   };
 
   const createBus = () => {
-    if (!activeTrip || !selectedLeaderUserId) return;
+    if (!activeTrip) return;
     void runAction(
       () =>
-        supabase.rpc('admin_create_trip_bus_with_leader', {
+        selectedLeaderUserId ? supabase.rpc('admin_create_trip_bus_with_leader', {
           p_leader_user_id: selectedLeaderUserId,
+          p_name: busName.trim(),
+          p_trip_id: activeTrip.id,
+        }) : supabase.rpc('admin_create_trip_bus', {
           p_name: busName.trim(),
           p_trip_id: activeTrip.id,
         }),
@@ -259,7 +281,7 @@ export function AdminBusManagementPanel({
             })
         : assignmentChoice.kind === 'person'
         ? () =>
-            supabase.rpc('admin_assign_trip_person', {
+            supabase.rpc('admin_move_trip_person', {
               p_bus_id: selectedBusId,
               p_trip_id: activeTrip.id,
               p_user_id: assignmentChoice.userId,
@@ -353,11 +375,20 @@ export function AdminBusManagementPanel({
                   />
                 ))}
               </View>
+              {selectedTemplate ? (
+                <Button
+                  disabled={isWorking || hasSyncError}
+                  icon="close"
+                  label={t('bus.admin.deleteTemplate')}
+                  onPress={confirmDeleteTemplate}
+                  variant="danger"
+                />
+              ) : null}
             </View>
           ) : null}
 
           <Button
-            disabled={isWorking || tripName.trim().length < 3}
+            disabled={isWorking || tripName.trim().length < 3 || (templateTripId !== null && !selectedTemplate)}
             icon="plus"
             label={t(
               templateTripId === null
@@ -367,6 +398,11 @@ export function AdminBusManagementPanel({
             onPress={createTrip}
           />
           {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
+          {templateDeleted ? (
+            <ThemedText accessibilityLiveRegion="polite" type="small" themeColor="success">
+              {t('bus.admin.templateDeleted')}
+            </ThemedText>
+          ) : null}
           {actionErrorMessage ? <ActionError message={actionErrorMessage} /> : null}
         </Card>
       </View>
@@ -419,6 +455,18 @@ export function AdminBusManagementPanel({
 
       {tripExpanded ? (
         <>
+          <AdminBusRoster
+            key={activeTrip.id}
+            buses={buses}
+            disabled={isWorking || hasSyncError}
+            roster={roster}
+            onMove={(userId, busId) => void runAction(
+              () => supabase.rpc('admin_move_trip_person', {
+                p_trip_id: activeTrip.id, p_bus_id: busId, p_user_id: userId,
+              }),
+              () => setAssignmentSaved(true),
+            )}
+          />
           <Card style={styles.formCard}>
             <ThemedText type="heading">{t('bus.admin.busesTitle')}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
@@ -444,8 +492,7 @@ export function AdminBusManagementPanel({
             <Button
               disabled={
                 isWorking ||
-                busName.trim().length < 2 ||
-                selectedLeaderUserId === null
+                busName.trim().length < 2 || busName.trim().length > 60
               }
               icon="plus"
               label={t('bus.admin.addBus')}
@@ -467,7 +514,7 @@ export function AdminBusManagementPanel({
                       <ThemedText type="heading">{bus.name}</ThemedText>
                       <ThemedText
                         type="smallBold"
-                        themeColor={leader ? 'accent' : 'danger'}>
+                        themeColor={leader ? 'accent' : 'textSecondary'}>
                         {leader
                           ? t('bus.admin.busLeaderName', { name: leader.display_name })
                           : t('bus.admin.busLeaderMissing')}
@@ -529,6 +576,7 @@ export function AdminBusManagementPanel({
                 label={t('bus.admin.group')}
                 onPress={() => {
                   setAssignmentKind('group');
+                  setIsAssignmentSearchOpen(false);
                   setAssignmentChoice(null);
                   setAssignmentSearch('');
                   setAssignmentSaved(false);
@@ -539,6 +587,7 @@ export function AdminBusManagementPanel({
                 label={t('bus.admin.person')}
                 onPress={() => {
                   setAssignmentKind('person');
+                  setIsAssignmentSearchOpen(false);
                   setAssignmentChoice(null);
                   setAssignmentSearch('');
                   setAssignmentSaved(false);
@@ -549,6 +598,7 @@ export function AdminBusManagementPanel({
                 label={t('bus.admin.family')}
                 onPress={() => {
                   setAssignmentKind('family');
+                  setIsAssignmentSearchOpen(false);
                   setAssignmentChoice(null);
                   setAssignmentSearch('');
                   setAssignmentSaved(false);
@@ -567,8 +617,12 @@ export function AdminBusManagementPanel({
               )}
               onChangeText={(value) => {
                 setAssignmentSearch(value);
+                setIsAssignmentSearchOpen(true);
                 setAssignmentChoice(null);
                 setAssignmentSaved(false);
+              }}
+              onFocus={() => {
+                setIsAssignmentSearchOpen(true);
               }}
               placeholder={t(
                 assignmentKind === 'group'
@@ -580,61 +634,78 @@ export function AdminBusManagementPanel({
               value={assignmentSearch}
             />
 
-            <View style={styles.accountResults}>
-              {assignmentKind === 'group' && !areGroupsLoading && !hasGroupSyncError
-                ? matchingGroups.map((group) => (
+            {selectedAssignmentName ? (
+              <ThemedText type="smallBold" themeColor="success">
+                {t('bus.admin.selectedPerson', { name: selectedAssignmentName })}
+              </ThemedText>
+            ) : null}
+
+            {isAssignmentSearchOpen && (
+              (assignmentKind === 'person' && matchingPeople.length > 0) ||
+              (assignmentKind === 'family' && matchingFamilies.length > 0) ||
+              (assignmentKind === 'group' && !areGroupsLoading && !hasGroupSyncError && matchingGroups.length > 0)
+            ) ? (
+              <ScrollView
+                accessibilityLabel={t(assignmentKind === 'group' ? 'bus.admin.groupSearch'
+                  : assignmentKind === 'family' ? 'bus.admin.familySearch' : 'bus.admin.personSearch')}
+                accessibilityRole="radiogroup"
+                contentContainerStyle={styles.accountResults}
+                keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+                style={styles.assignmentResults}>
+                {assignmentKind === 'person' ? matchingPeople.map((user) => (
+                  <ChoiceRow
+                    key={user.user_id}
+                    label={user.display_name}
+                    note={t('bus.admin.accountPartySize', { count: user.party_size })}
+                    onPress={() => {
+                      setAssignmentChoice({ kind: 'person', userId: user.user_id });
+                      setIsAssignmentSearchOpen(false);
+                      setAssignmentSaved(false);
+                    }}
+                    selected={assignmentChoice?.kind === 'person' && assignmentChoice.userId === user.user_id}
+                  />
+                )) : null}
+                {assignmentKind === 'group' ? matchingGroups.map((group) => (
+                  <ChoiceRow
+                    key={group.id}
+                    label={group.name}
+                    note={t('bus.admin.groupMembers', {
+                      count: group.members.length,
+                      people: group.members.reduce((sum, member) => sum + member.party_size, 0),
+                      leaders: group.leaders.map((leader) => leader.display_name).join(', '),
+                    })}
+                    onPress={() => {
+                      setAssignmentChoice({ kind: 'group', groupId: group.id });
+                      setGroupLeaderChoice(null);
+                      setIsAssignmentSearchOpen(false);
+                      setAssignmentSaved(false);
+                    }}
+                    selected={assignmentChoice?.kind === 'group' && assignmentChoice.groupId === group.id}
+                  />
+                )) : null}
+                {assignmentKind === 'family' ? matchingFamilies.map((family) => {
+                  const members = users.filter((user) => user.family_id === family.id);
+                  return (
                     <ChoiceRow
-                      key={group.id}
-                      label={group.name}
-                      note={t('bus.admin.groupMembers', {
-                        count: group.members.length,
-                        people: group.members.reduce((sum, member) => sum + member.party_size, 0),
-                        leaders: group.leaders.map((leader) => leader.display_name).join(', '),
+                      key={family.id}
+                      label={family.name}
+                      note={t('bus.admin.familyMembers', {
+                        count: members.length,
+                        names: members.map((member) => member.display_name).join(', '),
                       })}
                       onPress={() => {
-                        setAssignmentChoice({ kind: 'group', groupId: group.id });
-                        setGroupLeaderChoice(null);
+                        setAssignmentChoice({ kind: 'family', familyId: family.id });
+                        setIsAssignmentSearchOpen(false);
                         setAssignmentSaved(false);
                       }}
-                      selected={assignmentChoice?.kind === 'group' && assignmentChoice.groupId === group.id}
+                      selected={assignmentChoice?.kind === 'family' && assignmentChoice.familyId === family.id}
                     />
-                  )) : null}
-              {assignmentKind === 'person'
-                ? matchingPeople.map((user) => (
-                    <ChoiceRow
-                      key={user.user_id}
-                      label={user.display_name}
-                      note={t('bus.admin.accountPartySize', { count: user.party_size })}
-                      onPress={() =>
-                        setAssignmentChoice({ kind: 'person', userId: user.user_id })
-                      }
-                      selected={
-                        assignmentChoice?.kind === 'person' &&
-                        assignmentChoice.userId === user.user_id
-                      }
-                    />
-                  )) : null}
-              {assignmentKind === 'family' ? matchingFamilies.map((family) => {
-                    const members = users.filter((user) => user.family_id === family.id);
-                    return (
-                      <ChoiceRow
-                        key={family.id}
-                        label={family.name}
-                        note={t('bus.admin.familyMembers', {
-                          count: members.length,
-                          names: members.map((member) => member.display_name).join(', '),
-                        })}
-                        onPress={() =>
-                          setAssignmentChoice({ familyId: family.id, kind: 'family' })
-                        }
-                        selected={
-                          assignmentChoice?.kind === 'family' &&
-                          assignmentChoice.familyId === family.id
-                        }
-                      />
-                    );
-                  }) : null}
-            </View>
+                  );
+                }) : null}
+              </ScrollView>
+            ) : null}
 
             {assignmentKind === 'group' ? (
               areGroupsLoading ? (
@@ -647,7 +718,7 @@ export function AdminBusManagementPanel({
                   <ThemedText type="small" themeColor="danger">{groupSyncErrorMessage}</ThemedText>
                   <Button icon="refresh" label={t('bus.retry')} onPress={() => void refreshGroups()} variant="secondary" />
                 </View>
-              ) : matchingGroups.length === 0 ? (
+              ) : isAssignmentSearchOpen && matchingGroups.length === 0 ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   {t(groups.length === 0 ? 'bus.admin.noGroups' : 'bus.admin.noMatchingGroups')}
                 </ThemedText>
@@ -689,14 +760,14 @@ export function AdminBusManagementPanel({
               </View>
             ) : null}
 
-            {assignmentSearch.trim() &&
+            {isAssignmentSearchOpen &&
             assignmentKind === 'person' &&
             matchingPeople.length === 0 ? (
               <ThemedText type="small" themeColor="textSecondary">
                 {t('bus.admin.noPeopleAvailable')}
               </ThemedText>
             ) : null}
-            {assignmentSearch.trim() &&
+            {isAssignmentSearchOpen &&
             assignmentKind === 'family' &&
             matchingFamilies.length === 0 ? (
               <ThemedText type="small" themeColor="textSecondary">
@@ -735,50 +806,27 @@ export function AdminBusManagementPanel({
               label={t(assignmentKind === 'group' ? 'bus.admin.saveGroupAssignment' : 'bus.admin.saveAssignment')}
               onPress={saveAssignment}
             />
-            {assignmentSaved ? (
-              <ThemedText accessibilityLiveRegion="polite" type="smallBold" themeColor="success">
-                {t('bus.admin.assignmentSaved')}
-              </ThemedText>
-            ) : null}
           </Card>
 
-          <View style={styles.participantList}>
-            {participants.length === 0 ? (
-              <Card style={styles.stateCard}>
-                <ThemedText type="heading">{t('bus.admin.noParticipantsTitle')}</ThemedText>
-                <ThemedText themeColor="textSecondary">
-                  {t('bus.admin.noParticipantsBody')}
-                </ThemedText>
-              </Card>
-            ) : (
-              buses.map((bus) => (
-                <BusAssignments
-                  bus={bus}
-                  familiesById={familiesById}
-                  key={bus.id}
-                  participants={participants.filter((participant) => participant.bus_id === bus.id)}
-                />
-              ))
-            )}
-          </View>
         </>
       ) : null}
 
       {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
+      {assignmentSaved ? <ThemedText accessibilityLiveRegion="polite" type="small" themeColor="success">{t('bus.admin.assignmentSaved')}</ThemedText> : null}
       {actionErrorMessage ? <ActionError message={actionErrorMessage} /> : null}
     </View>
   );
 }
 
-function matchingUsers(users: AdminUserSummary[], search: string, language: string) {
+function matchingUsers(users: AdminUserSummary[], search: string, language: string, showAll = false) {
   const normalized = search.trim().toLocaleLowerCase(language);
-  if (!normalized) return [];
-  return users
+  if (!normalized && !showAll) return [];
+  const matches = users
     .filter(
       (user) => user.display_name.toLocaleLowerCase(language).includes(normalized),
     )
-    .sort((left, right) => left.display_name.localeCompare(right.display_name, language))
-    .slice(0, 8);
+    .sort((left, right) => left.display_name.localeCompare(right.display_name, language));
+  return showAll ? matches : matches.slice(0, 8);
 }
 
 function AccountSearch({
@@ -825,79 +873,16 @@ function AccountSearch({
   );
 }
 
-function BusAssignments({
-  bus,
-  familiesById,
-  participants,
-}: {
-  bus: TripBus;
-  familiesById: Map<number, AccountFamily>;
-  participants: ReturnType<typeof useBusManagement>['participants'];
-}) {
-  const theme = useTheme();
-  const { t } = useI18n();
-  const familyGroups = new Map<number, typeof participants>();
-  const people = [] as typeof participants;
-
-  for (const participant of participants) {
-    if (participant.assignment_family_id === null) {
-      people.push(participant);
-    } else {
-      familyGroups.set(participant.assignment_family_id, [
-        ...(familyGroups.get(participant.assignment_family_id) ?? []),
-        participant,
-      ]);
-    }
-  }
-
-  return (
-    <Card style={styles.assignmentCard}>
-      <ThemedText type="heading">{bus.name}</ThemedText>
-      {participants.length === 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('bus.admin.busEmpty')}
-        </ThemedText>
-      ) : (
-        <View style={styles.assignmentRows}>
-          {[...familyGroups.entries()].map(([familyId, members]) => (
-            <View
-              key={`family:${familyId}`}
-              style={[styles.assignmentRow, { borderColor: theme.border }]}>
-              <SymbolIcon color={theme.accent} name="people" size={20} />
-              <View style={styles.flexText}>
-                <ThemedText type="smallBold">
-                  {familiesById.get(familyId)?.name ?? t('bus.admin.unknownFamily')}
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {members.map((member) => member.display_name).join(', ')}
-                </ThemedText>
-              </View>
-            </View>
-          ))}
-          {people.map((participant) => (
-            <View
-              key={participant.id}
-              style={[styles.assignmentRow, { borderColor: theme.border }]}>
-              <SymbolIcon color={theme.accent} name="account" size={20} />
-              <ThemedText type="smallBold" style={styles.flexText}>
-                {participant.display_name}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      )}
-    </Card>
-  );
-}
-
 function LabeledInput({
   label,
   onChangeText,
+  onFocus,
   placeholder,
   value,
 }: {
   label: string;
   onChangeText: (value: string) => void;
+  onFocus?: () => void;
   placeholder: string;
   value: string;
 }) {
@@ -908,6 +893,8 @@ function LabeledInput({
       <TextInput
         accessibilityLabel={label}
         onChangeText={onChangeText}
+        onFocus={onFocus}
+        onPressIn={onFocus}
         placeholder={placeholder}
         placeholderTextColor={theme.textSecondary}
         style={[
@@ -1007,18 +994,8 @@ const styles = StyleSheet.create({
   accountResults: {
     gap: Spacing.one,
   },
-  assignmentCard: {
-    gap: Spacing.two,
-  },
-  assignmentRow: {
-    alignItems: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: Spacing.two,
-    paddingVertical: Spacing.two,
-  },
-  assignmentRows: {
-    gap: Spacing.one,
+  assignmentResults: {
+    maxHeight: 288,
   },
   busCard: {
     borderRadius: 8,
@@ -1063,9 +1040,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   leaderEditor: {
-    gap: Spacing.two,
-  },
-  participantList: {
     gap: Spacing.two,
   },
   pressed: {

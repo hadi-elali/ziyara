@@ -26,8 +26,9 @@ import {
 } from '@/features/bus-management/bus-management-context';
 
 const session = { user: { id: 'bus-user' } } as Session;
-const mockAuthState: { isLoading: boolean; session: Session | null } = {
+const mockAuthState: { isLoading: boolean; profile: { role: string }; session: Session | null } = {
   isLoading: false,
+  profile: { role: 'user' },
   session,
 };
 
@@ -60,6 +61,7 @@ type MockSupabase = {
 
 const activeTrip: Trip = {
   archived_at: null,
+  bus_setup_deleted_at: null,
   created_at: '2026-08-27T08:00:00Z',
   created_by_profile_id: 1,
   id: 10,
@@ -75,6 +77,7 @@ const bus: TripBus = {
 };
 const participant: TripParticipant = {
   assignment_family_id: null,
+  is_on_bus: null,
   bus_id: bus.id,
   created_at: '2026-08-27T08:02:00Z',
   display_name: 'Testteilnehmer',
@@ -161,6 +164,7 @@ describe('BusManagementProvider', () => {
     jest.clearAllMocks();
     mockAuthState.isLoading = false;
     mockAuthState.session = session;
+    mockAuthState.profile = { role: 'user' };
     mockSupabase.auth.refreshSession.mockImplementation(() =>
       Promise.resolve({ data: { session }, error: null }),
     );
@@ -193,6 +197,9 @@ describe('BusManagementProvider', () => {
       query.maybeSingle.mockImplementation(() => dequeue(table));
       return query;
     });
+    mockSupabase.rpc.mockImplementation((name: string) => name === 'admin_trip_bus_roster'
+      ? { abortSignal: () => dequeue(name) }
+      : dequeue(name));
 
   });
 
@@ -268,5 +275,65 @@ describe('BusManagementProvider', () => {
     });
 
     expect(context()).toMatchObject({ activeTrip: null, participants: [] });
+  });
+
+  it('speichert die eigene Wahl ohne eine fremde Profil-ID zu übergeben', async () => {
+    await renderLoadedProvider();
+    enqueue('select_trip_bus', { data: participant, error: null });
+    queueSnapshot();
+    await act(async () => context().selectBus(bus.id));
+    expect(mockSupabase.rpc).toHaveBeenCalledWith('select_trip_bus', { p_trip_id: activeTrip.id, p_bus_id: bus.id });
+    expect(context().participants[0].bus_id).toBe(bus.id);
+  });
+
+  it('behält die bestätigte Buswahl, wenn der anschließende Refresh offline ist', async () => {
+    await renderLoadedProvider();
+    enqueue('select_trip_bus', { data: { ...participant, bus_id: 21 }, error: null });
+    enqueue('trips', { data: null, error: new PostgrestError({ code: '', details: '', hint: '', message: 'Failed to fetch' }) });
+    await act(async () => context().selectBus(21));
+    expect(context().participants[0]).toMatchObject({ bus_id: 21 });
+    expect(context().buses[0].leader_participant_id).toBeNull();
+    expect(context().hasSyncError).toBe(true);
+  });
+
+  it('erneuert eine abgelaufene Sitzung genau einmal vor dem erneuten Speichern', async () => {
+    await renderLoadedProvider();
+    enqueue('select_trip_bus', { data: null, error: new PostgrestError({ code: 'PGRST301', details: '', hint: '', message: 'JWT expired' }) });
+    enqueue('select_trip_bus', { data: participant, error: null });
+    queueSnapshot();
+    await act(async () => context().selectBus(bus.id));
+    expect(mockSupabase.auth.refreshSession).toHaveBeenCalledTimes(1);
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(2);
+  });
+
+  it('verwirft eine verspätete Mutation nach Logout und wiederholt sie nicht', async () => {
+    await renderLoadedProvider();
+    let resolveMutation: (value: QueryResult<null>) => void = () => {};
+    enqueue('select_trip_bus', new Promise<QueryResult<null>>((resolve) => { resolveMutation = resolve; }));
+    const saving = context().selectBus(bus.id);
+    mockAuthState.session = null;
+    await act(async () => { renderer?.update(<BusManagementProvider><Probe /></BusManagementProvider>); await flush(); });
+    await act(async () => {
+      resolveMutation({ data: null, error: new PostgrestError({ code: 'PGRST301', details: '', hint: '', message: 'JWT expired' }) });
+      await saving;
+    });
+    expect(context().participants).toEqual([]);
+    expect(mockSupabase.auth.refreshSession).not.toHaveBeenCalled();
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(1);
+  });
+
+  it('lädt die vollständige Übersicht nur für Admins und entfernt sie beim Rollenwechsel', async () => {
+    mockAuthState.profile = { role: 'admin' };
+    enqueue('admin_trip_bus_roster', { data: [{ user_id: 'unassigned-user', display_name: 'Ohne Bus', participant_id: null, bus_id: null }], error: null });
+    await renderLoadedProvider();
+    expect(context().roster).toHaveLength(1);
+    expect(mockSupabase.rpc).toHaveBeenCalledWith('admin_trip_bus_roster', { p_trip_id: activeTrip.id });
+    mockAuthState.profile = { role: 'user' };
+    queueSnapshot();
+    await act(async () => { renderer?.update(<BusManagementProvider><Probe /></BusManagementProvider>); });
+    expect(context().roster).toEqual([]);
+    await waitFor(() => !context().isLoading);
+    expect(context().roster).toEqual([]);
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(1);
   });
 });

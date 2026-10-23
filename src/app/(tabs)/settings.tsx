@@ -168,7 +168,6 @@ export default function SettingsScreen() {
                 notifications.availability === "expo_go" ||
                 notifications.availability === "unsupported"
               }
-              ios_backgroundColor={theme.border}
               onValueChange={(enabled) =>
                 void (enabled
                   ? notifications.enable()
@@ -177,10 +176,6 @@ export default function SettingsScreen() {
               thumbColor={
                 notifications.enabled ? theme.accent : theme.textSecondary
               }
-              trackColor={{
-                false: theme.border,
-                true: theme.accentSoft,
-              }}
               value={notifications.enabled}
             />
           </View>

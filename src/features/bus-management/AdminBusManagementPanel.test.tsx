@@ -1,8 +1,10 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { Alert, TextInput } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import type { AccountFamily, AdminUserSummary, Trip } from '@/domain/database';
 import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
 import { buildTripGroupStates } from '@/features/trip-groups/trip-group-state';
 
@@ -10,6 +12,8 @@ const mockRpc = jest.fn<(name: string, args: unknown) => Promise<{ error: { mess
 const mockRefresh = jest.fn(async () => {});
 const mockRefreshGroups = jest.fn(async () => {});
 let mockGroupError = false;
+let mockActiveTrip: { id: number; name: string } | null = { id: 20, name: 'Testfahrt' };
+let mockTrips: Trip[] = [];
 const initialMockGroups = buildTripGroupStates(
   [{ id: 10, name: 'Gruppe A', created_at: '', updated_at: '' }],
   [
@@ -26,9 +30,9 @@ jest.mock('@/features/auth/supabase', () => ({
 jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => ({ session: { user: { id: 'admin' } } }) }));
 jest.mock('@/features/bus-management/bus-management-context', () => ({
   useBusManagement: () => ({
-    activeTrip: { id: 20, name: 'Testfahrt' },
+    activeTrip: mockActiveTrip,
     buses: [{ id: 40, name: 'Bus 1', leader_participant_id: null }],
-    participants: [], trips: [], hasSyncError: false, isLoading: false, refresh: mockRefresh,
+    participants: [], trips: mockTrips, hasSyncError: false, isLoading: false, refresh: mockRefresh,
   }),
 }));
 jest.mock('@/features/trip-groups/trip-group-context', () => ({
@@ -68,6 +72,9 @@ function saveButton() {
 }
 async function mountAndSelect() {
   await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+  await act(async () => {
+    root().findAllByType(TextInput).find((field) => field.props.accessibilityLabel === 'bus.admin.groupSearch')?.props.onFocus();
+  });
   await act(async () => { choice('Gruppe A').props.onPress(); });
   await act(async () => { choice('Bus 1').props.onPress(); });
 }
@@ -79,9 +86,11 @@ describe('group bus assignment', () => {
     mockRefresh.mockClear();
     mockRefreshGroups.mockClear();
     mockGroupError = false;
+    mockActiveTrip = { id: 20, name: 'Testfahrt' };
+    mockTrips = [];
     mockGroups = initialMockGroups;
   });
-  afterEach(async () => { await act(async () => renderer?.unmount()); renderer = null; });
+  afterEach(async () => { await act(async () => renderer?.unmount()); renderer = null; jest.restoreAllMocks(); });
   afterAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment; });
 
   it('offers existing groups without searching and imports all members in one RPC', async () => {
@@ -119,7 +128,7 @@ describe('group bus assignment', () => {
     await mountAndSelect();
     await act(async () => { saveButton().props.onPress(); });
     expect(JSON.stringify(renderer?.toJSON())).toContain('bus.admin.groupLeaderConflict');
-    expect(choice('Gruppe A').props.accessibilityState.checked).toBe(true);
+    expect(JSON.stringify(renderer?.toJSON())).toContain('bus.admin.selectedPerson Gruppe A');
     expect(saveButton().props.disabled).toBe(false);
     await act(async () => { saveButton().props.onPress(); });
     expect(mockRpc).toHaveBeenCalledTimes(2);
@@ -135,5 +144,89 @@ describe('group bus assignment', () => {
     const retry = root().findAllByType(Button).find((button) => button.props.label === 'bus.retry')!;
     await act(async () => { retry.props.onPress(); });
     expect(mockRefreshGroups).toHaveBeenCalledTimes(1);
+  });
+
+  it('creates an empty bus without requiring a leader selection', async () => {
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    const nameInput = root().findAllByType(TextInput).find((input) => input.props.accessibilityLabel === 'bus.admin.busName')!;
+    await act(async () => { nameInput.props.onChangeText('Bus 2'); });
+    const createBus = root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.addBus')!;
+    expect(createBus.props.disabled).toBe(false);
+    await act(async () => { createBus.props.onPress(); });
+    expect(mockRpc).toHaveBeenCalledWith('admin_create_trip_bus', { p_name: 'Bus 2', p_trip_id: 20 });
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens all names on person search, filters them and assigns the selected account', async () => {
+    const users: AdminUserSummary[] = Array.from({ length: 12 }, (_, index) => ({
+      user_id: `person-${index + 1}`, display_name: `Person ${index + 1}`,
+      role: 'user', member_type: null, party_size: 1, emergency_on_duty: false,
+      family_id: null, family_name: null, luggage_count: 0, sim_card_count: 0,
+    }));
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={users} />); });
+    await act(async () => { choice('bus.admin.person').props.onPress(); });
+    expect(() => choice('Person 1')).toThrow();
+    const input = root().findAllByType(TextInput).find((field) => field.props.accessibilityLabel === 'bus.admin.personSearch')!;
+    await act(async () => { input.props.onFocus(); });
+    for (const user of users) expect(choice(user.display_name)).toBeDefined();
+    await act(async () => { input.props.onChangeText('Person 12'); });
+    expect(() => choice('Person 1')).toThrow();
+    await act(async () => { choice('Person 12').props.onPress(); });
+    expect(JSON.stringify(renderer?.toJSON())).toContain('bus.admin.selectedPerson Person 12');
+    await act(async () => { choice('Bus 1').props.onPress(); });
+    await act(async () => {
+      root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.saveAssignment')?.props.onPress();
+    });
+    expect(mockRpc).toHaveBeenCalledWith('admin_move_trip_person', { p_trip_id: 20, p_bus_id: 40, p_user_id: 'person-12' });
+  });
+
+  it.each(['family', 'group'] as const)('opens the full %s list and filters it before selecting', async (kind) => {
+    const families: AccountFamily[] = Array.from({ length: 12 }, (_, index) => ({
+      id: index + 1, name: `Familie ${index + 1}`, created_at: '', updated_at: '', created_by_profile_id: null,
+    }));
+    const users: AdminUserSummary[] = families.map((family) => ({
+      user_id: `member-${family.id}`, display_name: `Mitglied ${family.id}`, family_id: family.id,
+      family_name: family.name, role: 'user', member_type: null, party_size: 1,
+      emergency_on_duty: false, luggage_count: 0, sim_card_count: 0,
+    }));
+    mockGroups = families.map((family) => ({ ...initialMockGroups[0], id: family.id, name: `Gruppe ${family.id}` }));
+    const names = kind === 'family' ? families.map((family) => family.name) : mockGroups.map((group) => group.name);
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={families} users={users} />); });
+    await act(async () => { choice(`bus.admin.${kind}`).props.onPress(); });
+    expect(() => choice(names[0])).toThrow();
+    const input = root().findAllByType(TextInput).find((field) => field.props.accessibilityLabel === `bus.admin.${kind}Search`)!;
+    await act(async () => { input.props.onFocus(); });
+    for (const name of names) expect(choice(name)).toBeDefined();
+    await act(async () => { input.props.onChangeText(names[11]); });
+    expect(() => choice(names[0])).toThrow();
+    await act(async () => { choice(names[11]).props.onPress(); });
+    expect(JSON.stringify(renderer?.toJSON())).toContain(`bus.admin.selectedPerson ${names[11]}`);
+    expect(() => choice(names[11])).toThrow();
+  });
+
+  it('requires confirmation to delete a saved arrangement and clears its selection', async () => {
+    mockActiveTrip = null;
+    mockTrips = [{
+      id: 60, name: 'Gespeicherte Anordnung', archived_at: '2026-10-23T08:00:00Z',
+      bus_setup_deleted_at: null, created_at: '2026-10-22T08:00:00Z', created_by_profile_id: 1,
+    }];
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    await act(async () => { choice('Gespeicherte Anordnung').props.onPress(); });
+    const deleteButton = root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.deleteTemplate')!;
+    await act(async () => { deleteButton.props.onPress(); });
+    expect(mockRpc).not.toHaveBeenCalled();
+    expect(alert.mock.calls[0][0]).toContain('Gespeicherte Anordnung');
+    const confirm = alert.mock.calls[0][2]?.find((button) => button.style === 'destructive');
+    expect(confirm).toBeDefined();
+    await act(async () => { confirm?.onPress?.(); });
+    expect(mockRpc).toHaveBeenCalledWith('admin_delete_trip_bus_setup', { p_trip_id: 60 });
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(() => choice('Gespeicherte Anordnung')).toThrow();
+    expect(JSON.stringify(renderer?.toJSON())).toContain('bus.admin.templateDeleted');
+    const tripName = root().findAllByType(TextInput).find((input) => input.props.accessibilityLabel === 'bus.admin.tripName')!;
+    await act(async () => { tripName.props.onChangeText('Nächste Fahrt'); });
+    await act(async () => { root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.createTrip')?.props.onPress(); });
+    expect(mockRpc).toHaveBeenLastCalledWith('admin_create_trip', { p_name: 'Nächste Fahrt' });
   });
 });

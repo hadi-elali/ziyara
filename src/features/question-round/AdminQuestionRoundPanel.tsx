@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Spacing } from '@/constants/theme';
-import type { AnonymousQuestion, QuestionRound } from '@/domain/database';
+import type { AnonymousQuestion, MemberType, QuestionRound } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useI18n } from '@/features/i18n/i18n';
 import {
@@ -25,6 +25,7 @@ export function AdminQuestionRoundPanel() {
   const [isLoadingRound, setIsLoadingRound] = useState(true);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
+  const [targetMemberType, setTargetMemberType] = useState<MemberType | null>(null);
   const [updatingQuestionId, setUpdatingQuestionId] = useState<number | null>(null);
   const [roundErrorMessage, setRoundErrorMessage] = useState<string | null>(null);
   const [questionsErrorMessage, setQuestionsErrorMessage] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export function AdminQuestionRoundPanel() {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
         supabase
           .from('question_rounds')
-          .select('id, created_at, closed_at')
+          .select('id, created_at, closed_at, target_member_type')
           .order('created_at', { ascending: false })
           .limit(1)
           .abortSignal(signal)
@@ -176,7 +177,7 @@ export function AdminQuestionRoundPanel() {
   }, [loadQuestions, roundId]);
 
   const openRound = async () => {
-    if (isWorking) {
+    if (isWorking || !targetMemberType) {
       return;
     }
 
@@ -184,7 +185,9 @@ export function AdminQuestionRoundPanel() {
     setActionErrorMessage(null);
 
     try {
-      const { data, error } = await supabase.rpc('open_question_round');
+      const { data, error } = await supabase.rpc('open_question_round', {
+        p_target_member_type: targetMemberType,
+      });
 
       if (error) {
         throw error;
@@ -193,6 +196,7 @@ export function AdminQuestionRoundPanel() {
       latestRoundRequestSequence.current += 1;
       setLatestRound(data);
       setRoundErrorMessage(null);
+      setTargetMemberType(null);
     } catch (error) {
       setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
@@ -283,6 +287,17 @@ export function AdminQuestionRoundPanel() {
               <ThemedText type="smallBold" themeColor={isOpen ? 'success' : 'textSecondary'}>
                 {t(isOpen ? 'questionRound.statusOpen' : 'questionRound.statusClosed')}
               </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t(
+                  latestRound.target_member_type === 'brother'
+                    ? 'questionRound.audience.brother'
+                    : latestRound.target_member_type === 'sister'
+                      ? 'questionRound.audience.sister'
+                      : isOpen
+                        ? 'questionRound.audienceMissing'
+                        : 'questionRound.audienceUnknown',
+                )}
+              </ThemedText>
             </View>
           ) : null}
 
@@ -339,12 +354,45 @@ export function AdminQuestionRoundPanel() {
               variant="secondary"
             />
           ) : (
-            <Button
-              disabled={isWorking}
-              icon="question"
-              label={t('questionRound.open')}
-              onPress={() => void openRound()}
-            />
+            <View style={styles.audienceForm}>
+              <ThemedText type="smallBold">{t('questionRound.audienceTitle')}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('questionRound.audienceBody')}
+              </ThemedText>
+              <View
+                accessibilityRole="radiogroup"
+                accessibilityLabel={t('questionRound.audienceTitle')}
+                style={styles.audienceChoices}>
+                {(['brother', 'sister'] as const).map((memberType) => (
+                  <Pressable
+                    accessibilityLabel={t(`questionRound.audience.${memberType}`)}
+                    accessibilityRole="radio"
+                    accessibilityState={{
+                      checked: targetMemberType === memberType,
+                      disabled: isWorking,
+                    }}
+                    disabled={isWorking}
+                    key={memberType}
+                    onPress={() => setTargetMemberType(memberType)}
+                    style={[
+                      styles.audienceChoice,
+                      {
+                        backgroundColor:
+                          targetMemberType === memberType ? theme.accentSoft : theme.background,
+                        borderColor: targetMemberType === memberType ? theme.accent : theme.border,
+                      },
+                    ]}>
+                    <ThemedText type="smallBold">{t(`questionRound.audience.${memberType}`)}</ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+              <Button
+                disabled={isWorking || !targetMemberType}
+                icon="question"
+                label={t('questionRound.open')}
+                onPress={() => void openRound()}
+              />
+            </View>
           )}
         </>
       )}
@@ -413,6 +461,22 @@ const styles = StyleSheet.create({
   status: {
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.two,
+    padding: Spacing.three,
+  },
+  audienceForm: {
+    gap: Spacing.two,
+  },
+  audienceChoices: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  audienceChoice: {
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+    minHeight: 48,
     padding: Spacing.three,
   },
   questionList: {

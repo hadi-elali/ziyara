@@ -4,6 +4,49 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 23 October 2026: Delete saved bus arrangements
+
+- Let admins select an archived arrangement and delete it after a native confirmation naming that arrangement. Immediately remove confirmed deletions from the choices, clear the selected template and show success. Keep errors actionable and refuse stale template choices.
+- Migration `20261023020000_delete_saved_bus_setups.sql` persists removal in `trips.bus_setup_deleted_at` through an admin-only RPC. Reject active trips; preserve historical records. Exclude removed arrangements both in the UI and in the existing copy RPC, using its shared transaction lock to serialize copying and deletion. No direct client writes.
+- Adminpanel, context, domain/RPC types and DE/EN/AR copy are updated. TypeScript and lint pass (four existing warnings); six affected admin UI tests and eight isolated PostgreSQL assertions pass. No web or broad test runs. Migration not deployed; native/Realtime checks remain pending. No dependency/native configuration changes or new development build required.
+
+## 23 October 2026: Own bus presence confirmation
+
+- After choosing a bus, users explicitly report “On the bus” or “Not on the bus yet” and can revise their response. Keep unanswered distinct from no. Store the nullable Boolean with the trip participant and load it after restart.
+- Show each response in the expanded admin name list and per-bus yes/no/unanswered totals while collapsed. Reuse the existing bus synchronization, save feedback, auth retry and private participant permissions; provide German, English and Arabic text.
+- Migration `20261023010000_add_bus_presence_confirmation.sql` follows `20261023000000`. Its guarded RPC accepts only the authenticated account's assignment in an active trip and checks the expected bus, serialized with moves and archival. A trigger resets the confirmation on any actual bus change, including admin/group/family moves. Same-bus reassignment preserves it; trip copying starts unanswered. This does not restore historical boarding rounds or alarms.
+- Implemented in the existing bus selection panel, admin roster, context, domain/RPC types and translations. TypeScript and lint pass (four existing warnings); only seven affected UI tests and twelve focused PostgreSQL assertions ran. No web or broad test runs per user preference. Migration not deployed; actual Supabase/device validation remains pending. No dependency/native changes or additional development build required.
+
+## 23 October 2026: Self-service bus selection and collapsible rosters
+
+- Person, family and group search open bounded, nested-scrollable alphabetical lists on focus/tap. Include every registered account and eligible family without an eight-result cap, and all groups. Typing filters; choosing an entry closes the list and visibly retains its name. Preserve selected group details and leader selection. Client-only change, verified with the affected nine-test admin suite plus TypeScript/lint; no web or broad test runs.
+- Admins create an active trip and its buses; a bus leader is optional. This supersedes Phase 11's earlier mandatory-leader requirement for new buses.
+- Every signed-in account sees the active trip and its buses before assignment, chooses its own bus under `/bus`, and can change buses later. Home links to the selection as soon as an active trip exists. Persist choices in PostgreSQL and load them again after restart.
+- Admins see collapsed per-bus name lists plus accounts with no bus yet, and can move individual accounts directly. Keep existing optional group/family import and trip copying. Individual selection or admin movement detaches only that account's family assignment marker; leaving a bus vacates its leadership.
+- Migration `20261023000000_allow_self_service_bus_selection.sql` adds guarded self-selection, single-account admin movement, the minimal admin roster, active trip/bus reads and empty bus creation. Preserve private participant RLS, revoked direct writes, stable participant IDs and serialized mutations against trip archival. Apply remotely before client rollout; it has not been deployed here.
+- Implemented in the bus route, `BusSelectionPanel`, `AdminBusRoster`, the existing admin panel/context, domain RPC types, Home and all three UI languages. Providers hide previous account/admin data immediately on scope changes and refresh through Realtime, reconnect, app focus and fallback.
+- Validation: 69 targeted Jest tests pass; 33 committed SQL assertions pass using isolated PGlite PostgreSQL with local assertion functions instead of pgTAP. TypeScript and web export pass; lint has four existing warnings. Local SDK version check passes in offline mode; online Doctor reports the seven existing SDK-57 patch mismatches (20/21 checks). No dependency or native configuration changes. The browser smoke is updated but cannot even be listed without the stopped local Docker/Supabase environment; no full E2E, Supabase/pgTAP concurrency or device run. Per user instruction, no further tests or web checks.
+
+## 23 October 2026: Preserve login after pauses
+
+- On temporary startup refresh failures, recover the validated stored session identity from the existing SDK storage key. Never rewrite stale tokens or restore server-rejected credentials. Let explicit session reads distinguish an empty `INITIAL_SESSION` from a temporary outage; newer sign-in/sign-out events take precedence over delayed restoration.
+- Keep native foreground auto-refresh and retry profile loading when the access token changes. Preserve existing profiles and navigation during background refreshes; server profile roles, RLS and mandatory checks remain authoritative.
+- Scope ordinary sign-out to the current session; keep global revocation after password recovery. No backend, dependency or native configuration change and no new development build required for this fix. Updated clients must be delivered.
+- Verify Android/iOS recovery, token renewal, rejected credentials, corrupt/removed storage and logout/account-switch races, including a reproduction with the installed Supabase SDK. Run required project checks. The exact reported Admin error, remote session settings and physical-device pause/restart behavior remain unverified.
+
+## 23 October 2026: Back navigation after emergency notifications
+
+- Give `/emergency` and `/emergency-dashboard` an explicit translated Back button on both iOS and Android. Use existing navigation history; otherwise replace the emergency route with Home, or the currently available startup/check-in route while guards restrict Home.
+- Handle Android system Back only on active emergency routes without history, preventing an immediate app exit after a notification cold start. Preserve normal stack navigation, emergency access during mandatory checks and authentication/role guards.
+- Keep verification focused on the existing navigation regression suite and required static checks; no additional broad test or web runs requested. Ship the updated client and verify a real push cold start on iOS/Android. No dependency, native configuration or backend changes.
+
+## 22 October 2026: Database-controlled black Home screen
+
+- Read `public.lock_app.lock` for `id = 1` independently of login. Default to `false`; `true` covers Home, its controls and native tabs with a plain black fullscreen modal. `false` dismisses it automatically. Keep other routes and existing startup/group-check guards intact.
+- Preserve confirmed state across restart and failed reads using a validated local Boolean. Refresh through Realtime/reconnection, app/browser focus and a 30–40 second fallback; keep syncing while covered. Ignore stale reads and use the existing read timeout.
+- Migration `20261022040000_add_home_screen_lock.sql` preserves existing values, sets the database default to `false`, seeds only a missing `id = 1`, grants anonymous/authenticated read access with RLS, denies client writes, and registers the table for Realtime. Apply before shipping the client. No native dependency/configuration change.
+- Verify focused UI, sync/persistence/race and database permissions/default tests, TypeScript, lint, Expo alignment/Doctor and web export. Real native fullscreen and live Supabase-Realtime verification remain necessary.
+
 ## Phase 1: Architecture and project setup
 
 Files to create or modify:
@@ -548,6 +591,7 @@ Files to create or modify:
 Acceptance criteria:
 
 - Since 22 October 2026, registration requires separate first and last names, saved as `profiles.name` and `profiles.surname` by the auth signup trigger. Migration `20261022000000_add_registration_first_and_last_names.sql` supports both the legacy `display_name` schema and the supplied `name`/`surname` schema, retaining `display_name` for existing reads and RPCs. Preserve unsplit legacy names and nullable legacy surnames. Apply the migration before client rollout.
+- Migration `20261022131422_allow_single_character_profile_names.sql` permits first names and display labels of 1–80 characters, rejects blank names, and preserves single-character first names during signup. Replace both profile name checks because the historical remote `profiles_display_name_check` targets `name`. Keep manual edits synchronized with `display_name`; align all three UI validation messages.
 - Registration also requires age in completed years (an integer from 0 to 120). The separate migration `20261022010000_add_registration_age.sql` stores validated auth metadata in nullable `profiles.age`; preserve `null` for existing accounts and older clients without an age. This records age at registration rather than a date of birth. Apply after the name migration.
 - Registration requires a luggage count from `0` to `50`; the value covers every person represented by the account. Existing accounts default to `0`.
 - Registration accepts a required SIM-card count from `0` to `50`; the value covers every person represented by the account. Existing accounts default to `0`.
@@ -656,3 +700,10 @@ Tests/checks:
 - Importing a group also sets its sole leader as the bus leader automatically. When several group leaders exist, require one explicit choice. Show the incoming leader before saving; replacing a bus leader retains the previous leader's participant assignment.
 - Migration `20261019030000_use_group_leader_as_bus_leader.sql` adds a four-argument RPC that validates the current group leadership and saves membership assignments plus bus leadership atomically. Preserve admin checks, family units, participant IDs and conflicts with leaders of other buses. Keep the three-argument signature for older clients: infer only a sole leader and reject ambiguous choices. Existing trip copying preserves the assigned bus leader.
 - Apply locally and before updated-client delivery remotely. Existing assignments are not changed retroactively. Provide German, English and Arabic selection/validation text and update the domain RPC arguments. Use only the existing focused UI/SQL suites and required project checks; no full coverage/E2E/device run. No native or dependency changes.
+
+## 22 October 2026: Question rounds for brothers or sisters
+
+- Require admins and scholars to select brothers or sisters explicitly before opening a round. Persist and display the audience. Home offers submission only to matching registered accounts; direct links show a clear denial for other accounts and accounts without a member type. Translate selection and participation states into German, English and Arabic.
+- Add `20261022030000_target_question_rounds_by_member_type.sql`, domain types and selects together. The opening RPC requires `p_target_member_type`; its legacy no-argument signature rejects opening without a choice. Submission checks the current profile assignment on the server for every role, including admins and scholars. Management rights for both audiences remain unchanged.
+- Preserve the single-open-round constraint, submission/closure row locking, five-question limit, anonymous question rows and private counter cleanup. Retain historical rounds with an unknown audience and deny further submissions until management closes and reopens them with a choice; never guess an audience or delete history.
+- Run focused UI/context and database authorization/lifecycle checks plus required project checks. Apply the migration before updated-client delivery. No dependency or native configuration changes and no new development build required for this feature.

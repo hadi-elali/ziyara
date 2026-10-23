@@ -50,7 +50,9 @@ export function buildTripGroupStates(
   return [...groups]
     .sort((left, right) => left.name.localeCompare(right.name))
     .map((group) => {
-      const groupMembers = membersByGroup.get(group.id) ?? [];
+      const groupMembers = (membersByGroup.get(group.id) ?? []).sort(
+        (left, right) => Number(right.is_leader) - Number(left.is_leader),
+      );
       return {
         ...group,
         is_current_user_leader: groupMembers.some((member) =>

@@ -1,5 +1,6 @@
 import {
   FunctionsHttpError,
+  isAuthRetryableFetchError,
   type AuthError,
   type PostgrestError,
   type Session,
@@ -23,7 +24,7 @@ import {
   parsePasswordRecoveryLink,
   passwordRecoveryRedirectUrl,
 } from '@/features/auth/password-recovery-link';
-import { supabase } from '@/features/auth/supabase';
+import { readPersistedSession, supabase } from '@/features/auth/supabase';
 import { withSupabaseReadTimeout } from '@/features/network/supabase-read';
 
 type AuthResult = {
@@ -255,6 +256,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      // INITIAL_SESSION also carries null when a refresh failed temporarily.
+      // Let getSession below distinguish that from a genuinely missing session.
+      if (event === 'INITIAL_SESSION' && !nextSession) {
+        return;
+      }
+
       if (isMounted) {
         hasReceivedAuthEvent = true;
         applySession(nextSession);
@@ -278,14 +285,28 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     supabase.auth
       .getSession()
-      .then(({ data, error }) => {
-        if (!isMounted) {
+      .then(async ({ data, error }) => {
+        if (!isMounted || hasReceivedAuthEvent) {
           return;
         }
 
-        if (!hasReceivedAuthEvent) {
-          applySession(error ? null : data.session);
+        // A transient refresh failure leaves the SDK's stored credentials intact.
+        // Keep that identity while auto-refresh retries; never write old tokens
+        // back or restore sessions rejected/revoked by the server. Profile reads
+        // and all permissions still require successful server authorization.
+        const nextSession = isAuthRetryableFetchError(error)
+          ? await readPersistedSession()
+          : error
+            ? null
+            : data.session;
+
+        if (isMounted && !hasReceivedAuthEvent) {
+          applySession(nextSession);
         }
+      })
+      .catch(() => {
+        // Storage/initialization can also reject. Do not leave an unhandled
+        // promise or overwrite a newer login/logout event in that case.
       })
       .finally(() => {
         if (isMounted) {
@@ -452,7 +473,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       clearTimeout(profileLoadTimeout);
       profileRequestSequence.current += 1;
     };
-  }, [isSessionLoading, refreshProfile, session?.user.id]);
+  }, [isSessionLoading, refreshProfile, session?.access_token, session?.user.id]);
 
   useEffect(() => {
     const userId = session?.user.id;
@@ -529,7 +550,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
 
     if (!error) {
       applySession(null);

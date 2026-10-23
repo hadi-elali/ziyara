@@ -20,6 +20,7 @@ import {
   type SupabaseReadFailureKind,
   withSupabaseReadTimeout,
 } from '@/features/network/supabase-read';
+import { canSubmitToQuestionRound } from '@/features/question-round/question-round-permissions';
 
 type QuestionRoundActionResult = {
   error: PostgrestError | null;
@@ -27,6 +28,7 @@ type QuestionRoundActionResult = {
 
 type QuestionRoundContextValue = {
   activeRound: QuestionRound | null;
+  canSubmitQuestion: boolean;
   hasSyncError: boolean;
   isLoading: boolean;
   refresh: () => Promise<void>;
@@ -42,7 +44,7 @@ const fallbackRefreshIntervalMs = 120_000;
 const fallbackRefreshJitterMs = 30_000;
 
 export function QuestionRoundProvider({ children }: PropsWithChildren) {
-  const { isLoading: isAuthLoading, session } = useAuth();
+  const { isLoading: isAuthLoading, profile, session } = useAuth();
   const [activeRound, setActiveRound] = useState<QuestionRound | null>(null);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
@@ -67,7 +69,7 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
         supabase
           .from('question_rounds')
-          .select('id, created_at, closed_at')
+          .select('id, created_at, closed_at, target_member_type')
           .is('closed_at', null)
           .abortSignal(signal)
           .maybeSingle(),
@@ -158,7 +160,11 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
 
   const value = useMemo<QuestionRoundContextValue>(
     () => ({
-      activeRound,
+      activeRound: userId && syncedUserId === userId ? activeRound : null,
+      canSubmitQuestion:
+        !isAuthLoading &&
+        Boolean(userId && syncedUserId === userId && profile?.user_id === userId) &&
+        canSubmitToQuestionRound(activeRound, profile?.member_type),
       hasSyncError: syncState === 'error',
       isLoading: isAuthLoading || syncedUserId !== userId || syncState === 'loading',
       refresh,
@@ -169,6 +175,7 @@ export function QuestionRoundProvider({ children }: PropsWithChildren) {
     [
       activeRound,
       isAuthLoading,
+      profile,
       refresh,
       submitQuestion,
       syncErrorMessage,

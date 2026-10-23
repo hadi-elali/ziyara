@@ -121,6 +121,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await expect(admin.page).toHaveURL(/\/$/u);
     await admin.page.goto('/admin');
     await admin.page.getByRole('button', { name: /Statusabfrage/u }).click();
+    await admin.page.getByRole('button', { name: /^Ja: Namen anzeigen/u }).click();
 
     await member.page.goto('/check-in');
     await expect(member.page.getByText('Sind alle E2E-Teilnehmenden da?')).toBeVisible();
@@ -141,7 +142,9 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
       password: adminPassword,
     });
     expect(adminSignIn.error).toBeNull();
-    const openedRound = await adminClient.rpc('open_question_round');
+    const openedRound = await adminClient.rpc('open_question_round', {
+      p_target_member_type: 'brother',
+    });
     expect(openedRound.error).toBeNull();
     expect(openedRound.data?.id).toBeTruthy();
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
@@ -167,7 +170,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await member.context.close();
   });
 
-  test('Buszuordnung für die aktuelle Fahrt', async ({ browser }) => {
+  test('Bus selbst wählen, nach Neustart behalten und als Admin verschieben', async ({ browser }) => {
     const admin = await openAuthenticatedPage(browser, adminEmail, adminPassword);
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
@@ -176,24 +179,32 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await admin.page.getByLabel('Name der Fahrt').fill('E2E Ziyara Reise');
     await admin.page.getByRole('button', { name: 'Fahrt anlegen', exact: true }).click();
     await expect(admin.page.getByText('E2E Ziyara Reise')).toBeVisible();
-
-    await admin.page.getByLabel('Busname').fill('Bus 1');
-    await admin.page.getByLabel('Busführer auswählen', { exact: true }).fill(adminName);
-    await admin.page.getByText(adminName, { exact: true }).last().click();
-    await admin.page.getByRole('button', { name: 'Bus mit Führer anlegen' }).click();
-    await expect(admin.page.getByText(`Busführer: ${adminName}`, { exact: true })).toBeVisible();
-    await admin.page.getByRole('radio', { name: 'Einzelne Person', exact: true }).click();
-    await admin.page.getByLabel('Person suchen', { exact: true }).fill(memberName);
-    await admin.page.getByText(memberName, { exact: true }).last().click();
-    await admin.page.getByRole('radio', { name: 'Bus 1' }).click();
-    await admin.page.getByRole('button', { name: 'Zuordnung speichern' }).click();
-    await expect(admin.page.getByText(memberName, { exact: true }).last()).toBeVisible();
+    for (const name of ['Bus 1', 'Bus 2']) {
+      await admin.page.getByLabel('Busname').fill(name);
+      await admin.page.getByRole('button', { name: 'Bus anlegen', exact: true }).click();
+      await expect(admin.page.getByRole('button', { name: `${name} · 0 Konten`, exact: true })).toBeVisible();
+    }
 
     await member.page.goto('/bus');
     await expect(member.page.getByText('E2E Ziyara Reise')).toBeVisible();
-    await expect(member.page.getByText(memberName, { exact: true })).toBeVisible();
-    await expect(member.page.getByText('Bus 1', { exact: true })).toBeVisible();
+    await member.page.getByRole('button', { name: 'Bus 1 auswählen', exact: true }).click();
+    await expect(member.page.getByText('Dein Bus: Bus 1', { exact: true })).toBeVisible();
+    await member.page.reload();
+    await expect(member.page.getByText('Dein Bus: Bus 1', { exact: true })).toBeVisible();
 
+    const busOne = admin.page.getByRole('button', { name: 'Bus 1 · 1 Konten', exact: true });
+    await expect(busOne).toBeVisible();
+    await expect(admin.page.getByText(memberName, { exact: true })).not.toBeVisible();
+    await busOne.click();
+    await expect(admin.page.getByText(memberName, { exact: true })).toBeVisible();
+    await admin.page.getByRole('button', { name: `${memberName} verschieben`, exact: true }).click();
+    await admin.page.getByRole('button', { name: 'In Bus 2 verschieben', exact: true }).click();
+    await expect(member.page.getByText('Dein Bus: Bus 2', { exact: true })).toBeVisible();
+
+    await member.page.getByRole('button', { name: 'Zu Bus 1 wechseln', exact: true }).click();
+    await expect(member.page.getByText('Dein Bus: Bus 1', { exact: true })).toBeVisible();
+    await member.page.reload();
+    await expect(member.page.getByText('Dein Bus: Bus 1', { exact: true })).toBeVisible();
     await admin.context.close();
     await member.context.close();
   });

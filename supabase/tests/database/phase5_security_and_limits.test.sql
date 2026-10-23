@@ -48,7 +48,7 @@ values
   (
     '10000000-0000-0000-0000-000000000002',
     'phase5-user-one@example.invalid',
-    '{"display_name":"Phase 5 User One"}'::jsonb
+    '{"display_name":"Phase 5 User One","member_type":"brother"}'::jsonb
   ),
   (
     '10000000-0000-0000-0000-000000000003',
@@ -80,9 +80,9 @@ where profiles.user_id in (
   '10000000-0000-0000-0000-000000000003'
 );
 
-insert into public.question_rounds (id)
+insert into public.question_rounds (id, target_member_type)
 overriding system value
-values (950000000000000001);
+values (950000000000000001, 'brother');
 
 select results_eq(
   $$
