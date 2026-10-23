@@ -14,13 +14,17 @@ import type { WakeUpCall } from '@/domain/database';
 import { useI18n } from '@/features/i18n/i18n';
 import { useWakeUpCall } from '@/features/wake-up-call/wake-up-call-context';
 import {
+  WakeUpCallRecipients,
+  type WakeUpCallRecipientNamesProps,
+} from '@/features/wake-up-call/WakeUpCallRecipients';
+import {
   formatWakeUpTime,
   parseWakeUpDateTime,
   wakeUpDateTimeFields,
 } from '@/features/wake-up-call/wake-up-call-time';
 import { useTheme } from '@/hooks/use-theme';
 
-export function AdminGeneralAlarmPanel() {
+export function AdminGeneralAlarmPanel(recipientNames: WakeUpCallRecipientNamesProps) {
   const { t, isRTL, language } = useI18n();
   const theme = useTheme();
   const {
@@ -323,14 +327,7 @@ export function AdminGeneralAlarmPanel() {
               {t('wakeUp.timeZone')}
             </ThemedText>
             <ThemedText>{call.message}</ThemedText>
-            <ThemedText themeColor='textSecondary'>
-              {t('wakeUp.confirmations', {
-                confirmed: targets.filter((recipient) =>
-                  recipient.acknowledged_at
-                ).length,
-                total: targets.length,
-              })}
-            </ThemedText>
+            <WakeUpCallRecipients recipients={targets} {...recipientNames} />
             <Button
               icon='close'
               disabled={working}

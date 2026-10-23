@@ -6,6 +6,32 @@ export type AppLock = {
   id: number;
   lock: boolean | null;
 };
+export type AdminPushMessage = {
+  id: number;
+  title: string;
+  body: string;
+  created_at: string;
+  created_by_profile_id: number | null;
+  started_at: string | null;
+};
+export type AdminPushMessageSummary = Omit<AdminPushMessage, 'created_by_profile_id'> & {
+  total: number;
+  accepted: number;
+  failed: number;
+  pending: number;
+};
+export type AdminPushNotificationAttempt = {
+  id: number;
+  message_id: number;
+  device_id: number | null;
+  recipient_profile_id: number | null;
+  claimed_at: string | null;
+  completed_at: string | null;
+  accepted: boolean | null;
+  error_code: string | null;
+  expo_http_status: number | null;
+  expo_ticket_id: string | null;
+};
 export type TripGroupLocationStatus = 'declined' | 'pending' | 'shared';
 export type TripGuidanceStatus =
   | 'almost_there'
@@ -490,6 +516,8 @@ export type TripGuidanceResponse = {
 export type Database = {
   public: {
     Tables: {
+      admin_push_messages: { Row: AdminPushMessage; Insert: never; Update: never; Relationships: [] };
+      admin_push_notification_attempts: { Row: AdminPushNotificationAttempt; Insert: never; Update: never; Relationships: [] };
       lock_app: { Row: AppLock; Insert: never; Update: never; Relationships: [] };
       organization_groups: { Row: OrganizationGroup; Insert: never; Update: never; Relationships: [] };
       organization_group_members: { Row: Pick<OrganizationGroupMember, 'group_id' | 'user_id' | 'is_leader'>; Insert: never; Update: never; Relationships: [] };
@@ -1136,6 +1164,12 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      admin_prepare_push_message: { Args: { p_title: string; p_body: string }; Returns: number };
+      admin_list_push_messages: { Args: Record<string, never>; Returns: AdminPushMessageSummary[] };
+      claim_admin_push_notifications: {
+        Args: { p_message_id: number; p_requester_user_id: string };
+        Returns: { attempt_id: number; expo_push_token: string; title: string; body: string }[];
+      };
       get_organization_group_members: { Args: Record<string, never>; Returns: OrganizationGroupMember[] };
       admin_save_organization_group: {
         Args: { p_name: string; p_leader_user_ids: string[]; p_member_user_ids: string[]; p_family_ids: number[]; p_group_id: number | null };

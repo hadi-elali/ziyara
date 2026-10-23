@@ -26,6 +26,7 @@ import {
   getAdminUserStats,
 } from '@/features/admin/admin-user-list';
 import { AdminSectionHeader } from '@/features/admin/AdminSectionHeader';
+import { AdminPushPanel } from '@/features/admin/AdminPushPanel';
 import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrganizationPanel';
 import { useAuth } from '@/features/auth/auth-context';
 import { RequireAuth } from '@/features/auth/RequireAuth';
@@ -56,6 +57,7 @@ const assignableRoles: AppRole[] = ['user', 'medical_staff', 'organization_team'
 
 type AdminSection =
   | 'alarm'
+  | 'push'
   | 'transport'
   | 'families'
   | 'navigation'
@@ -150,6 +152,7 @@ function AdminContent() {
   const hasError = readErrorMessage !== null;
   const [expandedSections, setExpandedSections] = useState<Record<AdminSection, boolean>>({
     alarm: false,
+    push: false,
     transport: false,
     families: false,
     navigation: false,
@@ -332,7 +335,26 @@ function AdminContent() {
                   )}
                   statusColor={wakeUpError ? 'danger' : wakeUpCall ? 'warning' : 'textSecondary'}
                 />
-                {expandedSections.alarm ? <AdminGeneralAlarmPanel /> : null}
+                {expandedSections.alarm ? (
+                  <AdminGeneralAlarmPanel
+                    users={users}
+                    isLoadingUsers={isLoading}
+                    usersError={readErrorMessage}
+                    onRetryUsers={() => void loadUsers()}
+                  />
+                ) : null}
+              </View>
+
+              <View style={styles.section}>
+                <AdminSectionHeader
+                  description={t('adminPush.description')}
+                  expanded={expandedSections.push}
+                  icon="alarm"
+                  onToggle={() => toggleSection('push')}
+                  title={t('adminPush.title')}
+                  status={t('adminPush.all')}
+                />
+                {expandedSections.push ? <AdminPushPanel /> : null}
               </View>
 
               <View style={styles.section}>
