@@ -1,12 +1,16 @@
+import type { RegistrationFamilyMember } from './registration';
+
 export type AppRole = 'admin' | 'medical_staff' | 'organization_team' | 'scholar' | 'user';
 export type BusBoardingStatus = 'boarded' | 'on_way' | 'problem' | 'read';
 export type EmergencyTeam = 'medical' | 'travel';
 export type MemberType = 'brother' | 'sister';
+export type AdminPushAudience = 'all' | MemberType;
 export type AppLock = {
   id: number;
   lock: boolean | null;
 };
 export type AdminPushMessage = {
+  audience: AdminPushAudience;
   id: number;
   title: string;
   body: string;
@@ -14,7 +18,7 @@ export type AdminPushMessage = {
   created_by_profile_id: number | null;
   started_at: string | null;
 };
-export type AdminPushMessageSummary = Omit<AdminPushMessage, 'created_by_profile_id'> & {
+export type AdminPushMessageSummary = Omit<AdminPushMessage, 'created_by_profile_id' | 'audience'> & {
   total: number;
   accepted: number;
   failed: number;
@@ -777,9 +781,11 @@ export type Database = {
       profiles: {
         Insert: {
           age?: number | string | null;
+          birth_date?: string | null;
           created_at?: string;
           display_name?: string;
           family_id?: number | null;
+          family_members?: RegistrationFamilyMember[];
           id?: never;
           luggage_count?: number;
           member_type?: MemberType | null;
@@ -795,14 +801,18 @@ export type Database = {
         Row: UserProfile & {
           // Remote stores age as text; fresh local schemas use smallint.
           age: number | string | null;
+          birth_date: string | null;
+          family_members: RegistrationFamilyMember[];
           name: string;
           surname: string | null;
         };
         Update: {
           age?: number | string | null;
+          birth_date?: string | null;
           display_name?: string;
           family_id?: number | null;
           luggage_count?: number;
+          family_members?: RegistrationFamilyMember[];
           member_type?: MemberType | null;
           name?: string;
           party_size?: number;
@@ -1164,7 +1174,7 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
-      admin_prepare_push_message: { Args: { p_title: string; p_body: string }; Returns: number };
+      admin_prepare_push_message: { Args: { p_title: string; p_body: string; p_audience?: AdminPushAudience }; Returns: number };
       admin_list_push_messages: { Args: Record<string, never>; Returns: AdminPushMessageSummary[] };
       claim_admin_push_notifications: {
         Args: { p_message_id: number; p_requester_user_id: string };

@@ -20,6 +20,7 @@ import {
 import { AppState, Platform } from 'react-native';
 
 import type { MemberType, UserProfile } from '@/domain/database';
+import type { RegistrationFamilyMemberInput } from '@/domain/registration';
 import {
   parsePasswordRecoveryLink,
   passwordRecoveryRedirectUrl,
@@ -82,6 +83,8 @@ type AuthContextValue = {
     partySize: number,
     luggageCount: number,
     simCardCount: number,
+    familyMembers?: RegistrationFamilyMemberInput[],
+    birthDate?: string,
   ) => Promise<SignUpResult>;
   updateLuggageCount: (luggageCount: number) => Promise<ProfileUpdateResult>;
   updatePartySize: (partySize: number) => Promise<ProfileUpdateResult>;
@@ -523,6 +526,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       partySize: number,
       luggageCount: number,
       simCardCount: number,
+      familyMembers?: RegistrationFamilyMemberInput[],
+      birthDate?: string,
     ) => {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -537,6 +542,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
             member_type: memberType,
             party_size: partySize,
             sim_card_count: simCardCount,
+            ...(familyMembers ? { family_members: familyMembers } : {}),
+            ...(birthDate ? { birth_date: birthDate } : {}),
           },
         },
       });

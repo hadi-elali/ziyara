@@ -1,6 +1,6 @@
 import { router, useNavigation } from "expo-router";
 import { useNavigationState } from "expo-router/react-navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -22,8 +22,15 @@ import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { MemberType } from "@/domain/database";
+import { maximumRegistrationFamilyMembers } from "@/domain/registration";
 import { LuggageCountField } from "@/features/auth/LuggageCountField";
-import { getPartySize, PartySizeField } from "@/features/auth/PartySizeField";
+import { BirthDateField } from "@/features/auth/BirthDateField";
+import { getAgeFromBirthDate, getBirthDate } from "@/features/auth/birth-date";
+import {
+  RegistrationFamilyFields,
+  type RegistrationFamilyDraft,
+} from "@/features/auth/RegistrationFamilyFields";
+import { normalizeRegistrationFamilyMembers } from "@/features/auth/registration-family";
 import { SimCardCountField } from "@/features/auth/SimCardCountField";
 import { useAuth } from "@/features/auth/auth-context";
 import { getAge } from "@/features/auth/age";
@@ -59,6 +66,7 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
   const [firstName, setFirstName] = useState("");
   const [surname, setSurname] = useState("");
   const [age, setAge] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -67,7 +75,10 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
     useState<AccountCoverage | null>(null);
   const [luggageCount, setLuggageCount] = useState("0");
   const [simCardCount, setSimCardCount] = useState("0");
-  const [partySize, setPartySize] = useState("2");
+  const [familyMembers, setFamilyMembers] = useState<RegistrationFamilyDraft[]>([
+    { id: 0, name: "", surname: "", birthDate: "", age: "" },
+  ]);
+  const nextFamilyMemberId = useRef(1);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +90,7 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
   };
 
   const submit = async () => {
+    if (isSubmitting) return;
     Keyboard.dismiss();
     setFeedback(null);
 
@@ -86,10 +98,13 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
     const normalizedName = firstName.trim();
     const normalizedSurname = surname.trim();
     const normalizedAge = getAge(age);
+    const normalizedBirthDate = getBirthDate(birthDate);
     const normalizedLuggageCount = getLuggageCount(luggageCount);
     const normalizedSimCardCount = getSimCardCount(simCardCount);
-    const normalizedPartySize =
-      accountCoverage === "family" ? getPartySize(partySize, 2) : 1;
+    const normalizedFamilyMembers = accountCoverage === "family"
+      ? normalizeRegistrationFamilyMembers(familyMembers)
+      : [];
+    const normalizedPartySize = 1 + (normalizedFamilyMembers?.length ?? 0);
 
     if (!normalizedEmail.includes("@") || !normalizedEmail.includes(".")) {
       showFeedback(t("auth.validation.email"), true);
@@ -106,8 +121,18 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
       return;
     }
 
+    if (isRegister && !normalizedBirthDate) {
+      showFeedback(t("auth.validation.birthDate"), true);
+      return;
+    }
+
     if (isRegister && normalizedAge === null) {
       showFeedback(t("auth.validation.age"), true);
+      return;
+    }
+
+    if (isRegister && normalizedBirthDate && normalizedAge !== getAgeFromBirthDate(normalizedBirthDate)) {
+      showFeedback(t("auth.validation.birthDateAge"), true);
       return;
     }
 
@@ -124,9 +149,9 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
     if (
       isRegister &&
       accountCoverage === "family" &&
-      normalizedPartySize === null
+      normalizedFamilyMembers === null
     ) {
-      showFeedback(t("family.validation.partySize"), true);
+      showFeedback(t("auth.familyMembers.validation"), true);
       return;
     }
 
@@ -176,9 +201,11 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
           normalizedEmail,
           password,
           memberType,
-          normalizedPartySize ?? 1,
+          normalizedPartySize,
           normalizedLuggageCount ?? 0,
           normalizedSimCardCount ?? 0,
+          normalizedFamilyMembers ?? [],
+          normalizedBirthDate ?? undefined,
         );
 
         if (result.error) {
@@ -332,6 +359,12 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                       />
                     </View>
 
+                    <BirthDateField
+                      disabled={isSubmitting}
+                      onChange={setBirthDate}
+                      value={birthDate}
+                    />
+
                     <View style={styles.field}>
                       <ThemedText type="smallBold">{t("auth.age")}</ThemedText>
                       <TextInput
@@ -408,11 +441,27 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                     </View>
 
                     {accountCoverage === "family" ? (
-                      <PartySizeField
+                      <RegistrationFamilyFields
                         disabled={isSubmitting}
-                        minimum={2}
-                        onChange={setPartySize}
-                        value={partySize}
+                        members={familyMembers}
+                        onAdd={() => {
+                          const id = nextFamilyMemberId.current++;
+                          setFamilyMembers(current =>
+                            current.length < maximumRegistrationFamilyMembers
+                              ? [...current, { id, name: "", surname: "", birthDate: "", age: "" }]
+                              : current,
+                          );
+                        }}
+                        onChange={(id, field, value) => setFamilyMembers(current =>
+                          current.map(member => member.id === id
+                            ? { ...member, [field]: value }
+                            : member),
+                        )}
+                        onRemove={id => setFamilyMembers(current =>
+                          current.length > 1
+                            ? current.filter(member => member.id !== id)
+                            : current,
+                        )}
                       />
                     ) : null}
 

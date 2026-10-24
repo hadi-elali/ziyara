@@ -38,6 +38,11 @@ const useLanguageState = createPersistentState<Language>(
 
 const dictionaries: Record<Language, Record<string, string>> = {
   de: {
+    "adminPush.recipients": "Empfänger",
+    "adminPush.brother": "Brüder",
+    "adminPush.sister": "Schwestern",
+    "adminPush.sendBrothers": "An Brüder senden",
+    "adminPush.sendSisters": "An Schwestern senden",
     "adminPush.unavailable":
       "Der Push-Versand ist auf dem Server noch nicht vollständig eingerichtet. Es wurde kein Versand gestartet.",
     "adminPush.sessionError":
@@ -46,9 +51,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Der Server erlaubt den Versand für dieses Konto nicht. Prüfe deine Anmeldung und Adminberechtigung.",
     "adminPush.messageError":
       "Diese Nachricht kann nicht versendet werden. Bearbeite den Text und sende ihn erneut.",
-    "adminPush.title": "Push-Nachricht an alle",
+    "adminPush.title": "Push-Nachricht senden",
     "adminPush.description":
-      "Eine Mitteilung an alle registrierten Geräte senden.",
+      "Eine Mitteilung an alle, Brüder oder Schwestern senden.",
     "adminPush.all": "Alle",
     "adminPush.compose": "Nachricht verfassen",
     "adminPush.titleLabel": "Titel",
@@ -57,7 +62,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.bodyPlaceholder": "Organisatorische Mitteilung der Reiseleitung",
     "adminPush.limits": "Titel: {title}/100 · Nachricht: {body}/500",
     "adminPush.audience":
-      "An alle Konten mit registrierten Push-Geräten, einschließlich Admins. Geräte ohne aktivierte Mitteilungen und Webbrowser erhalten keinen Push. Alle erhalten deinen Text in derselben Sprache.",
+      "Die Auswahl richtet sich nach der Zuordnung im Konto. Konten ohne Zuordnung erhalten nur Nachrichten an „Alle“. Push erhalten nur registrierte Geräte mit aktivierten Mitteilungen.",
     "adminPush.send": "An alle senden",
     "adminPush.sending": "Versand läuft …",
     "adminPush.validation":
@@ -65,7 +70,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.prepareError":
       "Die Nachricht konnte nicht gespeichert werden. Es wurde kein Versand gestartet.",
     "adminPush.sendError":
-      "Der Versandstatus ist unklar. Versuche es mit unveränderter Nachricht erneut.",
+      "Der Versandstatus ist unklar. Versuche es mit unveränderter Nachricht und Empfängerauswahl erneut.",
     "adminPush.processed": "Versandlauf abgeschlossen.",
     "bus.admin.deleteTemplate": "Anordnung löschen",
     "bus.admin.deleteTemplateTitle": "Anordnung „{name}“ löschen?",
@@ -1106,6 +1111,17 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.accountCoverage.individualBody":
       "Dieses Konto vertritt ausschließlich mich.",
     "auth.accountCoverageTitle": "Für wen ist dieses Konto?",
+    "auth.familyMembers.title": "Familienmitglieder",
+    "auth.familyMembers.body": "Trage alle weiteren mitreisenden Angehörigen ohne eigenes Telefon ein. Du selbst bist bereits über die Angaben oben erfasst.",
+    "auth.familyMembers.member": "Mitglied {number}",
+    "auth.familyMembers.fieldLabel": "Mitglied {number}: {field}",
+    "auth.familyMembers.add": "Mitglied hinzufügen",
+    "auth.familyMembers.remove": "Mitglied {number} entfernen",
+    "auth.familyMembers.total": "{count} Personen einschließlich dir (höchstens 50).",
+    "auth.familyMembers.birthDate": "Geburtsdatum",
+    "auth.familyMembers.birthDatePlaceholder": "TT.MM.JJJJ",
+    "auth.familyMembers.birthDateHint": "Tag, Monat und Jahr. Die Punkte werden automatisch eingefügt.",
+    "auth.familyMembers.validation": "Bitte gib für jedes weitere Familienmitglied Vor- und Nachnamen (je 1 bis 80 Zeichen), ein gültiges Geburtsdatum (TT.MM.JJJJ) und das dazu passende Alter zwischen 0 und 120 Jahren an. Das Geburtsdatum darf nicht in der Zukunft liegen.",
     "auth.continueWithoutAccount": "Ohne Konto fortfahren",
     "auth.continueWithoutAccountError":
       "Die lokale Anmeldung konnte nicht entfernt werden. Versuche es erneut.",
@@ -1116,6 +1132,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.loginTitle": "Willkommen zurück",
     "auth.firstName": "Vorname",
     "auth.age": "Alter (Jahre)",
+    "auth.birthDate": "Geburtsdatum",
+    "auth.validation.birthDate": "Bitte gib ein gültiges Geburtsdatum im Format TT.MM.JJJJ ein. Es darf nicht in der Zukunft liegen.",
+    "auth.validation.birthDateAge": "Bitte gib das zum Geburtsdatum passende Alter in vollendeten Jahren zwischen 0 und 120 an.",
     "auth.agePlaceholder": "Dein Alter in Jahren",
     "auth.validation.age":
       "Gib dein Alter als ganze Zahl zwischen 0 und 120 ein.",
@@ -1427,6 +1446,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Quellenregel",
   },
   en: {
+    "adminPush.recipients": "Recipients",
+    "adminPush.brother": "Brothers",
+    "adminPush.sister": "Sisters",
+    "adminPush.sendBrothers": "Send to brothers",
+    "adminPush.sendSisters": "Send to sisters",
     "adminPush.unavailable":
       "Push delivery has not been fully set up on the server. Dispatch has not started.",
     "adminPush.sessionError":
@@ -1435,8 +1459,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "The server does not allow this account to send messages. Check your session and admin access.",
     "adminPush.messageError":
       "This message cannot be sent. Edit the text and send it again.",
-    "adminPush.title": "Push message to everyone",
-    "adminPush.description": "Send a notification to all registered devices.",
+    "adminPush.title": "Send push message",
+    "adminPush.description": "Send a message to everyone, brothers or sisters.",
     "adminPush.all": "Everyone",
     "adminPush.compose": "Compose message",
     "adminPush.titleLabel": "Title",
@@ -1445,7 +1469,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.bodyPlaceholder": "Organizational message from the travel team",
     "adminPush.limits": "Title: {title}/100 · Message: {body}/500",
     "adminPush.audience":
-      "All accounts with registered push devices, including admins. Devices without enabled notifications and web browsers receive no push. Everyone receives your text in the same language.",
+      "Recipients follow the assignment in each account. Accounts without an assignment receive only messages to “Everyone”. Only registered devices with notifications enabled receive push messages.",
     "adminPush.send": "Send to everyone",
     "adminPush.sending": "Sending …",
     "adminPush.validation":
@@ -1453,7 +1477,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.prepareError":
       "The message could not be saved. Sending has not started.",
     "adminPush.sendError":
-      "Delivery status is uncertain. Retry with the message unchanged.",
+      "Delivery status is uncertain. Retry with the message and recipients unchanged.",
     "adminPush.processed":
       "Dispatch run completed. This does not confirm delivery to the device.",
     "bus.admin.deleteTemplate": "Delete arrangement",
@@ -2464,6 +2488,17 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.accountCoverage.individual": "Only me",
     "auth.accountCoverage.individualBody": "This account represents only me.",
     "auth.accountCoverageTitle": "Who is this account for?",
+    "auth.familyMembers.title": "Family members",
+    "auth.familyMembers.body": "Enter every additional relative travelling without their own phone. Your own details are already recorded above.",
+    "auth.familyMembers.member": "Member {number}",
+    "auth.familyMembers.fieldLabel": "Member {number}: {field}",
+    "auth.familyMembers.add": "Add member",
+    "auth.familyMembers.remove": "Remove member {number}",
+    "auth.familyMembers.total": "{count} people including you (maximum 50).",
+    "auth.familyMembers.birthDate": "Date of birth",
+    "auth.familyMembers.birthDatePlaceholder": "DD.MM.YYYY",
+    "auth.familyMembers.birthDateHint": "Day, month and year. Dots are inserted automatically.",
+    "auth.familyMembers.validation": "Please enter a first and last name (1 to 80 characters each), a valid date of birth (DD.MM.YYYY) and the matching age from 0 to 120 for every additional family member. Dates of birth cannot be in the future.",
     "auth.continueWithoutAccount": "Continue without an account",
     "auth.continueWithoutAccountError":
       "The local sign-in could not be removed. Try again.",
@@ -2474,6 +2509,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.loginTitle": "Welcome back",
     "auth.firstName": "First name",
     "auth.age": "Age (years)",
+    "auth.birthDate": "Date of birth",
+    "auth.validation.birthDate": "Please enter a valid date of birth in DD.MM.YYYY format. It cannot be in the future.",
+    "auth.validation.birthDateAge": "Please enter the age in completed years matching the date of birth, between 0 and 120.",
     "auth.agePlaceholder": "Your age in years",
     "auth.validation.age":
       "Enter your age as a whole number between 0 and 120.",
@@ -2781,6 +2819,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Source Rule",
   },
   ar: {
+    "adminPush.recipients": "المستلمون",
+    "adminPush.brother": "الإخوة",
+    "adminPush.sister": "الأخوات",
+    "adminPush.sendBrothers": "إرسال إلى الإخوة",
+    "adminPush.sendSisters": "إرسال إلى الأخوات",
     "adminPush.unavailable":
       "لم يكتمل إعداد إرسال الإشعارات على الخادم بعد. لم يبدأ الإرسال.",
     "adminPush.sessionError":
@@ -2789,8 +2832,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "لا يسمح الخادم لهذا الحساب بإرسال الرسائل. تحقّق من تسجيل دخولك وصلاحيات الإدارة.",
     "adminPush.messageError":
       "لا يمكن إرسال هذه الرسالة. عدّل النص ثم أرسلها مجدداً.",
-    "adminPush.title": "إرسال إشعار إلى الجميع",
-    "adminPush.description": "إرسال إشعار إلى جميع الأجهزة المسجلة.",
+    "adminPush.title": "إرسال إشعار",
+    "adminPush.description": "إرسال رسالة إلى الجميع أو الإخوة أو الأخوات.",
     "adminPush.all": "الجميع",
     "adminPush.compose": "كتابة رسالة",
     "adminPush.titleLabel": "العنوان",
@@ -2799,14 +2842,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.bodyPlaceholder": "رسالة تنظيمية من فريق الرحلة",
     "adminPush.limits": "العنوان: {title}/100 · الرسالة: {body}/500",
     "adminPush.audience":
-      "إلى جميع الحسابات ذات الأجهزة المسجلة للإشعارات، بما فيها حسابات الإدارة. الأجهزة التي لم تفعّل الإشعارات ومتصفحات الويب لا تتلقى إشعاراً. يتلقى الجميع النص باللغة نفسها التي تكتب بها.",
+      "يعتمد الاختيار على التصنيف المسجل في الحساب. الحسابات دون تصنيف تتلقى رسائل «الجميع» فقط. تصل الإشعارات إلى الأجهزة المسجلة التي فعّلت الإشعارات فقط.",
     "adminPush.send": "إرسال إلى الجميع",
     "adminPush.sending": "جارٍ الإرسال …",
     "adminPush.validation":
       "أدخل عنواناً من 1 إلى 100 حرف ورسالة من 1 إلى 500 حرف.",
     "adminPush.prepareError": "تعذر حفظ الرسالة. لم يبدأ الإرسال.",
     "adminPush.sendError":
-      "حالة الإرسال غير مؤكدة. أعد المحاولة دون تغيير الرسالة.",
+      "حالة الإرسال غير مؤكدة. أعد المحاولة دون تغيير الرسالة أو المستلمين.",
     "adminPush.processed":
       "اكتملت عملية الإرسال. هذا لا يؤكد وصول الإشعار إلى الجهاز.",
     "bus.admin.deleteTemplate": "حذف الترتيب",
@@ -3777,6 +3820,17 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.accountCoverage.individual": "أنا فقط",
     "auth.accountCoverage.individualBody": "هذا الحساب يمثلني أنا فقط.",
     "auth.accountCoverageTitle": "من يمثل هذا الحساب؟",
+    "auth.familyMembers.title": "أفراد العائلة",
+    "auth.familyMembers.body": "أدخل كل قريب إضافي يسافر دون هاتف خاص به. بياناتك الشخصية مسجلة بالفعل أعلاه.",
+    "auth.familyMembers.member": "الفرد {number}",
+    "auth.familyMembers.fieldLabel": "الفرد {number}: {field}",
+    "auth.familyMembers.add": "إضافة فرد",
+    "auth.familyMembers.remove": "إزالة الفرد {number}",
+    "auth.familyMembers.total": "{count} أشخاص بمن فيهم أنت (الحد الأقصى 50).",
+    "auth.familyMembers.birthDate": "تاريخ الميلاد",
+    "auth.familyMembers.birthDatePlaceholder": "DD.MM.YYYY",
+    "auth.familyMembers.birthDateHint": "اليوم ثم الشهر ثم السنة. تُضاف النقاط تلقائيًا.",
+    "auth.familyMembers.validation": "يرجى إدخال الاسم الأول واسم العائلة (من حرف واحد إلى 80 حرفًا لكل اسم) وتاريخ ميلاد صحيح (DD.MM.YYYY) والعمر المطابق له بين 0 و120 لكل فرد إضافي. يجب ألا يكون تاريخ الميلاد في المستقبل.",
     "auth.continueWithoutAccount": "المتابعة بدون حساب",
     "auth.continueWithoutAccountError":
       "تعذر حذف تسجيل الدخول المحلي. حاول مرة أخرى.",
@@ -3786,6 +3840,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "auth.loginTitle": "مرحبا بعودتك",
     "auth.firstName": "الاسم الأول",
     "auth.age": "العمر (بالسنوات)",
+    "auth.birthDate": "تاريخ الميلاد",
+    "auth.validation.birthDate": "يرجى إدخال تاريخ ميلاد صحيح بتنسيق DD.MM.YYYY، على ألا يكون في المستقبل.",
+    "auth.validation.birthDateAge": "يرجى إدخال العمر بالسنوات المكتملة المطابق لتاريخ الميلاد، بين 0 و120.",
     "auth.agePlaceholder": "عمرك بالسنوات",
     "auth.validation.age": "أدخل عمرك كعدد صحيح بين 0 و120.",
     "auth.firstNamePlaceholder": "اسمك الأول",

@@ -914,6 +914,8 @@ describe('AuthProvider profile synchronization', () => {
           3,
           4,
           2,
+          [{ name: 'Kind', surname: 'Nachname', birth_date: '2020-02-29', age: 6 }, { name: 'Weiteres', surname: 'Nachname', birth_date: '2018-03-24', age: 8 }],
+          '1994-01-01',
         ),
       ).resolves.toEqual({ error: null, requiresEmailConfirmation: true });
     });
@@ -929,6 +931,8 @@ describe('AuthProvider profile synchronization', () => {
           member_type: 'sister',
           party_size: 3,
           sim_card_count: 2,
+          family_members: [{ name: 'Kind', surname: 'Nachname', birth_date: '2020-02-29', age: 6 }, { name: 'Weiteres', surname: 'Nachname', birth_date: '2018-03-24', age: 8 }],
+          birth_date: '1994-01-01',
         },
       },
       password: 'Passwort123',

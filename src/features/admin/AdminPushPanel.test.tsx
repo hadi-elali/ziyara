@@ -40,7 +40,13 @@ const draft = {
 let renderer: ReactTestRenderer | null;
 const actGlobal = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
 const previousAct = actGlobal.IS_REACT_ACT_ENVIRONMENT;
-function button(label: string) { return renderer!.root.findAllByType(Button).find(node => node.props.label === `adminPush.${label}`)!; }
+function button(label: string) {
+  const labels = label === 'send' ? ['send', 'sendBrothers', 'sendSisters'] : [label];
+  return renderer!.root.findAllByType(Button).find(node => labels.some(value => node.props.label === `adminPush.${value}`))!;
+}
+function audienceChoice(value: string) {
+  return renderer!.root.findAll(node => node.props.accessibilityRole === 'radio' && node.props.accessibilityLabel === `adminPush.${value}` && typeof node.props.onPress === 'function')[0];
+}
 function hasText(text: string) { return renderer!.root.findAllByType(Text).some(node => node.props.children === text); }
 async function render() {
   await act(async () => { renderer = create(<AdminPushPanel />); });
@@ -56,7 +62,7 @@ async function compose() {
 describe('AdminPushPanel', () => {
   beforeAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = true; });
   beforeEach(() => {
-    jest.clearAllMocks(); renderer = null;
+    jest.clearAllMocks(); mockPrepare.mockReset(); mockInvoke.mockReset(); renderer = null;
     mockAuth.profile.role = 'admin'; mockAuth.session.user.id = 'admin-1';
     mockPrepare.mockResolvedValue({ data: 42, error: null });
     mockInvoke.mockResolvedValue({ data: { code: 'processed' }, error: null });
@@ -80,16 +86,39 @@ describe('AdminPushPanel', () => {
     expect(hasText('adminPush.preview')).toBe(false);
     expect(renderer!.root.findAllByType(Button)).toHaveLength(1);
     await act(async () => { await button('send').props.onPress(); });
-    expect(mockPrepare).toHaveBeenCalledWith({ p_title: draft.title, p_body: draft.body });
+    expect(mockPrepare).toHaveBeenCalledWith({ p_title: draft.title, p_body: draft.body, p_audience: 'all' });
     expect(mockInvoke).toHaveBeenCalledWith('dispatch-admin-push', { body: { messageId: 42 } });
     expect(hasText('adminPush.processed')).toBe(true);
     expect(button('send').props.disabled).toBe(true);
     expect(mockList).not.toHaveBeenCalled();
   });
 
+  it.each(['all', 'brother', 'sister'] as const)('sends directly to the selected %s audience', async audience => {
+    await render(); await compose();
+    await act(async () => { audienceChoice(audience).props.onPress(); });
+    expect(audienceChoice(audience).props.accessibilityState.checked).toBe(true);
+    await act(async () => { await button('send').props.onPress(); });
+    expect(mockPrepare).toHaveBeenCalledWith({ p_title: draft.title, p_body: draft.body, p_audience: audience });
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
+    expect(audienceChoice(audience).props.accessibilityState.checked).toBe(true);
+  });
+
+  it('creates a new message when recipients change after an uncertain send', async () => {
+    mockInvoke.mockResolvedValueOnce({ data: null, error: { message: 'Network request failed' } });
+    mockPrepare.mockResolvedValueOnce({ data: 42, error: null }).mockResolvedValueOnce({ data: 43, error: null });
+    await render(); await compose();
+    await act(async () => { await button('send').props.onPress(); });
+    await act(async () => { audienceChoice('sister').props.onPress(); });
+    await act(async () => { await button('send').props.onPress(); });
+    expect(mockPrepare).toHaveBeenCalledTimes(2);
+    expect(mockPrepare).toHaveBeenLastCalledWith({ p_title: draft.title, p_body: draft.body, p_audience: 'sister' });
+    expect(mockInvoke).toHaveBeenLastCalledWith('dispatch-admin-push', { body: { messageId: 43 } });
+  });
+
   it('retains entered text and does not dispatch if saving fails', async () => {
     mockPrepare.mockResolvedValueOnce({ data: null, error: { message: 'Save failed' } });
     await render(); await compose();
+    await act(async () => { audienceChoice('sister').props.onPress(); });
     await act(async () => { await button('send').props.onPress(); });
     expect(mockInvoke).not.toHaveBeenCalled();
     expect(hasText('Save failed')).toBe(true);
@@ -129,6 +158,7 @@ describe('AdminPushPanel', () => {
     expect(mockPrepare).toHaveBeenCalledTimes(1);
     expect(mockInvoke).not.toHaveBeenCalled();
     expect(button('sending').props.disabled).toBe(true);
+    expect(audienceChoice('sister').props.disabled).toBe(true);
     await act(async () => { resolve?.({ data: 42, error: null }); });
     expect(mockInvoke).toHaveBeenCalledTimes(1);
   });
@@ -141,6 +171,7 @@ describe('AdminPushPanel', () => {
     await act(async () => { send(); send(); });
     expect(mockInvoke).toHaveBeenCalledTimes(1);
     expect(button('sending').props.disabled).toBe(true);
+    expect(audienceChoice('sister').props.disabled).toBe(true);
     await act(async () => { resolve?.({ data: { code: 'processed' }, error: null }); });
   });
 

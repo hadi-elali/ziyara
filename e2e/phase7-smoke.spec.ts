@@ -48,6 +48,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const [firstName, ...surname] = memberName.split(' ');
     await page.getByLabel('Vorname', { exact: true }).fill(firstName);
     await page.getByLabel('Nachname', { exact: true }).fill(surname.join(' '));
+    await page.getByLabel('Geburtsdatum', { exact: true }).fill(`01.01.${new Date().getFullYear() - 32}`);
     await page.getByLabel('Alter (Jahre)', { exact: true }).fill('32');
     await page.getByRole('radio', { name: 'Bruder' }).click();
     await page.getByRole('radio', { name: /Nur ich/u }).click();

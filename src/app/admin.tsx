@@ -352,7 +352,7 @@ function AdminContent() {
                   icon="alarm"
                   onToggle={() => toggleSection('push')}
                   title={t('adminPush.title')}
-                  status={t('adminPush.all')}
+                  status={t('adminPush.recipients')}
                 />
                 {expandedSections.push ? <AdminPushPanel /> : null}
               </View>
