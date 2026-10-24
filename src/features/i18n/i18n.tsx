@@ -38,8 +38,17 @@ const useLanguageState = createPersistentState<Language>(
 
 const dictionaries: Record<Language, Record<string, string>> = {
   de: {
+    "adminPush.unavailable":
+      "Der Push-Versand ist auf dem Server noch nicht vollständig eingerichtet. Es wurde kein Versand gestartet.",
+    "adminPush.sessionError":
+      "Deine Anmeldung wurde vom Server abgelehnt. Melde dich erneut an und versuche es noch einmal.",
+    "adminPush.accessError":
+      "Der Server erlaubt den Versand für dieses Konto nicht. Prüfe deine Anmeldung und Adminberechtigung.",
+    "adminPush.messageError":
+      "Diese Nachricht kann nicht versendet werden. Bearbeite den Text und sende ihn erneut.",
     "adminPush.title": "Push-Nachricht an alle",
-    "adminPush.description": "Eine Mitteilung an alle registrierten Geräte senden.",
+    "adminPush.description":
+      "Eine Mitteilung an alle registrierten Geräte senden.",
     "adminPush.all": "Alle",
     "adminPush.compose": "Nachricht verfassen",
     "adminPush.titleLabel": "Titel",
@@ -47,47 +56,58 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.titlePlaceholder": "z. B. Treffpunkt geändert",
     "adminPush.bodyPlaceholder": "Organisatorische Mitteilung der Reiseleitung",
     "adminPush.limits": "Titel: {title}/100 · Nachricht: {body}/500",
-    "adminPush.audience": "An alle Konten mit registrierten Push-Geräten, einschließlich Admins. Geräte ohne aktivierte Mitteilungen und Webbrowser erhalten keinen Push. Alle erhalten deinen Text in derselben Sprache.",
-    "adminPush.review": "Nachricht prüfen",
-    "adminPush.preparing": "Vorschau wird vorbereitet …",
-    "adminPush.preview": "Vorschau",
-    "adminPush.confirm": "Mit „An alle senden“ wird diese Nachricht sofort versendet. Bereits beanspruchte Versandversuche werden beim Fortsetzen nicht wiederholt.",
+    "adminPush.audience":
+      "An alle Konten mit registrierten Push-Geräten, einschließlich Admins. Geräte ohne aktivierte Mitteilungen und Webbrowser erhalten keinen Push. Alle erhalten deinen Text in derselben Sprache.",
     "adminPush.send": "An alle senden",
     "adminPush.sending": "Versand läuft …",
-    "adminPush.cancel": "Abbrechen",
-    "adminPush.validation": "Bitte einen Titel (1–100 Zeichen) und eine Nachricht (1–500 Zeichen) eingeben.",
-    "adminPush.prepareError": "Die Vorschau konnte nicht gespeichert werden. Es wurde kein Versand gestartet.",
-    "adminPush.sendError": "Der Versandstatus ist unklar. Du kannst den Versand mit dieser Vorschau erneut anstoßen. Bereits beanspruchte Versuche werden nicht wiederholt.",
-    "adminPush.processed": "Versandlauf abgeschlossen. Die Zustellung auf dem Gerät ist damit nicht bestätigt.",
+    "adminPush.validation":
+      "Bitte einen Titel (1–100 Zeichen) und eine Nachricht (1–500 Zeichen) eingeben.",
+    "adminPush.prepareError":
+      "Die Nachricht konnte nicht gespeichert werden. Es wurde kein Versand gestartet.",
+    "adminPush.sendError":
+      "Der Versandstatus ist unklar. Versuche es mit unveränderter Nachricht erneut.",
+    "adminPush.processed": "Versandlauf abgeschlossen.",
     "bus.admin.deleteTemplate": "Anordnung löschen",
     "bus.admin.deleteTemplateTitle": "Anordnung „{name}“ löschen?",
-    "bus.admin.deleteTemplateBody": "Diese Busanordnung wird aus der Auswahl entfernt und kann danach nicht mehr in eine neue Fahrt übernommen werden.",
+    "bus.admin.deleteTemplateBody":
+      "Diese Busanordnung wird aus der Auswahl entfernt und kann danach nicht mehr in eine neue Fahrt übernommen werden.",
     "bus.admin.templateDeleted": "Die Anordnung wurde gelöscht.",
-    "bus.admin.templateUnavailable": "Diese Anordnung ist nicht mehr verfügbar. Die Auswahl wurde aktualisiert. Wähle erneut.",
+    "bus.admin.templateUnavailable":
+      "Diese Anordnung ist nicht mehr verfügbar. Die Auswahl wurde aktualisiert. Wähle erneut.",
     "bus.presence.title": "Bist du bereits im Bus?",
     "bus.presence.onBus": "Im Bus",
     "bus.presence.notOnBus": "Noch nicht im Bus",
     "bus.presence.unanswered": "Noch keine Rückmeldung",
     "bus.presence.saved": "Deine Rückmeldung wurde gespeichert.",
-    "bus.presence.error": "Deine Rückmeldung konnte nicht gespeichert werden. Versuche es erneut.",
-    "bus.presence.resetHint": "Du kannst deine Rückmeldung ändern. Bei einem Buswechsel bestätigst du erneut.",
-    "bus.presence.summary": "Im Bus: {onBus} · Noch nicht: {notOnBus} · Ohne Rückmeldung: {unanswered}",
+    "bus.presence.error":
+      "Deine Rückmeldung konnte nicht gespeichert werden. Versuche es erneut.",
+    "bus.presence.resetHint":
+      "Du kannst deine Rückmeldung ändern. Bei einem Buswechsel bestätigst du erneut.",
+    "bus.presence.summary":
+      "Im Bus: {onBus} · Noch nicht: {notOnBus} · Ohne Rückmeldung: {unanswered}",
     "bus.selection.title": "Wähle deinen Bus",
-    "bus.selection.body": "Wähle den Bus, zu dem du gehörst. Du kannst jederzeit wechseln. Deine Auswahl gilt nur für dein Konto; eine bisherige Busführung wird beim Wechsel aufgehoben.",
+    "bus.selection.body":
+      "Wähle den Bus, zu dem du gehörst. Du kannst jederzeit wechseln. Deine Auswahl gilt nur für dein Konto; eine bisherige Busführung wird beim Wechsel aufgehoben.",
     "bus.selection.current": "Dein Bus: {bus}",
     "bus.selection.choose": "{bus} auswählen",
     "bus.selection.change": "Zu {bus} wechseln",
     "bus.selection.selected": "{bus} · Dein Bus",
     "bus.selection.saved": "Deine Buszuordnung wurde gespeichert.",
     "bus.selection.saving": "Busdaten werden gespeichert …",
-    "bus.selection.error": "Die Buszuordnung konnte nicht gespeichert werden. Versuche es erneut.",
-    "bus.selection.changed": "Die Fahrt oder der Bus ist nicht mehr verfügbar. Die Übersicht wurde aktualisiert.",
+    "bus.selection.error":
+      "Die Buszuordnung konnte nicht gespeichert werden. Versuche es erneut.",
+    "bus.selection.changed":
+      "Die Fahrt oder der Bus ist nicht mehr verfügbar. Die Übersicht wurde aktualisiert.",
     "bus.selection.noTripTitle": "Aktuell keine Fahrt",
-    "bus.selection.noTripBody": "Sobald die Reiseleitung eine Fahrt und Busse angelegt hat, kannst du hier deinen Bus wählen.",
-    "bus.selection.noBuses": "Die Reiseleitung hat für diese Fahrt noch keine Busse angelegt.",
-    "bus.selection.homeBody": "Für die aktuelle Fahrt kannst du jetzt deinen Bus selbst auswählen.",
+    "bus.selection.noTripBody":
+      "Sobald die Reiseleitung eine Fahrt und Busse angelegt hat, kannst du hier deinen Bus wählen.",
+    "bus.selection.noBuses":
+      "Die Reiseleitung hat für diese Fahrt noch keine Busse angelegt.",
+    "bus.selection.homeBody":
+      "Für die aktuelle Fahrt kannst du jetzt deinen Bus selbst auswählen.",
     "bus.admin.rosterTitle": "Wer ist in welchem Bus?",
-    "bus.admin.rosterBody": "Öffne einen Bus, um die Namen zu sehen und einzelne Personen zu verschieben. Nutzer können ihren Bus auch selbst wählen und wechseln.",
+    "bus.admin.rosterBody":
+      "Öffne einen Bus, um die Namen zu sehen und einzelne Personen zu verschieben. Nutzer können ihren Bus auch selbst wählen und wechseln.",
     "bus.admin.unassigned": "Noch ohne Bus",
     "bus.admin.rosterSection": "{name} · {count} Konten",
     "bus.admin.rosterCount": "{count} Konten",
@@ -140,7 +160,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Aktiviere Mitteilungen, um Weckrufe auch außerhalb der App zu erhalten. Der Ton richtet sich nach deinen Geräteeinstellungen.",
     "wakeUp.enableNotifications": "Mitteilungen aktivieren",
     "admin.transport.title": "Fahrten & Busse",
-    "admin.transport.description": "Fahrten und Busse anlegen, die Buswahl einsehen und Personen verschieben.",
+    "admin.transport.description":
+      "Fahrten und Busse anlegen, die Buswahl einsehen und Personen verschieben.",
     "tripGroups.groupCount": "{count} Gruppen",
     "tripGroups.admin.families": "Familien hinzufügen",
     "tripGroups.admin.familiesBody":
@@ -440,7 +461,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.busLeader": "Busführer auswählen (optional)",
     "bus.admin.busLeaderMissing": "Kein Busführer festgelegt",
     "bus.admin.busLeaderName": "Busführer: {name}",
-    "bus.admin.busLeaderRequired": "Lege die Busse an; Nutzer wählen ihren Bus selbst. Eine Busführung kannst du optional festlegen.",
+    "bus.admin.busLeaderRequired":
+      "Lege die Busse an; Nutzer wählen ihren Bus selbst. Eine Busführung kannst du optional festlegen.",
     "bus.admin.busesTitle": "Busse",
     "bus.admin.cancel": "Abbrechen",
     "bus.admin.changeBusLeader": "Führer ändern",
@@ -485,7 +507,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.homeTitle": "Mein Bus",
     "bus.loading": "Buszuordnung wird geladen …",
     "bus.navTitle": "Mein Bus",
-    "bus.noAssignmentBody": "Du kannst deinen Bus für die aktuelle Fahrt selbst auswählen und später wechseln.",
+    "bus.noAssignmentBody":
+      "Du kannst deinen Bus für die aktuelle Fahrt selbst auswählen und später wechseln.",
     "bus.noAssignmentTitle": "Keine Buszuordnung",
     "bus.noBoardingBody":
       "Deine Zuordnung ist sichtbar. Aktuell läuft keine Abfrage.",
@@ -1404,6 +1427,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Quellenregel",
   },
   en: {
+    "adminPush.unavailable":
+      "Push delivery has not been fully set up on the server. Dispatch has not started.",
+    "adminPush.sessionError":
+      "The server rejected your session. Sign in again and retry.",
+    "adminPush.accessError":
+      "The server does not allow this account to send messages. Check your session and admin access.",
+    "adminPush.messageError":
+      "This message cannot be sent. Edit the text and send it again.",
     "adminPush.title": "Push message to everyone",
     "adminPush.description": "Send a notification to all registered devices.",
     "adminPush.all": "Everyone",
@@ -1413,47 +1444,58 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.titlePlaceholder": "e.g. Meeting point changed",
     "adminPush.bodyPlaceholder": "Organizational message from the travel team",
     "adminPush.limits": "Title: {title}/100 · Message: {body}/500",
-    "adminPush.audience": "All accounts with registered push devices, including admins. Devices without enabled notifications and web browsers receive no push. Everyone receives your text in the same language.",
-    "adminPush.review": "Review message",
-    "adminPush.preparing": "Preparing preview …",
-    "adminPush.preview": "Preview",
-    "adminPush.confirm": "“Send to everyone” sends this message immediately. Resuming never repeats previously claimed attempts.",
+    "adminPush.audience":
+      "All accounts with registered push devices, including admins. Devices without enabled notifications and web browsers receive no push. Everyone receives your text in the same language.",
     "adminPush.send": "Send to everyone",
     "adminPush.sending": "Sending …",
-    "adminPush.cancel": "Cancel",
-    "adminPush.validation": "Enter a title (1–100 characters) and a message (1–500 characters).",
-    "adminPush.prepareError": "The preview could not be saved. Sending has not started.",
-    "adminPush.sendError": "Delivery status is uncertain. You can retry from this preview. Previously claimed attempts will not be repeated.",
-    "adminPush.processed": "Dispatch run completed. This does not confirm delivery to the device.",
+    "adminPush.validation":
+      "Enter a title (1–100 characters) and a message (1–500 characters).",
+    "adminPush.prepareError":
+      "The message could not be saved. Sending has not started.",
+    "adminPush.sendError":
+      "Delivery status is uncertain. Retry with the message unchanged.",
+    "adminPush.processed":
+      "Dispatch run completed. This does not confirm delivery to the device.",
     "bus.admin.deleteTemplate": "Delete arrangement",
     "bus.admin.deleteTemplateTitle": "Delete arrangement “{name}”?",
-    "bus.admin.deleteTemplateBody": "This bus arrangement will be removed from the selection and can no longer be copied to a new trip.",
+    "bus.admin.deleteTemplateBody":
+      "This bus arrangement will be removed from the selection and can no longer be copied to a new trip.",
     "bus.admin.templateDeleted": "The arrangement has been deleted.",
-    "bus.admin.templateUnavailable": "This arrangement is no longer available. The selection has been refreshed. Please choose again.",
+    "bus.admin.templateUnavailable":
+      "This arrangement is no longer available. The selection has been refreshed. Please choose again.",
     "bus.presence.title": "Are you already on the bus?",
     "bus.presence.onBus": "On the bus",
     "bus.presence.notOnBus": "Not on the bus yet",
     "bus.presence.unanswered": "No response yet",
     "bus.presence.saved": "Your response has been saved.",
     "bus.presence.error": "Your response could not be saved. Please try again.",
-    "bus.presence.resetHint": "You can change your response. Confirm again after changing buses.",
-    "bus.presence.summary": "On board: {onBus} · Not yet: {notOnBus} · No response: {unanswered}",
+    "bus.presence.resetHint":
+      "You can change your response. Confirm again after changing buses.",
+    "bus.presence.summary":
+      "On board: {onBus} · Not yet: {notOnBus} · No response: {unanswered}",
     "bus.selection.title": "Choose your bus",
-    "bus.selection.body": "Choose the bus you belong to. You can change buses at any time. Your choice applies only to your account; leaving a bus also vacates your leadership of that bus.",
+    "bus.selection.body":
+      "Choose the bus you belong to. You can change buses at any time. Your choice applies only to your account; leaving a bus also vacates your leadership of that bus.",
     "bus.selection.current": "Your bus: {bus}",
     "bus.selection.choose": "Choose {bus}",
     "bus.selection.change": "Move to {bus}",
     "bus.selection.selected": "{bus} · Your bus",
     "bus.selection.saved": "Your bus assignment has been saved.",
     "bus.selection.saving": "Saving bus details …",
-    "bus.selection.error": "Your bus assignment could not be saved. Please try again.",
-    "bus.selection.changed": "The trip or bus is no longer available. The overview has been refreshed.",
+    "bus.selection.error":
+      "Your bus assignment could not be saved. Please try again.",
+    "bus.selection.changed":
+      "The trip or bus is no longer available. The overview has been refreshed.",
     "bus.selection.noTripTitle": "No active trip",
-    "bus.selection.noTripBody": "Once the organizers create a trip and buses, you can choose your bus here.",
-    "bus.selection.noBuses": "The organizers have not created any buses for this trip yet.",
-    "bus.selection.homeBody": "You can now choose your own bus for the current trip.",
+    "bus.selection.noTripBody":
+      "Once the organizers create a trip and buses, you can choose your bus here.",
+    "bus.selection.noBuses":
+      "The organizers have not created any buses for this trip yet.",
+    "bus.selection.homeBody":
+      "You can now choose your own bus for the current trip.",
     "bus.admin.rosterTitle": "Who is in which bus?",
-    "bus.admin.rosterBody": "Expand a bus to see names and move individual people. Users can also choose and change their own bus.",
+    "bus.admin.rosterBody":
+      "Expand a bus to see names and move individual people. Users can also choose and change their own bus.",
     "bus.admin.unassigned": "No bus yet",
     "bus.admin.rosterSection": "{name} · {count} accounts",
     "bus.admin.rosterCount": "{count} accounts",
@@ -1506,7 +1548,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Enable notifications to receive wake-up calls outside the app. Sound depends on your device settings.",
     "wakeUp.enableNotifications": "Enable notifications",
     "admin.transport.title": "Trips & buses",
-    "admin.transport.description": "Create trips and buses, view bus choices and move people.",
+    "admin.transport.description":
+      "Create trips and buses, view bus choices and move people.",
     "tripGroups.groupCount": "{count} groups",
     "tripGroups.admin.families": "Add families",
     "tripGroups.admin.familiesBody":
@@ -1795,7 +1838,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.busLeader": "Select bus leader (optional)",
     "bus.admin.busLeaderMissing": "No bus leader selected",
     "bus.admin.busLeaderName": "Bus leader: {name}",
-    "bus.admin.busLeaderRequired": "Create the buses; users choose their own bus. You can optionally appoint a bus leader.",
+    "bus.admin.busLeaderRequired":
+      "Create the buses; users choose their own bus. You can optionally appoint a bus leader.",
     "bus.admin.busesTitle": "Buses",
     "bus.admin.cancel": "Cancel",
     "bus.admin.changeBusLeader": "Change leader",
@@ -1839,7 +1883,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.homeTitle": "My bus",
     "bus.loading": "Loading bus assignment …",
     "bus.navTitle": "My bus",
-    "bus.noAssignmentBody": "You can choose your own bus for the active trip and change it later.",
+    "bus.noAssignmentBody":
+      "You can choose your own bus for the active trip and change it later.",
     "bus.noAssignmentTitle": "No bus assignment",
     "bus.noBoardingBody":
       "Your assignment is visible. There is no active check right now.",
@@ -2736,6 +2781,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "sources.ruleTitle": "Source Rule",
   },
   ar: {
+    "adminPush.unavailable":
+      "لم يكتمل إعداد إرسال الإشعارات على الخادم بعد. لم يبدأ الإرسال.",
+    "adminPush.sessionError":
+      "رفض الخادم تسجيل دخولك. سجّل الدخول مجدداً ثم أعد المحاولة.",
+    "adminPush.accessError":
+      "لا يسمح الخادم لهذا الحساب بإرسال الرسائل. تحقّق من تسجيل دخولك وصلاحيات الإدارة.",
+    "adminPush.messageError":
+      "لا يمكن إرسال هذه الرسالة. عدّل النص ثم أرسلها مجدداً.",
     "adminPush.title": "إرسال إشعار إلى الجميع",
     "adminPush.description": "إرسال إشعار إلى جميع الأجهزة المسجلة.",
     "adminPush.all": "الجميع",
@@ -2745,33 +2798,37 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.titlePlaceholder": "مثلاً: تغيير نقطة التجمع",
     "adminPush.bodyPlaceholder": "رسالة تنظيمية من فريق الرحلة",
     "adminPush.limits": "العنوان: {title}/100 · الرسالة: {body}/500",
-    "adminPush.audience": "إلى جميع الحسابات ذات الأجهزة المسجلة للإشعارات، بما فيها حسابات الإدارة. الأجهزة التي لم تفعّل الإشعارات ومتصفحات الويب لا تتلقى إشعاراً. يتلقى الجميع النص باللغة نفسها التي تكتب بها.",
-    "adminPush.review": "مراجعة الرسالة",
-    "adminPush.preparing": "جارٍ إعداد المعاينة …",
-    "adminPush.preview": "معاينة",
-    "adminPush.confirm": "يؤدي الضغط على «إرسال إلى الجميع» إلى الإرسال فوراً. لا تعيد المتابعة محاولات الإرسال التي سبق حجزها.",
+    "adminPush.audience":
+      "إلى جميع الحسابات ذات الأجهزة المسجلة للإشعارات، بما فيها حسابات الإدارة. الأجهزة التي لم تفعّل الإشعارات ومتصفحات الويب لا تتلقى إشعاراً. يتلقى الجميع النص باللغة نفسها التي تكتب بها.",
     "adminPush.send": "إرسال إلى الجميع",
     "adminPush.sending": "جارٍ الإرسال …",
-    "adminPush.cancel": "إلغاء",
-    "adminPush.validation": "أدخل عنواناً من 1 إلى 100 حرف ورسالة من 1 إلى 500 حرف.",
-    "adminPush.prepareError": "تعذر حفظ المعاينة. لم يبدأ الإرسال.",
-    "adminPush.sendError": "حالة الإرسال غير مؤكدة. يمكنك إعادة المحاولة من هذه المعاينة. لن تتكرر المحاولات التي سبق حجزها.",
-    "adminPush.processed": "اكتملت عملية الإرسال. هذا لا يؤكد وصول الإشعار إلى الجهاز.",
+    "adminPush.validation":
+      "أدخل عنواناً من 1 إلى 100 حرف ورسالة من 1 إلى 500 حرف.",
+    "adminPush.prepareError": "تعذر حفظ الرسالة. لم يبدأ الإرسال.",
+    "adminPush.sendError":
+      "حالة الإرسال غير مؤكدة. أعد المحاولة دون تغيير الرسالة.",
+    "adminPush.processed":
+      "اكتملت عملية الإرسال. هذا لا يؤكد وصول الإشعار إلى الجهاز.",
     "bus.admin.deleteTemplate": "حذف الترتيب",
     "bus.admin.deleteTemplateTitle": "حذف الترتيب «{name}»؟",
-    "bus.admin.deleteTemplateBody": "سيُزال ترتيب الحافلات هذا من قائمة الاختيار ولن يمكن نسخه إلى تنقل جديد.",
+    "bus.admin.deleteTemplateBody":
+      "سيُزال ترتيب الحافلات هذا من قائمة الاختيار ولن يمكن نسخه إلى تنقل جديد.",
     "bus.admin.templateDeleted": "تم حذف الترتيب.",
-    "bus.admin.templateUnavailable": "لم يعد هذا الترتيب متاحًا. تم تحديث قائمة الاختيار. اختر مرة أخرى.",
+    "bus.admin.templateUnavailable":
+      "لم يعد هذا الترتيب متاحًا. تم تحديث قائمة الاختيار. اختر مرة أخرى.",
     "bus.presence.title": "هل أنت في الحافلة الآن؟",
     "bus.presence.onBus": "في الحافلة",
     "bus.presence.notOnBus": "لست في الحافلة بعد",
     "bus.presence.unanswered": "لم يرد بعد",
     "bus.presence.saved": "تم حفظ ردك.",
     "bus.presence.error": "تعذّر حفظ ردك. حاول مرة أخرى.",
-    "bus.presence.resetHint": "يمكنك تغيير ردك. أكّد مرة أخرى بعد تغيير الحافلة.",
-    "bus.presence.summary": "في الحافلة: {onBus} · ليس بعد: {notOnBus} · دون رد: {unanswered}",
+    "bus.presence.resetHint":
+      "يمكنك تغيير ردك. أكّد مرة أخرى بعد تغيير الحافلة.",
+    "bus.presence.summary":
+      "في الحافلة: {onBus} · ليس بعد: {notOnBus} · دون رد: {unanswered}",
     "bus.selection.title": "اختر حافلتك",
-    "bus.selection.body": "اختر الحافلة التي تنتمي إليها. يمكنك تغييرها في أي وقت. يخص الاختيار حسابك فقط، وعند انتقالك تُلغى قيادتك للحافلة السابقة إن كنت قائدها.",
+    "bus.selection.body":
+      "اختر الحافلة التي تنتمي إليها. يمكنك تغييرها في أي وقت. يخص الاختيار حسابك فقط، وعند انتقالك تُلغى قيادتك للحافلة السابقة إن كنت قائدها.",
     "bus.selection.current": "حافلتك: {bus}",
     "bus.selection.choose": "اختيار {bus}",
     "bus.selection.change": "الانتقال إلى {bus}",
@@ -2779,13 +2836,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.selection.saved": "تم حفظ تعيين حافلتك.",
     "bus.selection.saving": "جارٍ حفظ بيانات الحافلة…",
     "bus.selection.error": "تعذّر حفظ تعيين الحافلة. حاول مرة أخرى.",
-    "bus.selection.changed": "لم يعد التنقل أو الحافلة متاحًا. تم تحديث القائمة.",
+    "bus.selection.changed":
+      "لم يعد التنقل أو الحافلة متاحًا. تم تحديث القائمة.",
     "bus.selection.noTripTitle": "لا يوجد تنقل نشط",
-    "bus.selection.noTripBody": "عندما ينشئ فريق التنظيم تنقلًا وحافلات، يمكنك اختيار حافلتك هنا.",
+    "bus.selection.noTripBody":
+      "عندما ينشئ فريق التنظيم تنقلًا وحافلات، يمكنك اختيار حافلتك هنا.",
     "bus.selection.noBuses": "لم ينشئ فريق التنظيم حافلات لهذا التنقل بعد.",
     "bus.selection.homeBody": "يمكنك الآن اختيار حافلتك بنفسك للتنقل الحالي.",
     "bus.admin.rosterTitle": "من في كل حافلة؟",
-    "bus.admin.rosterBody": "افتح قائمة الحافلة لرؤية الأسماء ونقل الأشخاص بشكل فردي. يمكن للمستخدمين أيضًا اختيار حافلتهم وتغييرها بأنفسهم.",
+    "bus.admin.rosterBody":
+      "افتح قائمة الحافلة لرؤية الأسماء ونقل الأشخاص بشكل فردي. يمكن للمستخدمين أيضًا اختيار حافلتهم وتغييرها بأنفسهم.",
     "bus.admin.unassigned": "دون حافلة بعد",
     "bus.admin.rosterSection": "{name} · {count} حسابات",
     "bus.admin.rosterCount": "{count} حسابات",
@@ -2837,7 +2897,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "فعّل الإشعارات لتلقي نداءات الإيقاظ خارج التطبيق. يعتمد الصوت على إعدادات جهازك.",
     "wakeUp.enableNotifications": "تفعيل الإشعارات",
     "admin.transport.title": "التنقلات والحافلات",
-    "admin.transport.description": "إنشاء التنقلات والحافلات وعرض اختيارات الحافلات ونقل الأشخاص.",
+    "admin.transport.description":
+      "إنشاء التنقلات والحافلات وعرض اختيارات الحافلات ونقل الأشخاص.",
     "tripGroups.groupCount": "{count} مجموعات",
     "tripGroups.admin.families": "إضافة عائلات",
     "tripGroups.admin.familiesBody":
@@ -3120,7 +3181,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.busLeader": "اختيار قائد الحافلة (اختياري)",
     "bus.admin.busLeaderMissing": "لم يُحدّد قائد للحافلة",
     "bus.admin.busLeaderName": "قائد الحافلة: {name}",
-    "bus.admin.busLeaderRequired": "أنشئ الحافلات ليختار المستخدمون حافلتهم بأنفسهم. يمكنك تحديد قائد للحافلة اختياريًا.",
+    "bus.admin.busLeaderRequired":
+      "أنشئ الحافلات ليختار المستخدمون حافلتهم بأنفسهم. يمكنك تحديد قائد للحافلة اختياريًا.",
     "bus.admin.busesTitle": "الحافلات",
     "bus.admin.cancel": "إلغاء",
     "bus.admin.changeBusLeader": "تغيير القائد",
@@ -3164,7 +3226,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.homeTitle": "حافلتي",
     "bus.loading": "جارٍ تحميل تعيين الحافلة …",
     "bus.navTitle": "حافلتي",
-    "bus.noAssignmentBody": "يمكنك اختيار حافلتك للتنقل الحالي بنفسك وتغييرها لاحقًا.",
+    "bus.noAssignmentBody":
+      "يمكنك اختيار حافلتك للتنقل الحالي بنفسك وتغييرها لاحقًا.",
     "bus.noAssignmentTitle": "لا يوجد تعيين للحافلة",
     "bus.noBoardingBody": "تعيينك ظاهر، ولا يوجد تحقق نشط حالياً.",
     "bus.noBoardingTitle": "لا يوجد صعود نشط",

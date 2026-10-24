@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { TextInput, Text } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
@@ -7,7 +8,7 @@ import type { AppRole } from '@/domain/database';
 import { AdminPushPanel } from './AdminPushPanel';
 
 const mockAuth = { profile: { role: 'admin' as AppRole }, session: { user: { id: 'admin-1' } } };
-const mockPrepare = jest.fn<(args: unknown) => Promise<{ data: number; error: null }>>();
+const mockPrepare = jest.fn<(args: unknown) => Promise<{ data: number | null; error: { message: string } | null }>>();
 const mockList = jest.fn();
 const mockInvoke = jest.fn<(...args: unknown[]) => Promise<{ data: { code: string } | null; error: { message: string } | null }>>();
 const mockT = (key: string) => key;
@@ -50,7 +51,6 @@ async function compose() {
     inputs[0].props.onChangeText('  Treffpunkt  ');
     inputs[1].props.onChangeText('  Bitte zur Rezeption kommen.  ');
   });
-  await act(async () => { await button('review').props.onPress(); });
 }
 
 describe('AdminPushPanel', () => {
@@ -68,29 +68,33 @@ describe('AdminPushPanel', () => {
     await render();
     expect(hasText('adminPush.history')).toBe(false);
     expect(mockList).not.toHaveBeenCalled();
-    expect(button('review').props.disabled).toBe(true);
-    await act(async () => { await button('review').props.onPress(); });
+    expect(button('send').props.disabled).toBe(true);
+    await act(async () => { await button('send').props.onPress(); });
     expect(mockPrepare).not.toHaveBeenCalled();
     expect(hasText('adminPush.validation')).toBe(true);
   });
 
-  it('saves a trimmed preview and sends only after explicit confirmation', async () => {
+  it('saves trimmed input and dispatches directly with a single tap', async () => {
     await render(); await compose();
-    expect(mockPrepare).toHaveBeenCalledWith({ p_title: draft.title, p_body: draft.body });
     expect(mockInvoke).not.toHaveBeenCalled();
-    expect(hasText(draft.body)).toBe(true);
+    expect(hasText('adminPush.preview')).toBe(false);
+    expect(renderer!.root.findAllByType(Button)).toHaveLength(1);
     await act(async () => { await button('send').props.onPress(); });
+    expect(mockPrepare).toHaveBeenCalledWith({ p_title: draft.title, p_body: draft.body });
     expect(mockInvoke).toHaveBeenCalledWith('dispatch-admin-push', { body: { messageId: 42 } });
     expect(hasText('adminPush.processed')).toBe(true);
-    expect(button('review').props.disabled).toBe(true);
+    expect(button('send').props.disabled).toBe(true);
     expect(mockList).not.toHaveBeenCalled();
   });
 
-  it('cancels preview without sending', async () => {
+  it('retains entered text and does not dispatch if saving fails', async () => {
+    mockPrepare.mockResolvedValueOnce({ data: null, error: { message: 'Save failed' } });
     await render(); await compose();
-    await act(async () => { button('cancel').props.onPress(); });
+    await act(async () => { await button('send').props.onPress(); });
     expect(mockInvoke).not.toHaveBeenCalled();
+    expect(hasText('Save failed')).toBe(true);
     expect(renderer!.root.findAllByType(TextInput)[0].props.value).toBe('  Treffpunkt  ');
+    expect(button('send').props.disabled).toBe(false);
   });
 
   it('keeps the same message ID after an ambiguous dispatch failure', async () => {
@@ -105,6 +109,30 @@ describe('AdminPushPanel', () => {
     expect(mockInvoke).toHaveBeenNthCalledWith(2, 'dispatch-admin-push', { body: { messageId: 42 } });
   });
 
+  it('creates a new saved message after editing a failed send', async () => {
+    mockInvoke.mockResolvedValueOnce({ data: null, error: { message: 'Network request failed' } });
+    mockPrepare.mockResolvedValueOnce({ data: 42, error: null }).mockResolvedValueOnce({ data: 43, error: null });
+    await render(); await compose();
+    await act(async () => { await button('send').props.onPress(); });
+    await act(async () => { renderer!.root.findAllByType(TextInput)[1].props.onChangeText('Neuer Treffpunkt'); });
+    await act(async () => { await button('send').props.onPress(); });
+    expect(mockPrepare).toHaveBeenCalledTimes(2);
+    expect(mockInvoke).toHaveBeenLastCalledWith('dispatch-admin-push', { body: { messageId: 43 } });
+  });
+
+  it('blocks repeated taps while saving before dispatch', async () => {
+    let resolve: ((result: { data: number; error: null }) => void) | undefined;
+    mockPrepare.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    await render(); await compose();
+    const send = button('send').props.onPress;
+    await act(async () => { send(); send(); });
+    expect(mockPrepare).toHaveBeenCalledTimes(1);
+    expect(mockInvoke).not.toHaveBeenCalled();
+    expect(button('sending').props.disabled).toBe(true);
+    await act(async () => { resolve?.({ data: 42, error: null }); });
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
+  });
+
   it('blocks double taps while dispatching', async () => {
     let resolve: ((result: { data: { code: string }; error: null }) => void) | undefined;
     mockInvoke.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
@@ -116,6 +144,35 @@ describe('AdminPushPanel', () => {
     await act(async () => { resolve?.({ data: { code: 'processed' }, error: null }); });
   });
 
+  it.each([
+    [404, { code: 'NOT_FOUND' }, 'unavailable'],
+    [500, { code: 'not_configured' }, 'unavailable'],
+    [401, { code: 401, message: 'Invalid JWT' }, 'sessionError'],
+    [403, { code: 'admin_required' }, 'accessError'],
+    [400, { code: 'invalid_message' }, 'messageError'],
+    [500, { code: 'dispatch_failed' }, 'sendError'],
+    [502, { message: 'private server details' }, 'sendError'],
+  ])('explains HTTP %s without displaying the generic SDK error', async (status, payload, key) => {
+    mockInvoke.mockResolvedValueOnce({ data: null, error: new FunctionsHttpError({
+      status, json: async () => payload,
+    }) });
+    await render(); await compose();
+    await act(async () => { await button('send').props.onPress(); });
+    expect(hasText(`adminPush.${key}`)).toBe(true);
+    expect(hasText('adminPush.processed')).toBe(false);
+    expect(button('send')).toBeDefined();
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('recognizes a missing function even when the gateway response is not JSON', async () => {
+    mockInvoke.mockResolvedValueOnce({ data: null, error: new FunctionsHttpError({
+      status: 404, json: async () => { throw new SyntaxError('HTML response'); },
+    }) });
+    await render(); await compose();
+    await act(async () => { await button('send').props.onPress(); });
+    expect(hasText('adminPush.unavailable')).toBe(true);
+  });
+
   it.each(['user', 'scholar', 'medical_staff', 'organization_team'] as const)('hides the composer and skips reads for %s', async role => {
     mockAuth.profile.role = role;
     await render();
@@ -124,14 +181,14 @@ describe('AdminPushPanel', () => {
   });
 
   it('discards a late preparation result after switching accounts', async () => {
-    let resolve: ((result: { data: number; error: null }) => void) | undefined;
+    let resolve: ((result: { data: number | null; error: { message: string } | null }) => void) | undefined;
     mockPrepare.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
     await render();
     await act(async () => {
       const inputs = renderer!.root.findAllByType(TextInput);
       inputs[0].props.onChangeText('Treffpunkt'); inputs[1].props.onChangeText('Zur Rezeption');
     });
-    await act(async () => { button('review').props.onPress(); });
+    await act(async () => { button('send').props.onPress(); });
     mockAuth.session.user.id = 'admin-2';
     await act(async () => { renderer!.update(<AdminPushPanel />); });
     await act(async () => { resolve?.({ data: 42, error: null }); });

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spacing } from '@/constants/theme';
 import type { AdminPushMessage } from '@/domain/database';
+import { adminPushSendErrorMessage } from '@/features/admin/admin-push-error';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
 import { useI18n } from '@/features/i18n/i18n';
@@ -23,7 +24,7 @@ function PushComposer() {
   const theme = useTheme();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [preview, setPreview] = useState<Pick<AdminPushMessage, 'id' | 'title' | 'body'> | null>(null);
+  const pendingMessage = useRef<Pick<AdminPushMessage, 'id' | 'title' | 'body'> | null>(null);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -35,9 +36,11 @@ function PushComposer() {
     return () => { mounted.current = false; };
   }, []);
 
-  const prepare = async () => {
+  const send = async () => {
     if (busy.current) return;
-    if (!title.trim() || !body.trim() || title.trim().length > 100 || body.trim().length > 500) {
+    const nextTitle = title.trim();
+    const nextBody = body.trim();
+    if (!nextTitle || !nextBody || nextTitle.length > 100 || nextBody.length > 500) {
       setError(t('adminPush.validation'));
       return;
     }
@@ -45,43 +48,35 @@ function PushComposer() {
     setWorking(true);
     setError(null);
     setFeedback(null);
+    let dispatchStarted = false;
     try {
-      const result = await supabase.rpc('admin_prepare_push_message', {
-        p_title: title.trim(), p_body: body.trim(),
-      });
-      if (result.error) throw result.error;
-      if (!mounted.current) return;
-      setPreview({
-        id: result.data, title: title.trim(), body: body.trim(),
-      });
-    } catch (cause) {
-      if (mounted.current) setError(getOriginalErrorMessage(cause) ?? t('adminPush.prepareError'));
-    } finally {
-      busy.current = false;
-      if (mounted.current) setWorking(false);
-    }
-  };
-
-  const send = async () => {
-    if (busy.current || !preview) return;
-    busy.current = true;
-    setWorking(true);
-    setError(null);
-    setFeedback(null);
-    try {
+      let message = pendingMessage.current;
+      if (!message || message.title !== nextTitle || message.body !== nextBody) {
+        const result = await supabase.rpc('admin_prepare_push_message', {
+          p_title: nextTitle, p_body: nextBody,
+        });
+        if (result.error) throw result.error;
+        if (!mounted.current) return;
+        message = { id: result.data, title: nextTitle, body: nextBody };
+        pendingMessage.current = message;
+      }
+      // Reuse this ID after an uncertain failure while the text is unchanged.
+      // Saving and dispatching happen within the same button action.
+      dispatchStarted = true;
       const { data, error: dispatchError } = await supabase.functions.invoke<{ code: string }>(
-        'dispatch-admin-push', { body: { messageId: preview.id } },
+        'dispatch-admin-push', { body: { messageId: message.id } },
       );
       if (dispatchError || data?.code !== 'processed') throw dispatchError ?? new Error(t('adminPush.sendError'));
       if (!mounted.current) return;
-      setPreview(null);
+      pendingMessage.current = null;
       setTitle('');
       setBody('');
       setFeedback(t('adminPush.processed'));
     } catch (cause) {
-      if (mounted.current) {
-        setError(`${t('adminPush.sendError')} ${getOriginalErrorMessage(cause) ?? ''}`.trim());
-      }
+      const message = dispatchStarted
+        ? await adminPushSendErrorMessage(cause, t)
+        : getOriginalErrorMessage(cause) ?? t('adminPush.prepareError');
+      if (mounted.current) setError(message);
     } finally {
       busy.current = false;
       if (mounted.current) setWorking(false);
@@ -97,26 +92,14 @@ function PushComposer() {
   return (
     <View style={styles.stack}>
       <Card style={styles.stack}>
-        <ThemedText type="heading">{t(preview ? 'adminPush.preview' : 'adminPush.compose')}</ThemedText>
+        <ThemedText type="heading">{t('adminPush.compose')}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">{t('adminPush.audience')}</ThemedText>
-        {preview ? (
-          <>
-            <ThemedText type="smallBold">{preview.title}</ThemedText>
-            <ThemedText>{preview.body}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">{t('adminPush.confirm')}</ThemedText>
-            <Button disabled={working} icon="alarm" label={t(working ? 'adminPush.sending' : 'adminPush.send')} onPress={() => void send()} />
-            <Button disabled={working} icon="close" label={t('adminPush.cancel')} variant="secondary" onPress={() => { setPreview(null); setError(null); }} />
-          </>
-        ) : (
-          <>
-            <ThemedText type="smallBold">{t('adminPush.titleLabel')}</ThemedText>
-            <TextInput accessibilityLabel={t('adminPush.titleLabel')} editable={!working} maxLength={100} onChangeText={setTitle} placeholder={t('adminPush.titlePlaceholder')} placeholderTextColor={theme.textSecondary} style={inputStyle} value={title} />
-            <ThemedText type="smallBold">{t('adminPush.bodyLabel')}</ThemedText>
-            <TextInput accessibilityLabel={t('adminPush.bodyLabel')} editable={!working} maxLength={500} multiline onChangeText={setBody} placeholder={t('adminPush.bodyPlaceholder')} placeholderTextColor={theme.textSecondary} style={[inputStyle, styles.messageInput]} textAlignVertical="top" value={body} />
-            <ThemedText type="small" themeColor="textSecondary">{t('adminPush.limits', { title: title.length, body: body.length })}</ThemedText>
-            <Button disabled={working || !title.trim() || !body.trim()} icon="alarm" label={t(working ? 'adminPush.preparing' : 'adminPush.review')} onPress={() => void prepare()} />
-          </>
-        )}
+        <ThemedText type="smallBold">{t('adminPush.titleLabel')}</ThemedText>
+        <TextInput accessibilityLabel={t('adminPush.titleLabel')} editable={!working} maxLength={100} onChangeText={setTitle} placeholder={t('adminPush.titlePlaceholder')} placeholderTextColor={theme.textSecondary} style={inputStyle} value={title} />
+        <ThemedText type="smallBold">{t('adminPush.bodyLabel')}</ThemedText>
+        <TextInput accessibilityLabel={t('adminPush.bodyLabel')} editable={!working} maxLength={500} multiline onChangeText={setBody} placeholder={t('adminPush.bodyPlaceholder')} placeholderTextColor={theme.textSecondary} style={[inputStyle, styles.messageInput]} textAlignVertical="top" value={body} />
+        <ThemedText type="small" themeColor="textSecondary">{t('adminPush.limits', { title: title.length, body: body.length })}</ThemedText>
+        <Button disabled={working || !title.trim() || !body.trim()} icon="alarm" label={t(working ? 'adminPush.sending' : 'adminPush.send')} onPress={() => void send()} />
         {working ? <ActivityIndicator color={theme.accent} /> : null}
         {error ? <ThemedText accessibilityRole="alert" themeColor="danger">{error}</ThemedText> : null}
         {feedback ? <ThemedText accessibilityLiveRegion="polite" themeColor="success">{feedback}</ThemedText> : null}
