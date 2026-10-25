@@ -179,7 +179,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session ? (
+      {session && ownTripGroups.length > 0 ? (
         <View
           style={[
             styles.notice,
