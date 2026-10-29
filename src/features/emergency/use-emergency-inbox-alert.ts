@@ -11,6 +11,7 @@ import {
 
 const fallbackRefreshIntervalMs = 60_000;
 const fallbackRefreshJitterMs = 30_000;
+let nextChannelId = 0;
 
 export function isEmergencyInboxRole(role: AppRole | null | undefined) {
   return role === 'admin' || role === 'medical_staff' || role === 'organization_team';
@@ -72,8 +73,9 @@ export function useEmergencyInboxAlert() {
     const initialRefreshTimeout = setTimeout(() => void refresh(), 0);
     if (!scope) return () => clearTimeout(initialRefreshTimeout);
 
+    // Realtime reuses topics while asynchronous cleanup may still be pending.
     const channel = supabase
-      .channel(`emergency-inbox-alert:${scope}`)
+      .channel(`emergency-inbox-alert:${scope}:${++nextChannelId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'emergency_requests' },

@@ -4,6 +4,12 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 26 October 2026: Wait for route readiness after registration
+
+- Give `/register` the same loading/redirect decision as `/login`. A newly issued session must wait for profile loading and, for ordinary targets, the group check before redirecting into routes that the root guards still exclude. Show the existing themed loading indicator. Route profile failures to the retryable check-in, preserve mandatory-check return targets and emergency access, and leave email-confirmation registrations without a session on the form.
+- Extend the existing root-navigation suite with the actual registration route and root guards through the session/profile/group-check lifecycle, including iOS, profile failure, mandatory checks and emergency return targets. Three of the four added cases fail before the fix because the target is excluded or the profile-error destination is wrong. Physical-device reproduction/verification remains pending. Updated client required; no backend, dependency or native configuration change and no additional development build for this fix.
+- Validation: all 63 targeted tests in the four existing form/navigation suites, TypeScript, web export and diff checks pass. Lint has four existing warnings. Manifest/lockfile match and remain unchanged; local Expo alignment passes with its offline caveat, and online Doctor retains the seven known SDK-57 patch mismatches (20/21 checks). No full E2E or device run.
+
 ## 24 October 2026: Admin push messages and recipient selection
 
 - Add accessible All/Brothers/Sisters radios, defaulting to All on opening, with DE/EN/AR copy, RTL order and a send label matching the selection. Preserve direct one-tap sending. Freeze the choice while saving/dispatching; keep the last selection after success. The retry identity includes title, body and audience, so changing recipients creates a new message.

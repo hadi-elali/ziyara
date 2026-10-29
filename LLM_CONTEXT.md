@@ -1,6 +1,6 @@
 # Ziyarah – verbindlicher Projektkontext für LLMs
 
-Stand: 25. Oktober 2026
+Stand: 26. Oktober 2026
 
 ## Zweck und Pflege
 
@@ -22,6 +22,19 @@ Wenn Dokumentation und Code voneinander abweichen, den Code prüfen, die richtig
 Ziyarah ist eine produktionsorientierte Expo-App für eine schiitische Ziyarah-Reise in den Irak. Reisende können wichtige Städte und Orte ohne Anmeldung offline aus einem gebündelten Katalog öffnen, Orte auf einer Karte sehen, Inhalte durchsuchen, Einträge merken und religiöse Texte in einem Reader anzeigen. Eine Supabase-Anmeldung wird erst für Konto-, Notfall-, Tagesprogramm-, Bus-, Reisegruppen-, Generalalarm-, Gruppencheck-, Fragerunden- und Adminfunktionen benötigt. Die App bietet Deutsch, Englisch und Arabisch, Light/Dark Mode sowie administrative Gruppenfunktionen: dauerhafte Notfallmeldungen an das medizinische Team oder Reiseteam mit optionalem einmaligem Standort und Push, datumsbasierte Tagesprogramme auf Home, reiseunabhängige Karten- und Navigationsziele, freie eigene Buswahl mit einklappbarer Adminübersicht und gemeinsamer Gruppenübernahme, reiseunabhängige Gruppen mit mehreren Leitern, Familienzuordnung und zustimmungsbasierter einmaliger Standortanfrage sowie ein eigenständiger Weckruf, verpflichtende Statusabfragen, eine anonyme Fragerunde und eine Benutzerübersicht. Passwort-Recovery und sichere Eigenkonto-Löschung sind implementiert. Religiöse, historische und ortsbezogene Inhalte bleiben bis zu einer qualifizierten Prüfung sichtbar als `needs_review` markiert.
 
 ## Aktueller Funktionsumfang
+
+### Weiterleitung nach Registrierung vom 26. Oktober 2026
+
+- `/register` leitete bei der ersten vorhandenen Session sofort zu Home beziehungsweise zum Rücksprungziel weiter, während der Root-Navigator diese Routen wegen des noch ladenden Profils oder Gruppenchecks sperrte. Die Registrierung verwendet jetzt dieselbe Lade-/Weiterleitungsentscheidung wie `/login`: ein zum Theme passender Ladeindikator bis zur Freigabe, danach das sichere Ziel oder bei Profilfehlern/Pflichtabfrage der bestehende Check-in mit Wiederholen. Notfallziele bleiben nach dem Profilladen unabhängig vom Gruppencheck erreichbar; Registrierungen ohne Session bei E-Mail-Bestätigung behalten das Formular.
+- Die vorhandene Root-Navigationssuite prüft zusätzlich die tatsächlich gerenderte Registrierungsroute gegen die Root-Guards: Session vor Profil, Profil vor Gruppencheck, anschließender Home-Übergang auf iOS, Profilfehler, Pflichtabfrage samt Rücksprungziel und Notfallzugang. Vor der Korrektur scheiterten drei der vier zusätzlichen Tests an verfrühten beziehungsweise unzugänglichen Zielen. Der konkrete weiße Bildschirm ist noch nicht auf einem Gerät reproduziert oder nachgeprüft.
+- Prüfung: 63 gezielte Tests in vier bestehenden Formular-/Navigationssuites, TypeScript, Web-Export und Diffprüfung bestehen. Lint ohne Fehler mit den vier vorhandenen Warnungen; Manifest und Lockfile stimmen überein und bleiben unverändert. Lokaler Expo-Abgleich besteht mit Offline-Hinweis; Online-Doctor nach Sandbox-DNS-Fehler und Netzwerkfreigabe: 20/21, dieselben sieben bestehenden SDK-57-Patchabweichungen bei `@expo/ui`, `expo`, `expo-constants`, `expo-linking`, `expo-location`, `expo-notifications` und `expo-router`. Kein vollständiger E2E- oder Gerätelauf.
+- Aktualisierter Client erforderlich; keine Datenbank-, Paket- oder native Konfigurationsänderung und kein zusätzlicher Development Build aufgrund dieser Korrektur. Die bereits vorhandenen Änderungen am Notfall-Home-Hook bleiben erhalten.
+
+### Realtime-Fehler nach „Zurück zur App“ vom 26. Oktober 2026
+
+- Beim Rückweg aus einer beantworteten Statusabfrage kann Home seine Effekte erneut aktivieren, während ein vorheriger Notfall-Realtime-Kanal noch abgebaut wird. Der installierte Supabase-Client verwendet bei gleichem Topic den vorhandenen Kanal erneut; zusätzliche `postgres_changes`-Listener führen dann zum gemeldeten Renderfehler. `useEmergencyInboxAlert` vergibt deshalb bei jedem Effektstart eine appweit innerhalb dieses Moduls fortlaufende Kanal-ID, auch nach einer erneuten Aktivierung derselben Komponenteninstanz. Die bisherige Abmeldung bleibt erhalten.
+- Zwei Regressionstests reproduzierten vor der Korrektur denselben Fehler beim Wiederanzeigen einer React-Activity und beim Ersetzen der Komponente. Sie verzögern die Kanalentfernung ausdrücklich und prüfen anschließend weiter funktionierende Live-Aktualisierungen. Alle sechs Tests der bestehenden Hook-Suite, TypeScript, Web-Export und Diffprüfung bestehen; Lint ohne Fehler mit den vier vorhandenen Warnungen. Der lokale Expo-Abgleich besteht mit Offline-Hinweis; Online-Doctor nach Sandbox-DNS-Fehler und Netzwerkfreigabe: 20/21, weiterhin sieben SDK-57-Patchabweichungen bei `@expo/ui`, `expo`, `expo-constants`, `expo-linking`, `expo-location`, `expo-notifications` und `expo-router`. Paketmanifest und Lockfile bleiben unverändert.
+- Geändert sind ausschließlich der Notfall-Home-Hook, seine vorhandene Testsuite und dieser Kontext. Aktualisierter Client erforderlich; keine Backend-, Abhängigkeits- oder native Konfigurationsänderung und kein zusätzlicher Development Build. Der konkrete Ablauf wurde noch nicht auf einem Gerät geprüft.
 
 ### Geburtsdatum, Alter und Familienmitglieder bei Registrierung vom 24. Oktober 2026
 

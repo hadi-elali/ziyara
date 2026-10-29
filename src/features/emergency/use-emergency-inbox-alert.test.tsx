@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { PostgrestError, type Session } from '@supabase/supabase-js';
-import { useEffect } from 'react';
+import { Activity, useEffect } from 'react';
 import { AppState, type NativeEventSubscription } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import type { Mock } from 'jest-mock';
@@ -57,6 +57,8 @@ const originalActEnvironment = actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT;
 
 let appStateListener: ((state: string) => void) | null;
 let channelListeners: (() => void)[];
+let channelsByTopic: Map<string, MockChannel>;
+let channelRemovalDelay: Promise<void>;
 let currentAlert: ReturnType<typeof useEmergencyInboxAlert> | null;
 let queryResponses: Promise<QueryResult>[];
 let renderer: ReactTestRenderer | null;
@@ -91,7 +93,7 @@ async function waitForCondition(condition: () => boolean) {
 
 async function renderAlert() {
   await act(async () => {
-    renderer = create(<AlertProbe />);
+    renderer = create(<Activity mode="visible"><AlertProbe /></Activity>);
   });
   await act(flushAsyncWork);
 }
@@ -104,6 +106,8 @@ describe('useEmergencyInboxAlert', () => {
   beforeEach(() => {
     appStateListener = null;
     channelListeners = [];
+    channelsByTopic = new Map();
+    channelRemovalDelay = Promise.resolve();
     currentAlert = null;
     queryResponses = [];
     renderer = null;
@@ -118,16 +122,32 @@ describe('useEmergencyInboxAlert', () => {
       appStateListener = listener as (state: string) => void;
       return { remove: jest.fn() } as NativeEventSubscription;
     });
-    mockSupabase.removeChannel.mockImplementation(() => Promise.resolve('ok'));
-    mockSupabase.channel.mockImplementation(() => {
+    mockSupabase.removeChannel.mockImplementation(async (channelToRemove) => {
+      await channelRemovalDelay;
+      for (const [topic, channel] of channelsByTopic) {
+        if (channel === channelToRemove) channelsByTopic.delete(topic);
+      }
+      return 'ok';
+    });
+    mockSupabase.channel.mockImplementation((topic) => {
+      const existingChannel = channelsByTopic.get(topic as string);
+      if (existingChannel) return existingChannel;
+
+      let subscribed = false;
       const channel: MockChannel = {
         on: jest.fn((_event, _filter, listener) => {
+          if (subscribed) {
+            throw new Error('cannot add `postgres_changes` callbacks after `subscribe()`.');
+          }
           channelListeners.push(listener as () => void);
           return channel;
         }),
-        subscribe: jest.fn(),
+        subscribe: jest.fn(() => {
+          subscribed = true;
+          return channel;
+        }),
       };
-      channel.subscribe.mockReturnValue(channel);
+      channelsByTopic.set(topic as string, channel);
       return channel;
     });
     mockSupabase.from.mockImplementation(() => {
@@ -213,6 +233,58 @@ describe('useEmergencyInboxAlert', () => {
       syncErrorMessage: 'backend unavailable',
     });
   });
+
+  it.each(['reactivate', 'remount'] as const)(
+    'verwendet bei %s einen neuen Kanal, solange der alte noch abgebaut wird',
+    async (transition) => {
+      queryResponses.push(Promise.resolve({ data: [unreadReceipt], error: null }));
+      await renderAlert();
+      await waitForCondition(() => getAlert().hasUnreadMessages);
+      const originalChannel = mockSupabase.channel.mock.results[0]?.value;
+
+      let finishRemoval: (() => void) | undefined;
+      channelRemovalDelay = new Promise<void>((resolve) => {
+        finishRemoval = resolve;
+      });
+
+      try {
+        await act(async () => {
+          renderer?.update(<Activity mode="hidden"><AlertProbe /></Activity>);
+        });
+        expect(mockSupabase.removeChannel).toHaveBeenCalledWith(originalChannel);
+        expect(channelsByTopic.size).toBe(1);
+
+        queryResponses.push(Promise.resolve({ data: [], error: null }));
+        await act(async () => {
+          renderer?.update(
+            <Activity mode="visible">
+              <AlertProbe key={transition === 'remount' ? 'replacement' : undefined} />
+            </Activity>,
+          );
+        });
+        await act(flushAsyncWork);
+
+        const currentChannel = mockSupabase.channel.mock.results[1]?.value;
+        expect(currentChannel).not.toBe(originalChannel);
+        expect(channelsByTopic.size).toBe(2);
+        expect(getAlert().hasUnreadMessages).toBe(false);
+      } finally {
+        await act(async () => {
+          finishRemoval?.();
+          await flushAsyncWork();
+        });
+      }
+
+      expect(channelsByTopic.size).toBe(1);
+      expect([...channelsByTopic.values()]).toContain(mockSupabase.channel.mock.results[1]?.value);
+      queryResponses.push(Promise.resolve({ data: [unreadReceipt], error: null }));
+      await act(async () => {
+        channelListeners[3]?.();
+        await flushAsyncWork();
+      });
+      expect(getAlert().hasUnreadMessages).toBe(true);
+    },
+  );
 
   it('fragt ohne Teamrolle weder Empfängerstatus noch Realtime ab', async () => {
     mockAuthState = {
