@@ -30,6 +30,23 @@ function dependencies(
 }
 
 describe('Weckruf-Push-Diagnose', () => {
+  it('verwendet den längeren Vibrationskanal nur auf dafür registrierten Geräten', async () => {
+    const deps = dependencies({
+      claimNotifications: async () => [
+        claim,
+        { ...claim, attempt_id: 11, wake_up_channel_id: 'wake-up-calls-v1' },
+        { ...claim, attempt_id: 12, wake_up_channel_id: 'wake-up-calls-v2' },
+      ],
+      sendNotifications: jest.fn(async () => response({
+        data: Array.from({ length: 3 }, () => ({ status: 'ok', id: receiptId })),
+      })),
+    });
+
+    expect(await dispatchWakeUpNotifications(deps)).toEqual({ accepted: 3, claimed: 3, failed: 0 });
+    expect(jest.mocked(deps.sendNotifications).mock.calls[0][0].map((item) => item.channelId))
+      .toEqual(['wake-up-calls-v1', 'wake-up-calls-v1', 'wake-up-calls-v2']);
+  });
+
   it('speichert ein erfolgreiches Ticket für die spätere Receipt-Prüfung', async () => {
     const deps = dependencies();
     const result = await dispatchWakeUpNotifications(deps, claim.call_id);

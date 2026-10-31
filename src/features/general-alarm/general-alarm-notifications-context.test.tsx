@@ -5,7 +5,9 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import {
   inspectGeneralAlarmNotificationState,
   registerGeneralAlarmNotifications,
+  subscribeToDailyProgramNotificationResponses,
   subscribeToEmergencyDashboardNotificationResponses,
+  subscribeToGroupLocationNotificationResponses,
 } from '@/features/general-alarm/general-alarm-notifications';
 import {
   GeneralAlarmNotificationsProvider,
@@ -16,6 +18,7 @@ const mockRouter = { push: jest.fn() };
 let mockRootState: { key: string } | undefined;
 const mockAuthState = { isAdmin: false, isLoading: false, session: { user: { id: 'user-1' } } };
 const mockI18n = { language: 'de', t: (key: string) => key };
+const mockGroupSubscription = { remove: jest.fn() };
 
 jest.mock('expo-router', () => ({
   useRouter: () => mockRouter,
@@ -37,6 +40,9 @@ jest.mock('@/features/general-alarm/general-alarm-notifications', () => ({
   subscribeToEmergencyDashboardNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToEmergencyNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToGeneralAlarmNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
+  subscribeToGroupLocationNotificationResponses: jest.fn(() => mockGroupSubscription),
+  subscribeToDailyProgramNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
+  subscribeToQuestionRoundNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToWakeUpCallNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   syncGeneralAlarmReminders: jest.fn(async () => undefined),
   unregisterGeneralAlarmNotifications: jest.fn(async () => undefined),
@@ -105,5 +111,33 @@ describe('GeneralAlarmNotificationsProvider', () => {
     await act(async () => { renderer?.update(tree()); });
     expect(mockRouter.push).toHaveBeenCalledTimes(1);
     expect(mockRouter.push).toHaveBeenCalledWith('/emergency-dashboard');
+  });
+
+  it('öffnet nach einem Tagesprogramm-Push die Programmübersicht', async () => {
+    await act(async () => { renderer = create(tree()); });
+    const onResponse = jest.mocked(subscribeToDailyProgramNotificationResponses).mock.calls[0][0];
+    await act(async () => { onResponse(); });
+    expect(mockRouter.push).toHaveBeenCalledWith('/program');
+  });
+
+  it('öffnet die Gruppenanfrage beim Kaltstart nach Navigation und Auth-Laden', async () => {
+    mockRootState = undefined;
+    mockAuthState.isLoading = true;
+    await act(async () => { renderer = create(tree()); });
+    const subscription = jest.mocked(subscribeToGroupLocationNotificationResponses);
+    await act(async () => { subscription.mock.calls[0][0](); });
+    expect(mockRouter.push).not.toHaveBeenCalled();
+
+    mockRootState = { key: 'root' };
+    await act(async () => { renderer?.update(tree()); });
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    mockAuthState.isLoading = false;
+    await act(async () => { renderer?.update(tree()); });
+    expect(mockRouter.push).toHaveBeenCalledTimes(1);
+    expect(mockRouter.push).toHaveBeenCalledWith('/group');
+
+    await act(async () => { renderer?.unmount(); });
+    renderer = null;
+    expect(mockGroupSubscription.remove).toHaveBeenCalledTimes(1);
   });
 });

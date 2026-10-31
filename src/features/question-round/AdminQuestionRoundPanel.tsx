@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Spacing } from '@/constants/theme';
-import type { AnonymousQuestion, MemberType, QuestionRound } from '@/domain/database';
+import type { AnonymousQuestion, QuestionRound, QuestionRoundAudience } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useI18n } from '@/features/i18n/i18n';
 import {
@@ -19,13 +19,14 @@ const questionDisplayBatchSize = 50;
 
 export function AdminQuestionRoundPanel() {
   const theme = useTheme();
-  const { t } = useI18n();
+  const { isRTL, t } = useI18n();
   const [latestRound, setLatestRound] = useState<QuestionRound | null>(null);
   const [questions, setQuestions] = useState<AnonymousQuestion[]>([]);
   const [isLoadingRound, setIsLoadingRound] = useState(true);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
-  const [targetMemberType, setTargetMemberType] = useState<MemberType | null>(null);
+  const [targetMemberType, setTargetMemberType] = useState<QuestionRoundAudience | null>(null);
+  const [pushFailedRoundId, setPushFailedRoundId] = useState<number | null>(null);
   const [updatingQuestionId, setUpdatingQuestionId] = useState<number | null>(null);
   const [roundErrorMessage, setRoundErrorMessage] = useState<string | null>(null);
   const [questionsErrorMessage, setQuestionsErrorMessage] = useState<string | null>(null);
@@ -176,6 +177,34 @@ export function AdminQuestionRoundPanel() {
     };
   }, [loadQuestions, roundId]);
 
+  const dispatchRoundPush = async (openedRoundId: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke<{
+        code: string;
+        pushFailed: boolean;
+      }>('dispatch-question-round', {
+        body: { roundId: openedRoundId },
+      });
+      setPushFailedRoundId(
+        error || data?.code !== 'processed' || data?.pushFailed ? openedRoundId : null,
+      );
+    } catch {
+      setPushFailedRoundId(openedRoundId);
+    }
+  };
+
+  const retryRoundPush = async () => {
+    if (!latestRound || !isOpen || isWorking) {
+      return;
+    }
+    setIsWorking(true);
+    try {
+      await dispatchRoundPush(latestRound.id);
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
   const openRound = async () => {
     if (isWorking || !targetMemberType) {
       return;
@@ -186,7 +215,7 @@ export function AdminQuestionRoundPanel() {
 
     try {
       const { data, error } = await supabase.rpc('open_question_round', {
-        p_target_member_type: targetMemberType,
+        p_audience: targetMemberType,
       });
 
       if (error) {
@@ -197,6 +226,8 @@ export function AdminQuestionRoundPanel() {
       setLatestRound(data);
       setRoundErrorMessage(null);
       setTargetMemberType(null);
+      setPushFailedRoundId(null);
+      await dispatchRoundPush(data.id);
     } catch (error) {
       setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
@@ -224,6 +255,7 @@ export function AdminQuestionRoundPanel() {
       latestRoundRequestSequence.current += 1;
       setLatestRound(data);
       setRoundErrorMessage(null);
+      setPushFailedRoundId(null);
     } catch (error) {
       setActionErrorMessage(getOriginalErrorMessage(error));
     } finally {
@@ -289,13 +321,11 @@ export function AdminQuestionRoundPanel() {
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {t(
-                  latestRound.target_member_type === 'brother'
-                    ? 'questionRound.audience.brother'
-                    : latestRound.target_member_type === 'sister'
-                      ? 'questionRound.audience.sister'
-                      : isOpen
-                        ? 'questionRound.audienceMissing'
-                        : 'questionRound.audienceUnknown',
+                  latestRound.target_member_type
+                    ? `questionRound.audience.${latestRound.target_member_type}`
+                    : isOpen
+                      ? 'questionRound.audienceMissing'
+                      : 'questionRound.audienceUnknown',
                 )}
               </ThemedText>
             </View>
@@ -362,8 +392,8 @@ export function AdminQuestionRoundPanel() {
               <View
                 accessibilityRole="radiogroup"
                 accessibilityLabel={t('questionRound.audienceTitle')}
-                style={styles.audienceChoices}>
-                {(['brother', 'sister'] as const).map((memberType) => (
+                style={[styles.audienceChoices, isRTL && { flexDirection: 'row-reverse' }]}>
+                {(['all', 'brother', 'sister'] as const).map((memberType) => (
                   <Pressable
                     accessibilityLabel={t(`questionRound.audience.${memberType}`)}
                     accessibilityRole="radio"
@@ -398,6 +428,20 @@ export function AdminQuestionRoundPanel() {
       )}
 
       {isWorking ? <ActivityIndicator color={theme.accent} /> : null}
+      {isOpen && pushFailedRoundId === roundId ? (
+        <View style={styles.audienceForm}>
+          <ThemedText type="small" themeColor="danger" accessibilityLiveRegion="polite">
+            {t('questionRound.pushFailed')}
+          </ThemedText>
+          <Button
+            disabled={isWorking}
+            icon="refresh"
+            label={t('questionRound.retryPush')}
+            onPress={() => void retryRoundPush()}
+            variant="secondary"
+          />
+        </View>
+      ) : null}
       {errorMessage ? (
         <ThemedText type="small" themeColor="danger" accessibilityLiveRegion="polite">
           {errorMessage}

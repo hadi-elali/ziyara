@@ -20,6 +20,7 @@ jest.mock('@/features/auth/RequireAuth', () => ({ RequireAuth: ({ children }: Pr
 jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => ({ profile: { member_type: mockMemberType } }) }));
 jest.mock('@/features/auth/supabase', () => ({
   supabase: {
+    functions: { invoke: jest.fn(async () => ({ data: { code: 'processed', pushFailed: false }, error: null })) },
     rpc: (...args: unknown[]) => mockRpc(...args),
     from: (table: string) => {
       const query = {
@@ -99,7 +100,7 @@ describe('Fragerundenoberfläche', () => {
     expect(openButton().props.disabled).toBe(false);
     await act(async () => { openButton().props.onPress(); await flushAsyncWork(); });
 
-    expect(mockRpc).toHaveBeenCalledWith('open_question_round', { p_target_member_type: audience });
+    expect(mockRpc).toHaveBeenCalledWith('open_question_round', { p_audience: audience });
     expect(root.findAllByType(Button).some((button) => button.props.label === 'questionRound.close')).toBe(true);
   });
 

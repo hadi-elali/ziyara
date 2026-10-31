@@ -60,6 +60,9 @@ const savedProgram: DailyProgram = {
   id: 1,
   program_date: '2026-08-28',
   published_by_profile_id: 1,
+  items: [],
+    push_scheduled_at: null,
+    push_started_at: null,
   title: 'Karbala',
   updated_at: '2026-08-28T08:00:00.000Z',
 };

@@ -66,8 +66,25 @@ export function BusSelectionPanel() {
   return (
     <Card style={styles.card}>
       <ThemedText type="heading">{ownBus ? t('bus.selection.current', { bus: ownBus.name }) : t('bus.selection.title')}</ThemedText>
-      {ownBus ? (
+      <ThemedText themeColor="textSecondary">{t('bus.selection.body')}</ThemedText>
+      {buses.length === 0 ? (
+        <ThemedText themeColor="textSecondary">{t('bus.selection.noBuses')}</ThemedText>
+      ) : (
         <View style={styles.buses}>
+          {buses.map((bus) => (
+            <Button
+              key={bus.id}
+              disabled={isSaving || ownBus?.id === bus.id}
+              icon={ownBus?.id === bus.id ? 'confirm' : 'bus'}
+              label={t(ownBus?.id === bus.id ? 'bus.selection.selected' : ownBus ? 'bus.selection.change' : 'bus.selection.choose', { bus: bus.name })}
+              onPress={() => void chooseBus(bus.id)}
+              variant={ownBus?.id === bus.id ? 'secondary' : 'primary'}
+            />
+          ))}
+        </View>
+      )}
+      {ownBus ? (
+        <View style={[styles.buses, styles.presenceSection]}>
           <ThemedText type="smallBold">{t('bus.presence.title')}</ThemedText>
           <ThemedText
             accessibilityLiveRegion="polite"
@@ -101,23 +118,6 @@ export function BusSelectionPanel() {
           <ThemedText type="small" themeColor="textSecondary">{t('bus.presence.resetHint')}</ThemedText>
         </View>
       ) : null}
-      <ThemedText themeColor="textSecondary">{t('bus.selection.body')}</ThemedText>
-      {buses.length === 0 ? (
-        <ThemedText themeColor="textSecondary">{t('bus.selection.noBuses')}</ThemedText>
-      ) : (
-        <View style={styles.buses}>
-          {buses.map((bus) => (
-            <Button
-              key={bus.id}
-              disabled={isSaving || ownBus?.id === bus.id}
-              icon={ownBus?.id === bus.id ? 'confirm' : 'bus'}
-              label={t(ownBus?.id === bus.id ? 'bus.selection.selected' : ownBus ? 'bus.selection.change' : 'bus.selection.choose', { bus: bus.name })}
-              onPress={() => void chooseBus(bus.id)}
-              variant={ownBus?.id === bus.id ? 'secondary' : 'primary'}
-            />
-          ))}
-        </View>
-      )}
       {isSaving ? <ActivityIndicator accessibilityLabel={t('bus.selection.saving')} color={theme.accent} /> : null}
       {feedback ? (
         <ThemedText accessibilityLiveRegion="polite" type="small" themeColor={feedback.error ? 'danger' : 'success'}>{t(feedback.key)}</ThemedText>
@@ -129,6 +129,7 @@ export function BusSelectionPanel() {
 const styles = StyleSheet.create({
   card: { gap: Spacing.three },
   buses: { gap: Spacing.two },
+  presenceSection: { marginTop: Spacing.two },
   presenceActions: { flexDirection: 'row', gap: Spacing.two },
   presenceButton: { flex: 1, minWidth: 0, minHeight: 56, paddingHorizontal: Spacing.two },
 });

@@ -43,7 +43,7 @@ function isPlace(place: Place | undefined): place is Place {
 export default function HomeScreen() {
   const theme = useTheme();
   const { language, t } = useI18n();
-  const { profile, session } = useAuth();
+  const { isAdmin, profile, session } = useAuth();
   const { activeTrip: activeBusTrip, participants: busParticipants } = useBusManagement();
   const hasBusAssignment = busParticipants.some((participant) => participant.profile_id === profile?.id);
   const { activeCheck, currentResponse } = useGroupCheck();
@@ -81,6 +81,13 @@ export default function HomeScreen() {
   return (
     <>
     <Screen>
+      {session && isAdmin ? (
+        <Button
+          icon="people"
+          label={t("settings.openAdmin")}
+          onPress={() => router.push("/admin")}
+        />
+      ) : null}
       {session ? <WakeUpCallPanel compact /> : null}
       {session ? (
         <View
@@ -227,11 +234,7 @@ export default function HomeScreen() {
         >
           <ThemedText type="heading">{t("questionRound.homeTitle")}</ThemedText>
           <ThemedText type="smallBold">
-            {t(
-              activeRound.target_member_type === 'brother'
-                ? 'questionRound.audience.brother'
-                : 'questionRound.audience.sister',
-            )}
+            {t(`questionRound.audience.${activeRound.target_member_type ?? 'all'}`)}
           </ThemedText>
           <ThemedText themeColor="textSecondary">
             {t("questionRound.homeBody")}

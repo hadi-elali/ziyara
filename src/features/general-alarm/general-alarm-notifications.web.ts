@@ -47,7 +47,25 @@ export function subscribeToEmergencyDashboardNotificationResponses(
   return { remove: () => undefined };
 }
 
+export function subscribeToGroupLocationNotificationResponses(
+  _listener: () => void,
+): NotificationResponseSubscription {
+  return { remove: () => undefined };
+}
+
 export async function openGeneralAlarmNotificationSettings() {}
+
+export function subscribeToQuestionRoundNotificationResponses(
+  _listener: () => void,
+): NotificationResponseSubscription {
+  return { remove: () => undefined };
+}
+
+export function subscribeToDailyProgramNotificationResponses(
+  _listener: () => void,
+): NotificationResponseSubscription {
+  return { remove: () => undefined };
+}
 
 export function subscribeToWakeUpCallNotificationResponses(_listener: () => void): NotificationResponseSubscription {
   return { remove: () => undefined };

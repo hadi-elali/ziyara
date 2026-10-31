@@ -10,6 +10,7 @@ export type SymbolIconName =
   | 'bookmark'
   | 'bus'
   | 'chevron'
+  | 'clock'
   | 'close'
   | 'confirm'
   | 'copy'
@@ -46,6 +47,7 @@ const symbolNames: Record<SymbolIconName, React.ComponentProps<typeof SymbolView
   bookmark: { ios: 'bookmark', android: 'bookmark', web: 'bookmark' },
   bus: { ios: 'bus.fill', android: 'directions_bus', web: 'directions_bus' },
   chevron: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
+  clock: { ios: 'clock', android: 'schedule', web: 'schedule' },
   close: { ios: 'xmark', android: 'close', web: 'close' },
   confirm: { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
   copy: { ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' },

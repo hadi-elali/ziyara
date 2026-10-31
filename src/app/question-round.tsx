@@ -161,6 +161,7 @@ function QuestionRoundContent() {
           </ThemedText>
         </View>
 
+          
         <View style={styles.field}>
           <ThemedText type="smallBold">{t('questionRound.questionLabel')}</ThemedText>
           <TextInput

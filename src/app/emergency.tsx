@@ -28,6 +28,7 @@ import { supabase } from "@/features/auth/supabase";
 import { EmergencyRequestActions, EmergencyRequestStatus, type EmergencyRequestChange } from "@/features/emergency/EmergencyRequestActions";
 import { useGeneralAlarmNotifications } from "@/features/general-alarm/general-alarm-notifications-context";
 import { isEmergencyInboxRole } from "@/features/emergency/use-emergency-inbox-alert";
+import { emergencyRestrictionUntilRelease, useEmergencySendRestriction } from "@/features/emergency/use-emergency-send-restriction";
 import { useI18n } from "@/features/i18n/i18n";
 import {
   getOriginalErrorMessage,
@@ -51,6 +52,7 @@ type SubmitFeedback =
         | "validation_team";
     }
   | { kind: "error"; message: string }
+  | { kind: "restricted" }
   | { kind: "no_recipients" }
   | { count: number; kind: "success" | "success_no_push" }
   | null;
@@ -113,6 +115,7 @@ function EmergencyContent() {
   const refreshVersion = useRef(0);
   const loadedUserId = useRef<string | null>(null);
   const userId = session?.user.id ?? null;
+  const sendRestriction = useEmergencySendRestriction(userId);
   const profileId = profile?.id ?? null;
   const canReceiveEmergencyMessages = isEmergencyInboxRole(profile?.role);
 
@@ -259,6 +262,10 @@ function EmergencyContent() {
 
   const submit = async () => {
     if (isSubmitting) return;
+    if (sendRestriction.until) {
+      setSubmitFeedback({ kind: "restricted" });
+      return;
+    }
     const normalizedLocationLabel = locationLabel.trim();
     const normalizedMessage = message.trim();
     if (!team) {
@@ -319,8 +326,11 @@ function EmergencyContent() {
       );
       await refresh();
     } catch (error) {
-      const message = getOriginalErrorMessage(error);
-      if (message) setSubmitFeedback({ kind: "error", message });
+      if (sendRestriction.acceptRejection(error)) {
+        setSubmitFeedback({ kind: "restricted" });
+      } else {
+        setSubmitFeedback({ kind: "error", message: getOriginalErrorMessage(error) ?? t("emergency.feedback.error") });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -379,6 +389,19 @@ function EmergencyContent() {
 
       <Section title={t("emergency.formTitle")}>
         <Card style={styles.formCard}>
+          {sendRestriction.until ? (
+            <View accessibilityRole="alert" accessibilityLiveRegion="polite"
+              style={[styles.feedback, { backgroundColor: theme.warningSoft, borderColor: theme.warning }]}>
+              <ThemedText type="smallBold" themeColor="danger">
+                {sendRestriction.until === emergencyRestrictionUntilRelease
+                  ? t("emergency.restriction.senderUntilRelease")
+                  : t("emergency.restriction.senderUntil", { date: formatDate(sendRestriction.until) })}
+              </ThemedText>
+              <ThemedText type="small">{t("emergency.restriction.senderContact")}</ThemedText>
+              <Button icon="refresh" label={t("emergency.retry")}
+                onPress={() => void sendRestriction.refresh()} size="compact" variant="ghost" />
+            </View>
+          ) : null}
           <View style={styles.field}>
             <ThemedText type="smallBold">{t("emergency.teamLabel")}</ThemedText>
             <View style={styles.teamChoices}>
@@ -568,7 +591,9 @@ function EmergencyContent() {
                       : "warning"
                 }
               >
-                {submitFeedback.kind === "error"
+                {submitFeedback.kind === "restricted"
+                  ? t("emergency.restriction.senderRejected")
+                  : submitFeedback.kind === "error"
                   ? submitFeedback.message
                   : t(
                       `emergency.feedback.${submitFeedback.kind}`,
@@ -581,7 +606,7 @@ function EmergencyContent() {
           ) : null}
 
           <Button
-            disabled={isSubmitting}
+            disabled={isSubmitting || sendRestriction.until !== null}
             icon="warning"
             label={
               isSubmitting ? t("emergency.submitting") : t("emergency.submit")

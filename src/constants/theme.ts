@@ -25,6 +25,12 @@ export const Colors = {
     successSoft: '#DDEEDC',
     danger: '#B14B45',
     dangerSoft: '#F4DDDA',
+    roleAdmin: '#1D4ED8',
+    roleAdminSoft: '#DBEAFE',
+    roleMedical: '#B91C1C',
+    roleMedicalSoft: '#FEE2E2',
+    roleOrganization: '#854D0E',
+    roleOrganizationSoft: '#FEF9C3',
   },
   dark: {
     text: '#F4F8FF',
@@ -43,6 +49,12 @@ export const Colors = {
     successSoft: '#173927',
     danger: '#F19A91',
     dangerSoft: '#3E2223',
+    roleAdmin: '#93C5FD',
+    roleAdminSoft: '#172F52',
+    roleMedical: '#FCA5A5',
+    roleMedicalSoft: '#451F28',
+    roleOrganization: '#FDE047',
+    roleOrganizationSoft: '#3D3215',
   },
 } as const;
 

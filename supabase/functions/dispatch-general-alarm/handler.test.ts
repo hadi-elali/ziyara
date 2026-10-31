@@ -36,6 +36,7 @@ function dependencies(
 describe('dispatch general alarm handler', () => {
   it('weist Aufrufe ohne Admin- oder Scheduler-Berechtigung ab', async () => {
     const dispatchWakeUpCalls = jest.fn(async () => undefined);
+    const dispatchDailyPrograms = jest.fn(async () => undefined);
     const result = await handleDispatchGeneralAlarmRequest(
       {
         authorization: null,
@@ -43,15 +44,17 @@ describe('dispatch general alarm handler', () => {
         cronSecret: null,
         method: 'POST',
       },
-      dependencies({ dispatchWakeUpCalls }),
+      dependencies({ dispatchWakeUpCalls, dispatchDailyPrograms }),
     );
 
     expect(result).toMatchObject({ body: { code: 'unauthorized' }, status: 401 });
     expect(dispatchWakeUpCalls).not.toHaveBeenCalled();
+    expect(dispatchDailyPrograms).not.toHaveBeenCalled();
   });
 
   it('führt geplante Weckrufe auch ohne aktives Boarding aus', async () => {
     const dispatchWakeUpCalls = jest.fn(async () => undefined);
+    const dispatchDailyPrograms = jest.fn(async () => undefined);
     const sendNotifications = jest.fn(async () => []);
     const result = await handleDispatchGeneralAlarmRequest(
       {
@@ -60,7 +63,7 @@ describe('dispatch general alarm handler', () => {
         cronSecret: 'secret',
         method: 'POST',
       },
-      dependencies({ sendNotifications, dispatchWakeUpCalls }),
+      dependencies({ sendNotifications, dispatchWakeUpCalls, dispatchDailyPrograms }),
     );
 
     expect(result).toMatchObject({
@@ -69,6 +72,17 @@ describe('dispatch general alarm handler', () => {
     });
     expect(sendNotifications).not.toHaveBeenCalled();
     expect(dispatchWakeUpCalls).toHaveBeenCalledTimes(1);
+    expect(dispatchDailyPrograms).toHaveBeenCalledTimes(1);
+  });
+
+  it('führt Tagesprogramm und Weckruf unabhängig aus und meldet Versandfehler', async () => {
+    const dispatchWakeUpCalls = jest.fn(async () => { throw new Error('Wake-up unavailable'); });
+    const dispatchDailyPrograms = jest.fn(async () => undefined);
+    const result = await handleDispatchGeneralAlarmRequest({
+      authorization: null, configuredCronSecret: 'secret', cronSecret: 'secret', method: 'POST',
+    }, dependencies({ dispatchWakeUpCalls, dispatchDailyPrograms }));
+    expect(dispatchDailyPrograms).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ status: 500, body: { code: 'dispatch_failed' } });
   });
 
   it('prüft einen Nutzer-Token serverseitig und protokolliert das Expo-Ergebnis', async () => {

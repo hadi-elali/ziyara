@@ -9,8 +9,9 @@ export function canSubmitToQuestionRound(
   return Boolean(
     round &&
       !round.closed_at &&
-      (round.target_member_type === 'brother' || round.target_member_type === 'sister') &&
-      round.target_member_type === memberType,
+      (round.target_member_type === 'all' ||
+        ((round.target_member_type === 'brother' || round.target_member_type === 'sister') &&
+          round.target_member_type === memberType)),
   );
 }
 

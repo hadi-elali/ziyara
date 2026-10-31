@@ -79,33 +79,6 @@ export function RegistrationFamilyFields({
             onChange={value => onChange(member.id, 'birthDate', value)}
             value={member.birthDate}
           />
-          <View style={styles.field}>
-            <ThemedText type="small">{t('auth.age')}</ThemedText>
-            <TextInput
-              accessibilityLabel={t('auth.familyMembers.fieldLabel', {
-                field: t('auth.age'), number: index + 1,
-              })}
-              autoComplete="off"
-              editable={!disabled}
-              inputMode="numeric"
-              keyboardType="number-pad"
-              maxLength={3}
-              onChangeText={value => onChange(member.id, 'age', value)}
-              placeholder={t('auth.age')}
-              placeholderTextColor={theme.textSecondary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.background,
-                  borderColor: theme.border,
-                  color: theme.text,
-                  textAlign: isRTL ? 'right' : 'left',
-                  writingDirection: 'ltr',
-                },
-              ]}
-              value={member.age}
-            />
-          </View>
           <Button
             disabled={disabled || members.length <= 1}
             icon="minus"

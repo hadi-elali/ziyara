@@ -18,6 +18,9 @@ function program(id: number, programDate: string): DailyProgram {
     id,
     program_date: programDate,
     published_by_profile_id: 1,
+    items: [],
+    push_scheduled_at: null,
+    push_started_at: null,
     title: null,
     updated_at: '2026-08-28T00:00:00.000Z',
   };

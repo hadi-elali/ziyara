@@ -69,6 +69,7 @@ export function AdminBusManagementPanel({
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null);
   const [isWorking, setIsWorking] = useState(false);
   const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
+  const [pushFailedTripId, setPushFailedTripId] = useState<number | null>(null);
   const [assignmentSaved, setAssignmentSaved] = useState(false);
   const [templateDeleted, setTemplateDeleted] = useState(false);
   const [deletedTemplateIds, setDeletedTemplateIds] = useState<number[]>([]);
@@ -138,9 +139,9 @@ export function AdminBusManagementPanel({
         groupLeaderChoice?.groupId === selectedGroup.id && leader.user_id === groupLeaderChoice.userId,
       );
 
-  const runAction = async (
-    action: () => PromiseLike<{ error: unknown }>,
-    onSuccess?: () => void,
+  const runAction = async <T extends { error: unknown }>(
+    action: () => PromiseLike<T>,
+    onSuccess?: (result: T) => void | Promise<void>,
   ) => {
     if (isWorking) return;
     setAssignmentSaved(false);
@@ -166,11 +167,36 @@ export function AdminBusManagementPanel({
         setActionErrorMessage(actionErrorText(result.error));
         await refresh();
       } else {
-        onSuccess?.();
+        await onSuccess?.(result);
         await refresh();
       }
     } catch (error) {
       setActionErrorMessage(actionErrorText(error));
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const dispatchBusSelectionPush = async (tripId: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke<{
+        code: string;
+        pushFailed: boolean;
+      }>('dispatch-bus-selection', { body: { tripId } });
+      setPushFailedTripId(
+        error || data?.code !== 'processed' || data?.pushFailed ? tripId : null,
+      );
+    } catch {
+      // A dispatch failure must not turn successful trip/bus creation into an error.
+      setPushFailedTripId(tripId);
+    }
+  };
+
+  const retryBusSelectionPush = async () => {
+    if (!activeTrip || isWorking) return;
+    setIsWorking(true);
+    try {
+      await dispatchBusSelectionPush(activeTrip.id);
     } finally {
       setIsWorking(false);
     }
@@ -222,10 +248,13 @@ export function AdminBusManagementPanel({
               p_source_trip_id: templateTripId,
             });
 
-    void runAction(action, () => {
+    void runAction(action, async (result) => {
       setTripName('');
       setTemplateTripId(null);
       setTripExpanded(true);
+      if (result.data && templateTripId !== null) {
+        await dispatchBusSelectionPush(result.data.id);
+      }
     });
   };
 
@@ -241,10 +270,11 @@ export function AdminBusManagementPanel({
           p_name: busName.trim(),
           p_trip_id: activeTrip.id,
         }),
-      () => {
+      async () => {
         setBusName('');
         setLeaderSearch('');
         setSelectedLeaderUserId(null);
+        await dispatchBusSelectionPush(activeTrip.id);
       },
     );
   };
@@ -438,6 +468,21 @@ export function AdminBusManagementPanel({
           variant="ghost"
         />
       </Card>
+
+      {pushFailedTripId === activeTrip.id ? (
+        <Card style={styles.formCard}>
+          <ThemedText accessibilityLiveRegion="polite" type="small" themeColor="warning">
+            {t('bus.admin.pushFailed')}
+          </ThemedText>
+          <Button
+            disabled={isWorking || hasSyncError}
+            icon="refresh"
+            label={t('bus.admin.retryPush')}
+            onPress={() => void retryBusSelectionPush()}
+            variant="secondary"
+          />
+        </Card>
+      ) : null}
 
       {hasSyncError ? (
         <Card style={[styles.inlineError, { borderColor: theme.warning }]}>

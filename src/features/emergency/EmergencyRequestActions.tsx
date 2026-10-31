@@ -8,6 +8,7 @@ import { Spacing } from '@/constants/theme';
 import type { EmergencyInboxMessage } from '@/domain/database';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
+import { AdminEmergencySendRestriction } from '@/features/emergency/AdminEmergencySendRestriction';
 import { useI18n } from '@/features/i18n/i18n';
 import { getOriginalErrorMessage } from '@/features/network/supabase-read';
 import { useTheme } from '@/hooks/use-theme';
@@ -164,6 +165,7 @@ export function EmergencyRequestActions({
           {errorMessage}
         </ThemedText>
       ) : null}
+      {onChanged && isAdmin ? <AdminEmergencySendRestriction requestId={item.request_id} /> : null}
     </View>
   );
 }

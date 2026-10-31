@@ -2,14 +2,12 @@ import {
   maximumRegistrationFamilyMembers,
   type RegistrationFamilyMemberInput,
 } from '@/domain/registration';
-import { getAge } from './age';
 import { getAgeFromBirthDate, getBirthDate } from './birth-date';
 
 export type RegistrationFamilyMemberDraft = {
   name: string;
   surname: string;
   birthDate: string;
-  age: string;
 };
 
 export function normalizeRegistrationFamilyMembers(
@@ -24,8 +22,8 @@ export function normalizeRegistrationFamilyMembers(
     const name = member.name.trim();
     const surname = member.surname.trim();
     const birthDate = getBirthDate(member.birthDate);
-    const age = getAge(member.age);
-    if (!birthDate || age === null || age !== getAgeFromBirthDate(birthDate) ||
+    const age = birthDate ? getAgeFromBirthDate(birthDate) : null;
+    if (!birthDate || age === null ||
       Array.from(name).length < 1 || Array.from(name).length > 80 ||
       Array.from(surname).length < 1 || Array.from(surname).length > 80) {
       return null;

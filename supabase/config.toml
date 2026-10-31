@@ -449,3 +449,18 @@ entrypoint = "./functions/dispatch-wake-up-call/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/dispatch-admin-push/index.ts"
+
+[functions.dispatch-question-round]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/dispatch-question-round/index.ts"
+
+[functions.dispatch-bus-selection]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/dispatch-bus-selection/index.ts"
+
+[functions.dispatch-group-location]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/dispatch-group-location/index.ts"

@@ -19,6 +19,25 @@ Nur Admins sehen „Notfall löschen“. Ein nativer beziehungsweise Browserdial
 
 Die zugehörige Migration `20261019000000_manage_emergency_requests.sql` ist lokal angewandt und geprüft, remote noch ausstehend. Sie muss vor Auslieferung des aktualisierten Clients remote angewandt werden. Der Dispatcher und die native Konfiguration benötigen hierfür keine Änderung oder neuen Development Build. Gezielte Prüfung: 47 SQL-Assertions in `emergency_management.test.sql` und `emergency_always_on_duty.test.sql`, 20 UI-/Home-Hinweis-Prüfungen; keine vollständige E2E- oder Gerätesuite.
 
+## Einzelne Absender bei Missbrauch sperren
+
+Admins öffnen „Notfall-Sperre verwalten“ direkt an einer eingegangenen Meldung in `/emergency` oder `/emergency-dashboard`. Alternativ ist die Verwaltung in `/admin` unter Benutzerübersicht → Person → Benutzerdetails verfügbar. Eine Sperre gilt für medizinische und organisatorische Notfallmeldungen desselben Kontos.
+
+1. 1 Stunde, 24 Stunden oder „Bis zur manuellen Freigabe“ wählen.
+2. Eine Begründung mit 5–500 Zeichen eingeben. Diese ist ausschließlich für Admins sichtbar.
+3. „Notfallmeldungen sperren“ drücken. Erst die bestätigte Serverantwort gilt als gespeichert.
+4. Ablauf beziehungsweise manuelle Freigabe, Begründung und verantwortlichen Admin prüfen. „Sperre jetzt aufheben“ gibt das Senden sofort wieder frei. Die Zeitsperren enden automatisch; „Bis zur manuellen Freigabe“ bleibt auch nach Neustarts aktiv, bis ein Admin sie ausdrücklich aufhebt.
+
+Andere App-Funktionen und der Empfang beziehungsweise die Bearbeitung eingehender Notfälle bleiben verfügbar. Betroffene sehen auf der Notfallseite den Ablauf oder „Deine Notfallfunktion ist bis zur Freigabe durch einen Admin gesperrt“ sowie den Hinweis, sich bei Hilfebedarf direkt an das Organisations- oder medizinische Team zu wenden. Ist die Sperre erst während der Eingabe gesetzt worden, erhält die App den Entwurf und zeigt ausdrücklich „Es wurde kein Notfall gesendet“. Ein fehlgeschlagener Statusabruf verhindert keine Hilfeanfrage; die Datenbank kontrolliert jeden Sendeversuch.
+
+`20261030000000_restrict_emergency_senders.sql` enthält die geschützte Historie, ausschließlich für Admins erlaubte Verwaltungs-RPCs und einen privaten Inserttrigger auf `emergency_requests`. Dieser greift auch für die bisherige Sende-RPC, ältere Clients und privilegierte direkte Inserts. Abgewiesene Versuche erzeugen keine Meldung und keine Empfänger; der aktualisierte Client ruft keinen Dispatcher auf. Die historische Sende-RPC behält ihre Signatur; ältere Clients erhalten einen Fehler und können ihn gegebenenfalls nur technisch anzeigen. Sperren, Senden und Aufheben verwenden dieselbe Profilzeilensperre; ein Widerruf muss die konkrete Sperr-ID nennen. Zeitablauf benötigt keinen Scheduler. Die Historie speichert Begründung sowie Admin/Zeitpunkt für Sperre und Aufhebung; Adminnamen bleiben nach deren Kontolöschung erhalten. Die Löschung des gesperrten Kontos entfernt dessen Sperrdaten.
+
+Bereits gespeicherte Meldungen und bereits ausgelieferte Pushs werden durch die Sperre nicht zurückgerufen. Eine missbräuchliche Meldung kann zusätzlich gelöscht werden; ihre Löschung hebt die Sperre des Kontos nicht auf. Aktive Sperren werden nicht durch erneutes Setzen überschrieben. Wer eine andere Dauer benötigt, hebt die bestehende Sperre auf und setzt eine neue mit Begründung.
+
+Die Folgemigration `20261030010000_allow_indefinite_emergency_restrictions.sql` erlaubt bei derselben Admin-RPC eine explizite `null`-Dauer für manuelle Freigabe. `restricted_until = 'infinity'` bleibt serverseitig aktiv, bis die protokollierte Admin-Aufhebung erfolgt. Bestehende Zeitsperren bleiben erhalten. Die eigenen Statusantworten und Fehlerdetails geben `infinity` als Zeichenfolge zurück; `null` als Status bedeutet weiterhin keine aktive Sperre. Der aktualisierte Client zeigt dafür den Freigabehinweis und plant keinen Ablauftimer.
+
+Beide Migrationen sind lokal vorbereitet und mit 73 Sperren- und 47 bestehenden Assertions in isoliertem PGlite-PostgreSQL mit tatsächlichen Notfallmigrationen und pgTAP-äquivalenten Assertions geprüft. Sie sind weder in einer laufenden lokalen Supabase-Instanz noch remote angewandt. Beide in Reihenfolge vor dem aktualisierten Client produktiv anwenden. Kein Function-Deployment und kein neuer Development Build allein für diese Änderung erforderlich. Reale Geräte-, vollständige Supabase- und Mehrverbindungsprüfungen stehen aus.
+
 ## Produktiv bereitstellen
 
 1. Erledigt am 14. September 2026: Die Basismigrationen `20260903000000_add_emergency_requests.sql`, `20260904000000_add_emergency_dashboard_and_duty.sql` und `20260904010000_require_emergency_location_label.sql` sind remote angewandt.

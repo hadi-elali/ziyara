@@ -6,7 +6,7 @@ import { formatBirthDateInput, getAgeFromBirthDate, getBirthDate } from './birth
 describe('registration family names', () => {
   it('trims names and retains distinct surnames and single characters', () => {
     const age = getAgeFromBirthDate('2020-02-29')!;
-    expect(normalizeRegistrationFamilyMembers([{ name: ' ع ', surname: ' Andere Familie ', birthDate: '29.02.2020', age: String(age) }])).toEqual([
+    expect(normalizeRegistrationFamilyMembers([{ name: ' ع ', surname: ' Andere Familie ', birthDate: '29.02.2020' }])).toEqual([
       { name: 'ع', surname: 'Andere Familie', birth_date: '2020-02-29', age },
     ]);
   });
@@ -18,7 +18,7 @@ describe('registration family names', () => {
     [{ name: 'A'.repeat(81), surname: 'Name' }],
     [{ name: 'Kind', surname: 'B'.repeat(81) }],
     Array.from({ length: 50 }, () => ({ name: 'Kind', surname: 'Name' })),
-  ].map(members => ({ members: members.map(member => ({ ...member, birthDate: '29.02.2020', age: String(getAgeFromBirthDate('2020-02-29')) })) })))('rejects an incomplete or oversized family list: %j', ({ members }) => {
+  ].map(members => ({ members: members.map(member => ({ ...member, birthDate: '29.02.2020' })) })))('rejects an incomplete or oversized family list: %j', ({ members }) => {
     expect(normalizeRegistrationFamilyMembers(members)).toBeNull();
   });
 

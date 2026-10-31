@@ -16,6 +16,7 @@ import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 type ScreenProps = {
+  automaticallyAdjustKeyboardInsets?: boolean;
   children: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   onContentSizeChange?: (contentWidth: number, contentHeight: number) => void;
@@ -25,6 +26,7 @@ type ScreenProps = {
 };
 
 export function Screen({
+  automaticallyAdjustKeyboardInsets = false,
   children,
   contentStyle,
   onContentSizeChange,
@@ -41,6 +43,7 @@ export function Screen({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        enabled={Platform.OS !== "ios" || !automaticallyAdjustKeyboardInsets}
         style={styles.keyboardView}
       >
         <TouchableWithoutFeedback
@@ -49,6 +52,7 @@ export function Screen({
         >
           <ScrollView
             ref={scrollViewRef}
+            automaticallyAdjustKeyboardInsets={automaticallyAdjustKeyboardInsets}
             onContentSizeChange={onContentSizeChange}
             onScroll={onScroll}
             scrollEventThrottle={500}

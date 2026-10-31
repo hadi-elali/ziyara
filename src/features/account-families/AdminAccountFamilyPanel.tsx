@@ -17,9 +17,13 @@ type FamilyFeedback =
   | { message: string; type: 'error' }
   | null;
 
+export type AccountFamilyChange =
+  | { family: AccountFamily; memberUserIds: string[]; type: 'saved' }
+  | { familyId: number; type: 'deleted' };
+
 type AdminAccountFamilyPanelProps = {
   families: AccountFamily[];
-  onChanged: () => Promise<void>;
+  onChanged: (change: AccountFamilyChange) => void;
   users: AdminUserSummary[];
 };
 
@@ -81,20 +85,23 @@ export function AdminAccountFamilyPanel({
     setIsWorking(true);
 
     try {
-      const { error } = await supabase.rpc('admin_upsert_account_family', {
+      const { data, error } = await supabase.rpc('admin_upsert_account_family', {
         p_family_id: editingFamilyId,
         p_member_user_ids: [...selectedUserIds],
         p_name: familyName.trim(),
       });
 
-      if (error) {
-        setFeedback({ message: error.message, type: 'error' });
+      if (error || !data) {
+        setFeedback({
+          message: error?.message ?? t('accountFamilies.feedback.error'),
+          type: 'error',
+        });
         return;
       }
 
+      onChanged({ family: data, memberUserIds: [...selectedUserIds], type: 'saved' });
       resetEditor();
       setFeedback({ kind: 'saved', type: 'success' });
-      await onChanged();
     } catch (error) {
       const message = getOriginalErrorMessage(error);
       if (message) setFeedback({ message, type: 'error' });
@@ -118,9 +125,9 @@ export function AdminAccountFamilyPanel({
         return;
       }
 
+      onChanged({ familyId, type: 'deleted' });
       if (editingFamilyId === familyId) resetEditor();
       setFeedback({ kind: 'deleted', type: 'success' });
-      await onChanged();
     } catch (error) {
       const message = getOriginalErrorMessage(error);
       if (message) setFeedback({ message, type: 'error' });

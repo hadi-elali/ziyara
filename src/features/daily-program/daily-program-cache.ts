@@ -1,4 +1,4 @@
-import type { DailyProgram } from '@/domain/database';
+import type { DailyProgram, DailyProgramItem } from '@/domain/database';
 import { parseLocalISODate } from '@/features/daily-program/daily-program-state';
 import { createPersistentState } from '@/features/storage/persistentState';
 
@@ -21,6 +21,11 @@ function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string';
 }
 
+function isOptionalTimestamp(value: unknown) {
+  return value === undefined || value === null ||
+    (typeof value === 'string' && Number.isFinite(Date.parse(value)));
+}
+
 function isDailyProgram(value: unknown): value is DailyProgram {
   if (!isRecord(value)) return false;
 
@@ -32,9 +37,23 @@ function isDailyProgram(value: unknown): value is DailyProgram {
     typeof value.details === 'string' &&
     isNullableString(value.title) &&
     isNullableFiniteNumber(value.published_by_profile_id) &&
+    isOptionalTimestamp(value.push_scheduled_at) &&
+    isOptionalTimestamp(value.push_started_at) &&
+    (value.items === undefined || (Array.isArray(value.items) &&
+      value.items.every((item) => isDailyProgramItem(item) && item.program_id === value.id))) &&
     typeof value.created_at === 'string' &&
     typeof value.updated_at === 'string'
   );
+}
+
+function isDailyProgramItem(value: unknown): value is DailyProgramItem {
+  return isRecord(value) &&
+    typeof value.id === 'number' && Number.isSafeInteger(value.id) && value.id > 0 &&
+    typeof value.program_id === 'number' && Number.isSafeInteger(value.program_id) &&
+    typeof value.position === 'number' && Number.isSafeInteger(value.position) && value.position >= 0 &&
+    typeof value.details === 'string' && value.details.trim().length > 0 &&
+    isNullableString(value.push_scheduled_at) && isOptionalTimestamp(value.push_scheduled_at) &&
+    isNullableString(value.push_started_at) && isOptionalTimestamp(value.push_started_at);
 }
 
 export function parseDailyProgramCache(
@@ -53,7 +72,15 @@ export function parseDailyProgramCache(
     return undefined;
   }
 
-  return { programs, userId };
+  return {
+    programs: programs.map((program) => ({
+      ...program,
+      push_scheduled_at: program.push_scheduled_at ?? null,
+      push_started_at: program.push_started_at ?? null,
+      items: program.items ?? [],
+    })),
+    userId,
+  };
 }
 
 function readInitialWebCache() {

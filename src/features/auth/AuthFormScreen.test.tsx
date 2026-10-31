@@ -5,7 +5,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { Button } from '@/components/ui/button';
 import { RegistrationFamilyFields } from './RegistrationFamilyFields';
 import { AuthFormScreen } from './AuthFormScreen';
-import { formatBirthDateInput, getAgeFromBirthDate, getBirthDate } from './birth-date';
+import { getAgeFromBirthDate } from './birth-date';
 
 const ownerAge = getAgeFromBirthDate('1994-01-01')!;
 const childAge = getAgeFromBirthDate('2020-02-29')!;
@@ -16,6 +16,10 @@ const mockSignUp = jest.fn<(...args: unknown[]) => Promise<{
 }>>();
 const mockSignIn = jest.fn();
 const mockCompleteOnboarding = jest.fn();
+const mockRefreshRegistration = jest.fn<() => Promise<boolean | null>>();
+const mockRegistration: { enabled: boolean | null; hasError: boolean; refresh: typeof mockRefreshRegistration } = {
+  enabled: true, hasError: false, refresh: mockRefreshRegistration,
+};
 const mockT = (key: string, params?: Record<string, string | number>) =>
   params ? `${key}:${Object.values(params).join(':')}` : key;
 jest.mock('expo-router', () => ({
@@ -29,6 +33,7 @@ jest.mock('@/constants/theme', () => ({
   Spacing: { half: 2, one: 4, two: 8, three: 12, four: 16 },
 }));
 jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => ({ signUp: mockSignUp, signIn: mockSignIn }) }));
+jest.mock('@/features/auth/use-registration-availability', () => ({ useRegistrationAvailability: () => mockRegistration }));
 jest.mock('@/features/onboarding/onboarding-state', () => ({ useOnboarding: () => ({ completeOnboarding: mockCompleteOnboarding }) }));
 jest.mock('@/features/i18n/i18n', () => ({ useI18n: () => ({ t: mockT, isRTL: false }) }));
 jest.mock('@/hooks/use-theme', () => ({ useTheme: () => ({ border: '#888', text: '#111', textSecondary: '#666', background: '#fff' }) }));
@@ -54,13 +59,11 @@ async function choice(index: number) {
     choices[index].props.onPress();
   });
 }
-async function editMember(number: number, name: string, surname: string, birthDate = '29.02.2020', age?: string) {
+async function editMember(number: number, name: string, surname: string, birthDate = '29.02.2020') {
   await act(async () => {
     input(`auth.familyMembers.fieldLabel:auth.firstName:${number}`).props.onChangeText(name);
     input(`auth.familyMembers.fieldLabel:auth.surname:${number}`).props.onChangeText(surname);
     input(`auth.familyMembers.fieldLabel:auth.familyMembers.birthDate:${number}`).props.onChangeText(birthDate);
-    const isoDate = getBirthDate(formatBirthDateInput(birthDate));
-    input(`auth.familyMembers.fieldLabel:auth.age:${number}`).props.onChangeText(age ?? String(isoDate ? getAgeFromBirthDate(isoDate) : 0));
   });
 }
 async function render(mode: 'login' | 'register' = 'register') {
@@ -71,7 +74,6 @@ async function fillAccount() {
     input('auth.firstName').props.onChangeText(' Eltern ');
     input('auth.surname').props.onChangeText(' Familie ');
     input('auth.birthDate').props.onChangeText('01.01.1994');
-    input('auth.age').props.onChangeText(String(ownerAge));
     renderer.root.findAllByType(TextInput).find(node => node.props.placeholder === 'auth.emailPlaceholder')!.props.onChangeText(' family@example.com ');
     input('auth.password').props.onChangeText('Passwort123');
     input('auth.passwordConfirm').props.onChangeText('Passwort123');
@@ -90,10 +92,59 @@ describe('family registration', () => {
   beforeAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = true; });
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRegistration.enabled = true;
+    mockRegistration.hasError = false;
+    mockRefreshRegistration.mockResolvedValue(true);
     mockSignUp.mockResolvedValue({ error: null, requiresEmailConfirmation: true });
   });
   afterEach(async () => { await act(async () => renderer?.unmount()); });
   afterAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = previousAct; });
+
+  it('replaces a closed registration form with a notice and a sign-in action', async () => {
+    mockRegistration.enabled = false;
+    await render();
+    expect(renderer.root.findAllByType(TextInput)).toHaveLength(0);
+    expect(hasText('auth.registrationClosed')).toBe(true);
+    expect(button('auth.signIn')).toBeDefined();
+    expect(mockSignUp).not.toHaveBeenCalled();
+  });
+
+  it.each([false, null])('keeps sign-in working when registration is %s', async enabled => {
+    mockRegistration.enabled = enabled;
+    mockRegistration.hasError = enabled === null;
+    mockSignIn.mockResolvedValue({ error: null } as never);
+    await render('login');
+    await act(async () => {
+      renderer.root.findAllByType(TextInput).find(node => node.props.placeholder === 'auth.emailPlaceholder')!.props.onChangeText('member@example.com');
+      input('auth.password').props.onChangeText('Passwort123');
+    });
+    await act(async () => {
+      await renderer.root.findAll(node => node.props.accessibilityRole === 'button' &&
+        node.findAllByType(Text).some(text => text.props.children === 'auth.signIn'))[0].props.onPress();
+    });
+    expect(mockSignIn).toHaveBeenCalledWith('member@example.com', 'Passwort123');
+    expect(hasText('auth.signUp')).toBe(false);
+    expect(mockRefreshRegistration).not.toHaveBeenCalled();
+  });
+
+  it.each([false, null])('blocks an open form when the pre-submit recheck returns %s', async enabled => {
+    await render(); await fillAccount(); await choice(2);
+    mockRefreshRegistration.mockResolvedValue(enabled);
+    await submit();
+    expect(mockRefreshRegistration).toHaveBeenCalled();
+    expect(mockSignUp).not.toHaveBeenCalled();
+  });
+
+  it('shows a retry state if the registration setting cannot be loaded', async () => {
+    mockRegistration.enabled = null;
+    mockRegistration.hasError = true;
+    await render();
+    expect(renderer.root.findAllByType(TextInput)).toHaveLength(0);
+    expect(hasText('auth.registrationUnavailable')).toBe(true);
+    expect(button('auth.signIn')).toBeDefined();
+    await act(async () => { button('admin.retry').props.onPress(); });
+    expect(mockRefreshRegistration).toHaveBeenCalledTimes(1);
+  });
 
   it('shows the list only for family accounts and preserves names when adding, removing and switching', async () => {
     await render();
@@ -109,7 +160,6 @@ describe('family registration', () => {
     expect(input('auth.familyMembers.fieldLabel:auth.firstName:1').props.value).toBe('Erstes');
     expect(input('auth.familyMembers.fieldLabel:auth.firstName:2').props.value).toBe('Drittes');
     expect(input('auth.familyMembers.fieldLabel:auth.familyMembers.birthDate:2').props.value).toBe('01.03.2021');
-    expect(input('auth.familyMembers.fieldLabel:auth.age:2').props.value).toBe(String(getAgeFromBirthDate('2021-03-01')));
     expect(hasText('auth.familyMembers.total:3')).toBe(true);
     await choice(2);
     expect(renderer.root.findAllByType(RegistrationFamilyFields)).toHaveLength(0);
@@ -148,14 +198,11 @@ describe('family registration', () => {
     expect(button('auth.familyMembers.add').props.disabled).toBe(true);
     expect(input('auth.familyMembers.fieldLabel:auth.firstName:1').props.editable).toBe(false);
     expect(input('auth.familyMembers.fieldLabel:auth.familyMembers.birthDate:1').props.editable).toBe(false);
-    expect(input('auth.familyMembers.fieldLabel:auth.age:1').props.editable).toBe(false);
     expect(input('auth.birthDate').props.editable).toBe(false);
-    expect(input('auth.age').props.editable).toBe(false);
     await act(async () => { resolve({ error: { message: 'Speichern fehlgeschlagen' }, requiresEmailConfirmation: false }); });
     expect(hasText('Speichern fehlgeschlagen')).toBe(true);
     expect(input('auth.familyMembers.fieldLabel:auth.firstName:1').props.value).toBe('Kind');
     expect(input('auth.familyMembers.fieldLabel:auth.familyMembers.birthDate:1').props.value).toBe('29.02.2020');
-    expect(input('auth.familyMembers.fieldLabel:auth.age:1').props.value).toBe(String(childAge));
     expect(input('auth.birthDate').props.value).toBe('01.01.1994');
     expect(button('auth.familyMembers.add').props.disabled).toBe(false);
   });
@@ -188,17 +235,17 @@ describe('family registration', () => {
     expect(renderer.root.findAllByType(TextInput).some(node => node.props.accessibilityLabel === 'auth.birthDate')).toBe(false);
   });
 
-  it.each([2, 3])('shows owner birthday and age for account coverage choice %i', async coverage => {
+  it.each([2, 3])('asks only for birthdays for account coverage choice %i', async coverage => {
     await render(); await choice(coverage);
     expect(input('auth.birthDate').props.editable).toBe(true);
-    expect(input('auth.age').props.editable).toBe(true);
+    expect(input('auth.age')).toBeUndefined();
     if (coverage === 3) {
-      expect(input('auth.familyMembers.fieldLabel:auth.age:1').props.value).toBe('');
+      expect(input('auth.familyMembers.fieldLabel:auth.age:1')).toBeUndefined();
       expect(input('auth.familyMembers.fieldLabel:auth.familyMembers.birthDate:1').props.value).toBe('');
     }
   });
 
-  it.each(['', '31.04.2000', '01.01.9999'])('requires a valid birthday for the owner: %s', async birthDate => {
+  it.each(['', '31.04.2000', '01.01.9999', '01.01.1800'])('requires a valid birthday for the owner: %s', async birthDate => {
     await render(); await fillAccount(); await choice(2);
     await act(async () => { input('auth.birthDate').props.onChangeText(birthDate); });
     await submit();
@@ -206,17 +253,9 @@ describe('family registration', () => {
     expect(hasText('auth.validation.birthDate')).toBe(true);
   });
 
-  it.each([2, 3])('rejects inconsistent owner age for account coverage choice %i', async coverage => {
-    await render(); await fillAccount(); await choice(coverage);
-    await act(async () => { input('auth.age').props.onChangeText(String(ownerAge + 1)); });
-    await submit();
-    expect(mockSignUp).not.toHaveBeenCalled();
-    expect(hasText('auth.validation.birthDateAge')).toBe(true);
-  });
-
-  it.each(['', '-1', '121', '1.5', String(childAge + 1)])('rejects missing, invalid or inconsistent family member age: %s', async age => {
+  it('rejects a family birthday exceeding the age limit', async () => {
     await render(); await fillAccount(); await choice(3);
-    await editMember(1, 'Kind', 'Familie', '29.02.2020', age);
+    await editMember(1, 'Kind', 'Familie', '01.01.1800');
     await submit();
     expect(mockSignUp).not.toHaveBeenCalled();
     expect(hasText('auth.familyMembers.validation')).toBe(true);

@@ -1,11 +1,15 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
+import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Spacing } from '@/constants/theme';
-import type { DailyProgram } from '@/domain/database';
+import type { DailyProgram, DailyProgramItem } from '@/domain/database';
+import { useAuth } from '@/features/auth/auth-context';
+import { AdminDailyProgramPushEditor } from '@/features/daily-program/AdminDailyProgramPushEditor';
 import { useDailyProgram } from '@/features/daily-program/daily-program-context';
 import {
   localISODate,
@@ -14,6 +18,7 @@ import {
   visibleDailyPrograms,
 } from '@/features/daily-program/daily-program-state';
 import { useI18n } from '@/features/i18n/i18n';
+import { formatLocalDateTime } from '@/features/scheduling/local-date-time';
 import { useTheme } from '@/hooks/use-theme';
 
 const timePrefixPattern = /^(\d{1,2}[:.]\d{2}(?:\s*Uhr)?)\s*(?:[-–—:]\s*)?(.+)$/iu;
@@ -21,6 +26,7 @@ const timePrefixPattern = /^(\d{1,2}[:.]\d{2}(?:\s*Uhr)?)\s*(?:[-–—:]\s*)?(.
 export function DailyProgramOverview() {
   const theme = useTheme();
   const { language, t } = useI18n();
+  const { isAdmin } = useAuth();
   const {
     hasProgramSnapshot,
     hasSyncError,
@@ -98,6 +104,7 @@ export function DailyProgramOverview() {
             <View style={styles.dayList}>
               {programDates.map((date) => (
                 <ProgramDay
+                  canSchedulePush={isAdmin}
                   date={date}
                   isToday={date === today}
                   key={date}
@@ -113,17 +120,23 @@ export function DailyProgramOverview() {
 }
 
 function ProgramDay({
+  canSchedulePush,
   date,
   isToday,
   program,
 }: {
+  canSchedulePush: boolean;
   date: string;
   isToday: boolean;
   program?: DailyProgram;
 }) {
   const theme = useTheme();
-  const { language, t } = useI18n();
+  const { isRTL, language, t } = useI18n();
   const detailLines = program ? splitProgramDetails(program.details) : [];
+  const agenda = program?.items?.length
+    ? [...program.items].sort((left, right) => left.position - right.position)
+      .map((item) => ({ key: `item-${item.id}`, line: item.details, item }))
+    : detailLines.map((line, index) => ({ key: `legacy-${index}`, line, item: undefined }));
 
   return (
     <Card
@@ -134,24 +147,26 @@ function ProgramDay({
           borderColor: theme.accent,
         },
       ]}>
-      <View style={styles.dayHeader}>
+      <View style={[styles.dayHeader, isRTL && styles.rowReverse]}>
         <View style={styles.dayHeading}>
           <ThemedText type="heading">{formatWeekday(date, language)}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {formatDayDate(date, language)}
           </ThemedText>
         </View>
-        {isToday ? (
-          <View
-            style={[
-              styles.todayBadge,
-              { backgroundColor: theme.accent, borderColor: theme.accent },
-            ]}>
-            <ThemedText style={{ color: theme.background }} type="tinyBold">
-              {t('dailyProgram.today')}
-            </ThemedText>
-          </View>
-        ) : null}
+        <View style={[styles.dayActions, isRTL && styles.rowReverse]}>
+          {isToday ? (
+            <View
+              style={[
+                styles.todayBadge,
+                { backgroundColor: theme.accent, borderColor: theme.accent },
+              ]}>
+              <ThemedText style={{ color: theme.background }} type="tinyBold">
+                {t('dailyProgram.today')}
+              </ThemedText>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       {program ? (
@@ -160,11 +175,14 @@ function ProgramDay({
             <ThemedText type="subtitle">{program.title}</ThemedText>
           ) : null}
           <View style={styles.agenda}>
-            {detailLines.map((line, index) => (
+            {agenda.map((entry, index) => (
               <AgendaLine
-                key={`${program.id}-${index}`}
-                isLast={index === detailLines.length - 1}
-                line={line}
+                key={entry.key}
+                canSchedulePush={canSchedulePush}
+                isLast={index === agenda.length - 1}
+                item={entry.item}
+                line={entry.line}
+                programDate={program.program_date}
               />
             ))}
           </View>
@@ -178,9 +196,16 @@ function ProgramDay({
   );
 }
 
-function AgendaLine({ isLast, line }: { isLast: boolean; line: string }) {
+function AgendaLine({ canSchedulePush, isLast, item, line, programDate }: {
+  canSchedulePush: boolean;
+  isLast: boolean;
+  item?: DailyProgramItem;
+  line: string;
+  programDate: string;
+}) {
   const theme = useTheme();
-  const { isRTL } = useI18n();
+  const { isRTL, language, t } = useI18n();
+  const [showPushEditor, setShowPushEditor] = useState(false);
   const match = timePrefixPattern.exec(line);
   const time = match?.[1];
   const description = match?.[2] ?? line;
@@ -188,20 +213,46 @@ function AgendaLine({ isLast, line }: { isLast: boolean; line: string }) {
   return (
     <View style={[styles.agendaLine, isRTL && styles.rowReverse]}>
       <View style={styles.timeline}>
-        <View style={[styles.timelineDot, { backgroundColor: theme.accent }]} />
+        <View style={[styles.timelineDot, canSchedulePush && item && styles.itemTimelineDot, { backgroundColor: theme.accent }]} />
         {!isLast ? (
           <View style={[styles.timelineStem, { backgroundColor: theme.border }]} />
         ) : null}
       </View>
-      <View style={[styles.agendaContent, isRTL && styles.rowReverse]}>
-        {time ? (
-          <View style={[styles.timeBadge, { backgroundColor: theme.backgroundElement }]}>
-            <ThemedText type="smallBold" themeColor="accent">
-              {time}
-            </ThemedText>
-          </View>
+      <View style={styles.agendaBody}>
+        <View style={[styles.agendaContent, isRTL && styles.rowReverse]}>
+          {time ? (
+            <View style={[styles.timeBadge, { backgroundColor: theme.backgroundElement }]}>
+              <ThemedText type="smallBold" themeColor="accent">
+                {time}
+              </ThemedText>
+            </View>
+          ) : null}
+          <ThemedText style={styles.agendaDescription}>{description}</ThemedText>
+          {canSchedulePush && item ? (
+            <Pressable
+              accessibilityLabel={t('dailyProgram.admin.pushConfigure', { item: line, date: programDate, count: item.position + 1 })}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: showPushEditor }}
+              onPress={() => setShowPushEditor(true)}
+              style={({ pressed }) => [styles.clockButton, {
+                backgroundColor: theme.backgroundElement,
+                borderColor: item.push_scheduled_at ? theme.accent : theme.border,
+                opacity: pressed ? 0.7 : 1,
+              }]}>
+              <SymbolIcon color={item.push_scheduled_at ? theme.accent : theme.text} name="clock" size={22} />
+            </Pressable>
+          ) : null}
+        </View>
+        {canSchedulePush && item?.push_scheduled_at ? (
+          <ThemedText type="small" themeColor="accent">
+            {t(item.push_started_at ? 'dailyProgram.admin.pushStarted' : 'dailyProgram.admin.pushScheduled', {
+              time: formatLocalDateTime(item.push_scheduled_at, language),
+            })}
+          </ThemedText>
         ) : null}
-        <ThemedText style={styles.agendaDescription}>{description}</ThemedText>
+        {canSchedulePush && item && showPushEditor ? (
+          <AdminDailyProgramPushEditor item={item} onClose={() => setShowPushEditor(false)} />
+        ) : null}
       </View>
     </View>
   );
@@ -235,12 +286,15 @@ const styles = StyleSheet.create({
   agenda: {
     gap: 0,
   },
-  agendaContent: {
-    alignItems: 'flex-start',
+  agendaBody: {
     flex: 1,
-    flexDirection: 'row',
     gap: Spacing.two,
     paddingBottom: Spacing.three,
+  },
+  agendaContent: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.two,
   },
   agendaDescription: {
     flex: 1,
@@ -255,6 +309,19 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     overflow: 'hidden',
     padding: Spacing.four,
+  },
+  dayActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  clockButton: {
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+    minHeight: 48,
+    minWidth: 48,
   },
   dayHeader: {
     alignItems: 'flex-start',
@@ -317,6 +384,7 @@ const styles = StyleSheet.create({
     marginTop: 7,
     width: 10,
   },
+  itemTimelineDot: { marginTop: 19 },
   timelineStem: {
     flex: 1,
     marginTop: Spacing.one,

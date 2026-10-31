@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.112.3';
 import { dispatchWakeUpCalls } from '../_shared/wake-up-dispatch/index.ts';
+import { dispatchDailyPrograms } from '../_shared/daily-program-dispatch/index.ts';
 
 import {
   handleDispatchGeneralAlarmRequest,
@@ -167,6 +168,10 @@ Deno.serve(async (request: Request) => {
     auth: { autoRefreshToken: false, detectSessionInUrl: false, persistSession: false },
   });
   const dependencies: DispatchGeneralAlarmDependencies = {
+    dispatchDailyPrograms: async () => {
+      const result = await dispatchDailyPrograms(adminClient);
+      if (result.failed > 0) throw new Error('Daily-program push dispatch failed.');
+    },
     dispatchWakeUpCalls: async () => {
       const result = await dispatchWakeUpCalls(adminClient);
       if (result.failed > 0) throw new Error('Wake-up push dispatch failed.');

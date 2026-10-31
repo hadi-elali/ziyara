@@ -224,7 +224,7 @@ export function AdminTripGroupPanel(
     : [];
 
   const runAction = async (
-    action: () => Promise<{ error: unknown }>,
+    action: () => Promise<{ error: unknown; pushFailed?: boolean }>,
     success: 'requested' | 'saved',
     onSuccess?: () => void,
   ) => {
@@ -238,7 +238,9 @@ export function AdminTripGroupPanel(
         if (message) setFeedback({ message, type: 'error' });
       } else {
         onSuccess?.();
-        setFeedback({ kind: success, type: 'success' });
+        setFeedback(result.pushFailed
+          ? { message: t('tripGroups.admin.pushFailed'), type: 'error' }
+          : { kind: success, type: 'success' });
       }
     } catch (error) {
       const message = getOriginalErrorMessage(error);

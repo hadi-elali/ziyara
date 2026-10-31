@@ -85,7 +85,7 @@ export function DailyProgramProvider({ children }: PropsWithChildren) {
         supabase
           .from('daily_programs')
           .select(
-            'id, program_date, title, details, published_by_profile_id, created_at, updated_at',
+            'id, program_date, title, details, published_by_profile_id, push_scheduled_at, push_started_at, created_at, updated_at, items:daily_program_items(id, program_id, position, details, push_scheduled_at, push_started_at)',
           )
           .order('program_date')
           .abortSignal(signal),

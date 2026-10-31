@@ -20,13 +20,17 @@ import { Card } from '@/components/ui/card';
 import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import type { AccountFamily, AdminUserSummary, AppRole } from '@/domain/database';
-import { AdminAccountFamilyPanel } from '@/features/account-families/AdminAccountFamilyPanel';
+import {
+  AdminAccountFamilyPanel,
+  type AccountFamilyChange,
+} from '@/features/account-families/AdminAccountFamilyPanel';
 import {
   buildAdminUserListItems,
   getAdminUserStats,
 } from '@/features/admin/admin-user-list';
 import { AdminSectionHeader } from '@/features/admin/AdminSectionHeader';
 import { AdminPushPanel } from '@/features/admin/AdminPushPanel';
+import { AdminRegistrationPanel } from '@/features/admin/AdminRegistrationPanel';
 import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrganizationPanel';
 import { useAuth } from '@/features/auth/auth-context';
 import { RequireAuth } from '@/features/auth/RequireAuth';
@@ -41,6 +45,7 @@ import { localISODate, visibleDailyPrograms } from '@/features/daily-program/dai
 import { AdminGroupCheckPanel } from '@/features/group-check/AdminGroupCheckPanel';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
 import { AdminQuestionRoundPanel } from '@/features/question-round/AdminQuestionRoundPanel';
+import { AdminEmergencySendRestriction } from '@/features/emergency/AdminEmergencySendRestriction';
 import { useQuestionRound } from '@/features/question-round/question-round-context';
 import { useI18n } from '@/features/i18n/i18n';
 import {
@@ -196,6 +201,37 @@ function AdminContent() {
     }
   }, []);
 
+  const applyFamilyChange = useCallback(
+    (change: AccountFamilyChange) => {
+      // Reads started before this confirmed mutation must not restore old assignments.
+      usersRequestSequence.current += 1;
+      setReadErrorMessage(null);
+      setIsLoading(false);
+
+      const familyId = change.type === 'saved' ? change.family.id : change.familyId;
+      const memberUserIds = new Set(change.type === 'saved' ? change.memberUserIds : []);
+
+      setFamilies((current) => {
+        const remaining = current.filter((family) => family.id !== familyId);
+        return change.type === 'saved'
+          ? [...remaining, change.family].sort((left, right) =>
+              left.name.localeCompare(right.name, language),
+            )
+          : remaining;
+      });
+      setUsers((current) => current.map((user) => {
+        if (change.type === 'saved' && memberUserIds.has(user.user_id)) {
+          return { ...user, family_id: change.family.id, family_name: change.family.name };
+        }
+
+        return user.family_id === familyId
+          ? { ...user, family_id: null, family_name: null }
+          : user;
+      }));
+    },
+    [language],
+  );
+
   const assignRole = useCallback(
     async (userId: string, role: AppRole) => {
       setRoleFeedback(null);
@@ -291,6 +327,8 @@ function AdminContent() {
             </View>
 
             <View style={styles.sections}>
+              <AdminRegistrationPanel />
+
               <View style={styles.section}>
                 <AdminSectionHeader
                   description={t('admin.section.organization.description')}
@@ -513,7 +551,7 @@ function AdminContent() {
                   ) : (
                     <AdminAccountFamilyPanel
                       families={families}
-                      onChanged={loadUsers}
+                      onChanged={applyFamilyChange}
                       users={users}
                     />
                   )
@@ -718,28 +756,67 @@ function AdminUserDisclosure({
   const theme = useTheme();
   const { isRTL, t } = useI18n();
   const chevronRotation = expanded ? '90deg' : isRTL ? '180deg' : '0deg';
+  const hasSpecialRole = user.role !== 'user';
+  const roleAppearance = {
+    admin: { backgroundColor: theme.roleAdminSoft, color: theme.roleAdmin },
+    medical_staff: { backgroundColor: theme.roleMedicalSoft, color: theme.roleMedical },
+    organization_team: {
+      backgroundColor: theme.roleOrganizationSoft,
+      color: theme.roleOrganization,
+    },
+    scholar: { backgroundColor: theme.backgroundSelected, color: theme.textSecondary },
+    user: { backgroundColor: theme.surface, color: theme.textSecondary },
+  }[user.role];
+  const roleLabel = t(`admin.role.${user.role}`);
+  const roleBadge = (
+    <View
+      style={[
+        styles.roleBadge,
+        {
+          backgroundColor: roleAppearance.backgroundColor,
+          borderColor: roleAppearance.color,
+        },
+      ]}>
+      <ThemedText style={{ color: roleAppearance.color }} type="tinyBold">
+        {roleLabel}
+      </ThemedText>
+    </View>
+  );
 
   return (
     <View
       style={[
         styles.userDisclosure,
-        { backgroundColor: theme.surface, borderColor: theme.border },
+        {
+          backgroundColor: theme.surface,
+          borderColor: hasSpecialRole ? roleAppearance.color : theme.border,
+        },
       ]}>
       <Pressable
-        accessibilityLabel={t(
+        accessibilityLabel={[t(
           expanded ? 'admin.details.hide' : 'admin.details.show',
           { name: user.display_name },
-        )}
+        ), hasSpecialRole ? `${t('admin.roleLabel')}: ${roleLabel}` : null]
+          .filter(Boolean)
+          .join(', ')}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         onPress={onToggleDetails}
         style={({ pressed }) => [
           styles.userSummary,
+          isRTL && { flexDirection: 'row-reverse' },
           pressed && styles.userSummaryPressed,
         ]}>
-        <ThemedText style={styles.userName}>
-          {user.display_name}
-        </ThemedText>
+        <View style={[styles.userIdentity, isRTL && { flexDirection: 'row-reverse' }]}>
+          <ThemedText
+            style={[
+              styles.userName,
+              hasSpecialRole && { color: roleAppearance.color },
+            ]}>
+            {user.display_name}
+          </ThemedText>
+          {hasSpecialRole ? roleBadge : null}
+        </View>
         <View style={[styles.userChevron, { transform: [{ rotate: chevronRotation }] }]}>
           <SymbolIcon color={theme.textSecondary} name="chevron" size={22} />
         </View>
@@ -751,17 +828,13 @@ function AdminUserDisclosure({
             <ThemedText type="small" themeColor="textSecondary">
               {t('admin.roleLabel')}
             </ThemedText>
-            <View
-              style={[
-                styles.roleBadge,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: theme.border,
-                },
-              ]}>
-              <ThemedText type="tinyBold">{t(`admin.role.${user.role}`)}</ThemedText>
-            </View>
+            {roleBadge}
           </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            {user.age == null
+              ? t('admin.ageUnknown')
+              : t('admin.age', { count: user.age })}
+          </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {t('admin.partySize', { count: user.party_size })}
           </ThemedText>
@@ -794,6 +867,8 @@ function AdminUserDisclosure({
             style={[styles.roleAssignmentButton, { backgroundColor: theme.surface }]}
             variant="secondary"
           />
+
+          <AdminEmergencySendRestriction userId={user.user_id} defaultOpen />
 
           {roleAssignmentExpanded ? (
             <View style={[styles.roleAssignment, { borderColor: theme.border }]}>
@@ -930,14 +1005,24 @@ const styles = StyleSheet.create({
   userSummaryPressed: {
     opacity: 0.72,
   },
-  userName: {
+  userIdentity: {
+    alignItems: 'center',
     flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    minWidth: 0,
+  },
+  userName: {
+    flexShrink: 1,
     fontSize: 16,
     fontWeight: 600,
     lineHeight: 24,
+    maxWidth: '100%',
   },
   userChevron: {
     alignItems: 'center',
+    flexShrink: 0,
     height: 32,
     justifyContent: 'center',
     width: 32,
@@ -957,8 +1042,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'center',
+    maxWidth: '100%',
     minHeight: 28,
     paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
   },
   roleAssignment: {
     borderTopWidth: StyleSheet.hairlineWidth,

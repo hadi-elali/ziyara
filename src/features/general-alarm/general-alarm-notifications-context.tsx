@@ -15,9 +15,12 @@ import {
   inspectGeneralAlarmNotificationState,
   openGeneralAlarmNotificationSettings,
   registerGeneralAlarmNotifications,
+  subscribeToDailyProgramNotificationResponses,
   subscribeToEmergencyDashboardNotificationResponses,
   subscribeToEmergencyNotificationResponses,
   subscribeToGeneralAlarmNotificationResponses,
+  subscribeToGroupLocationNotificationResponses,
+  subscribeToQuestionRoundNotificationResponses,
   subscribeToWakeUpCallNotificationResponses,
   unregisterGeneralAlarmNotifications,
 } from '@/features/general-alarm/general-alarm-notifications';
@@ -60,6 +63,15 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
   const [pendingRoute, setPendingRoute] = useState<ProtectedRoutePath | null>(null);
 
   useEffect(() => {
+    const groupLocationSubscription = subscribeToGroupLocationNotificationResponses(() => {
+      setPendingRoute('/group');
+    });
+    const programSubscription = subscribeToDailyProgramNotificationResponses(() => {
+      setPendingRoute('/program');
+    });
+    const questionRoundSubscription = subscribeToQuestionRoundNotificationResponses(() => {
+      setPendingRoute('/question-round');
+    });
     const wakeUpSubscription = subscribeToWakeUpCallNotificationResponses(() => {
       setPendingRoute('/alarm');
     });
@@ -74,6 +86,9 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
         setPendingRoute('/emergency-dashboard');
       });
     return () => {
+      groupLocationSubscription.remove();
+      programSubscription.remove();
+      questionRoundSubscription.remove();
       wakeUpSubscription.remove();
       busSubscription.remove();
       emergencyDashboardSubscription.remove();

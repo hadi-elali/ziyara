@@ -3,8 +3,18 @@ import type { RegistrationFamilyMember } from './registration';
 export type AppRole = 'admin' | 'medical_staff' | 'organization_team' | 'scholar' | 'user';
 export type BusBoardingStatus = 'boarded' | 'on_way' | 'problem' | 'read';
 export type EmergencyTeam = 'medical' | 'travel';
+export type EmergencySendRestriction = {
+  id: number;
+  /** ISO timestamp, or PostgreSQL "infinity" until manual release. */
+  restricted_until: string;
+  reason: string;
+  created_at: string;
+  created_by_display_name: string;
+};
+export type EmergencyRestrictionTarget = { p_user_id?: string; p_request_id?: number };
 export type MemberType = 'brother' | 'sister';
 export type AdminPushAudience = 'all' | MemberType;
+export type QuestionRoundAudience = 'all' | MemberType;
 export type AppLock = {
   id: number;
   lock: boolean | null;
@@ -60,6 +70,8 @@ export type UserProfile = {
 };
 
 export type AdminUserSummary = {
+  /** Current completed years; absent until the admin-age migration is deployed. */
+  age?: number | null;
   display_name: string;
   emergency_on_duty: boolean;
   family_id: number | null;
@@ -115,7 +127,11 @@ export type QuestionRound = {
   closed_at: string | null;
   created_at: string;
   id: number;
-  target_member_type: MemberType | null;
+  target_member_type: QuestionRoundAudience | null;
+};
+
+export type QuestionRoundPushAttempt = Omit<AdminPushNotificationAttempt, 'message_id'> & {
+  round_id: number;
 };
 
 export type AnonymousQuestion = {
@@ -179,15 +195,28 @@ export type Trip = {
   name: string;
 };
 
-export type DailyProgram = {
+export type DailyProgramRow = {
   created_at: string;
   details: string;
   id: number;
   program_date: string;
   published_by_profile_id: number | null;
+  push_scheduled_at: string | null;
+  push_started_at: string | null;
   title: string | null;
   updated_at: string;
 };
+
+export type DailyProgramItem = {
+  id: number;
+  program_id: number;
+  position: number;
+  details: string;
+  push_scheduled_at: string | null;
+  push_started_at: string | null;
+};
+
+export type DailyProgram = DailyProgramRow & { items: DailyProgramItem[] };
 
 export type DailyProgramInput = {
   details: string;
@@ -234,6 +263,9 @@ export type OrganizationGroupMember = {
 };
 export type OrganizationGroupLocationRequest = Omit<TripGroupLocationRequest, 'trip_id' | 'requested_by_profile_id'> & {
   leader_user_id: string;
+};
+export type GroupLocationPushAttempt = Omit<AdminPushNotificationAttempt, 'message_id'> & {
+  request_id: number;
 };
 export type WakeUpCall = {
   id: number;
@@ -356,6 +388,7 @@ export type PushNotificationDevice = {
   platform: 'android' | 'ios';
   profile_id: number;
   updated_at: string;
+  wake_up_channel_id: 'wake-up-calls-v1' | 'wake-up-calls-v2';
 };
 
 export type GeneralAlarmNotificationAttempt = {
@@ -520,12 +553,15 @@ export type TripGuidanceResponse = {
 export type Database = {
   public: {
     Tables: {
+      registration_settings: { Row: { id: number; enabled: boolean }; Insert: never; Update: never; Relationships: [] };
       admin_push_messages: { Row: AdminPushMessage; Insert: never; Update: never; Relationships: [] };
       admin_push_notification_attempts: { Row: AdminPushNotificationAttempt; Insert: never; Update: never; Relationships: [] };
+      question_round_push_attempts: { Row: QuestionRoundPushAttempt; Insert: never; Update: never; Relationships: [] };
       lock_app: { Row: AppLock; Insert: never; Update: never; Relationships: [] };
       organization_groups: { Row: OrganizationGroup; Insert: never; Update: never; Relationships: [] };
       organization_group_members: { Row: Pick<OrganizationGroupMember, 'group_id' | 'user_id' | 'is_leader'>; Insert: never; Update: never; Relationships: [] };
       organization_group_location_requests: { Row: OrganizationGroupLocationRequest; Insert: never; Update: never; Relationships: [] };
+      group_location_push_attempts: { Row: GroupLocationPushAttempt; Insert: never; Update: never; Relationships: [] };
       wake_up_calls: { Row: WakeUpCall; Insert: never; Update: never; Relationships: [] };
       wake_up_call_recipients: { Row: WakeUpCallRecipient; Insert: never; Update: never; Relationships: [] };
       wake_up_notification_attempts: { Row: WakeUpNotificationAttempt; Insert: never; Update: never; Relationships: [] };
@@ -895,6 +931,7 @@ export type Database = {
           platform: 'android' | 'ios';
           profile_id: number;
           updated_at?: string;
+          wake_up_channel_id?: 'wake-up-calls-v1' | 'wake-up-calls-v2';
         };
         Relationships: [];
         Row: PushNotificationDevice;
@@ -904,6 +941,7 @@ export type Database = {
           platform?: 'android' | 'ios';
           profile_id?: number;
           updated_at?: string;
+          wake_up_channel_id?: 'wake-up-calls-v1' | 'wake-up-calls-v2';
         };
       };
       question_rounds: {
@@ -911,13 +949,13 @@ export type Database = {
           closed_at?: string | null;
           created_at?: string;
           id?: never;
-          target_member_type?: MemberType | null;
+          target_member_type?: QuestionRoundAudience | null;
         };
         Relationships: [];
         Row: QuestionRound;
         Update: {
           closed_at?: string | null;
-          target_member_type?: MemberType | null;
+          target_member_type?: QuestionRoundAudience | null;
         };
       };
       question_submission_limits: {
@@ -1025,18 +1063,34 @@ export type Database = {
           id?: never;
           program_date: string;
           published_by_profile_id?: number | null;
+          push_scheduled_at?: string | null;
+          push_started_at?: string | null;
           title?: string | null;
           updated_at?: string;
         };
         Relationships: [];
-        Row: DailyProgram;
+        Row: DailyProgramRow;
         Update: {
           details?: string;
           program_date?: string;
           published_by_profile_id?: number | null;
+          push_scheduled_at?: string | null;
+          push_started_at?: string | null;
           title?: string | null;
           updated_at?: string;
         };
+      };
+      daily_program_items: {
+        Row: DailyProgramItem;
+        Insert: never;
+        Update: never;
+        Relationships: [{
+          foreignKeyName: 'daily_program_items_program_id_fkey';
+          columns: ['program_id'];
+          isOneToOne: false;
+          referencedRelation: 'daily_programs';
+          referencedColumns: ['id'];
+        }];
       };
       trip_participants: {
         Insert: {
@@ -1174,10 +1228,16 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_registration_enabled: { Args: Record<string, never>; Returns: boolean };
+      admin_set_registration_enabled: { Args: { p_enabled: boolean }; Returns: boolean };
       admin_prepare_push_message: { Args: { p_title: string; p_body: string; p_audience?: AdminPushAudience }; Returns: number };
       admin_list_push_messages: { Args: Record<string, never>; Returns: AdminPushMessageSummary[] };
       claim_admin_push_notifications: {
         Args: { p_message_id: number; p_requester_user_id: string };
+        Returns: { attempt_id: number; expo_push_token: string; title: string; body: string }[];
+      };
+      claim_question_round_notifications: {
+        Args: { p_round_id: number; p_requester_user_id: string };
         Returns: { attempt_id: number; expo_push_token: string; title: string; body: string }[];
       };
       get_organization_group_members: { Args: Record<string, never>; Returns: OrganizationGroupMember[] };
@@ -1187,6 +1247,10 @@ export type Database = {
       };
       admin_delete_organization_group: { Args: { p_group_id: number }; Returns: undefined };
       admin_request_organization_group_location: { Args: { p_group_id: number; p_leader_user_id: string }; Returns: OrganizationGroupLocationRequest };
+      claim_group_location_notifications: {
+        Args: { p_request_id: number; p_requester_user_id: string };
+        Returns: { attempt_id: number; expo_push_token: string; title: string; body: string }[];
+      };
       respond_to_organization_group_location: {
         Args: { p_request_id: number; p_share: boolean; p_latitude: number | null; p_longitude: number | null; p_accuracy_meters: number | null };
         Returns: OrganizationGroupLocationRequest;
@@ -1244,7 +1308,15 @@ export type Database = {
       };
       admin_upsert_daily_programs: {
         Args: { p_programs: DailyProgramInput[] };
-        Returns: DailyProgram[];
+        Returns: DailyProgramRow[];
+      };
+      admin_schedule_daily_program_push: {
+        Args: { p_program_id: number; p_scheduled_at: string | null };
+        Returns: DailyProgramRow;
+      };
+      admin_schedule_daily_program_item_push: {
+        Args: { p_item_id: number; p_scheduled_at: string | null; p_send_now?: boolean };
+        Returns: DailyProgramItem;
       };
       admin_upsert_trip_group: {
         Args: {
@@ -1471,6 +1543,22 @@ export type Database = {
         Args: { p_request_id: number };
         Returns: undefined;
       };
+      admin_get_emergency_send_restriction: {
+        Args: EmergencyRestrictionTarget;
+        Returns: EmergencySendRestriction[];
+      };
+      admin_restrict_emergency_sender: {
+        Args: EmergencyRestrictionTarget & { p_duration_hours: number | null; p_reason: string };
+        Returns: EmergencySendRestriction[];
+      };
+      admin_revoke_emergency_send_restriction: {
+        Args: EmergencyRestrictionTarget & { p_restriction_id: number };
+        Returns: undefined;
+      };
+      get_my_emergency_send_restriction: {
+        Args: never;
+        Returns: string | null;
+      };
       close_group_check: {
         Args: { p_check_id: number };
         Returns: GroupCheck;
@@ -1484,7 +1572,7 @@ export type Database = {
         Returns: boolean;
       };
       open_question_round: {
-        Args: { p_target_member_type: MemberType };
+        Args: { p_audience: QuestionRoundAudience } | { p_target_member_type: MemberType };
         Returns: QuestionRound;
       };
       is_trip_member: {
@@ -1526,6 +1614,7 @@ export type Database = {
           p_expo_push_token: string;
           p_locale: 'ar' | 'de' | 'en';
           p_platform: 'android' | 'ios';
+          p_wake_up_channel_id?: 'wake-up-calls-v1' | 'wake-up-calls-v2';
         };
         Returns: undefined;
       };

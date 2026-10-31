@@ -33,7 +33,7 @@ import {
 import { normalizeRegistrationFamilyMembers } from "@/features/auth/registration-family";
 import { SimCardCountField } from "@/features/auth/SimCardCountField";
 import { useAuth } from "@/features/auth/auth-context";
-import { getAge } from "@/features/auth/age";
+import { useRegistrationAvailability } from "@/features/auth/use-registration-availability";
 import { getLuggageCount } from "@/features/auth/luggage-count";
 import { getSimCardCount } from "@/features/auth/sim-card-count";
 import { useI18n } from "@/features/i18n/i18n";
@@ -62,10 +62,10 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
   const { width } = useWindowDimensions();
   const { t } = useI18n();
   const { signIn, signUp } = useAuth();
+  const registration = useRegistrationAvailability();
   const { completeOnboarding } = useOnboarding();
   const [firstName, setFirstName] = useState("");
   const [surname, setSurname] = useState("");
-  const [age, setAge] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,7 +76,7 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
   const [luggageCount, setLuggageCount] = useState("0");
   const [simCardCount, setSimCardCount] = useState("0");
   const [familyMembers, setFamilyMembers] = useState<RegistrationFamilyDraft[]>([
-    { id: 0, name: "", surname: "", birthDate: "", age: "" },
+    { id: 0, name: "", surname: "", birthDate: "" },
   ]);
   const nextFamilyMemberId = useRef(1);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -97,8 +97,10 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedName = firstName.trim();
     const normalizedSurname = surname.trim();
-    const normalizedAge = getAge(age);
     const normalizedBirthDate = getBirthDate(birthDate);
+    const normalizedAge = normalizedBirthDate
+      ? getAgeFromBirthDate(normalizedBirthDate)
+      : null;
     const normalizedLuggageCount = getLuggageCount(luggageCount);
     const normalizedSimCardCount = getSimCardCount(simCardCount);
     const normalizedFamilyMembers = accountCoverage === "family"
@@ -121,18 +123,8 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
       return;
     }
 
-    if (isRegister && !normalizedBirthDate) {
+    if (isRegister && (!normalizedBirthDate || normalizedAge === null)) {
       showFeedback(t("auth.validation.birthDate"), true);
-      return;
-    }
-
-    if (isRegister && normalizedAge === null) {
-      showFeedback(t("auth.validation.age"), true);
-      return;
-    }
-
-    if (isRegister && normalizedBirthDate && normalizedAge !== getAgeFromBirthDate(normalizedBirthDate)) {
-      showFeedback(t("auth.validation.birthDateAge"), true);
       return;
     }
 
@@ -189,6 +181,9 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
 
     try {
       if (isRegister) {
+        // Recheck immediately before signup. The database trigger remains
+        // authoritative if an admin closes registration during this request.
+        if (await registration.refresh() !== true) return;
         if (!memberType) {
           showFeedback(t("auth.validation.memberType"), true);
           return;
@@ -209,7 +204,8 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
         );
 
         if (result.error) {
-          showFeedback(result.error.message, true);
+          const stillEnabled = await registration.refresh();
+          if (stillEnabled === true) showFeedback(result.error.message, true);
         } else {
           completeOnboarding();
 
@@ -244,11 +240,6 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
     router.replace(isRegister ? loginRoute(returnTo) : registerRoute(returnTo));
   };
 
-  const continueWithoutAccount = () => {
-    completeOnboarding();
-    router.replace("/");
-  };
-
   const goBack = () => {
     Keyboard.dismiss();
 
@@ -256,6 +247,32 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
       router.back();
     }
   };
+
+  if (isRegister && registration.enabled !== true) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={[styles.container, { width: Math.max(0, Math.min(MaxContentWidth, 480, width - Spacing.three * 2)) }]}>
+            {canGoBack ? <Button icon="back" label={t("common.back")} onPress={goBack} variant="ghost" /> : null}
+            <ThemedText type="title">{t("auth.registerTitle")}</ThemedText>
+            <ThemedView type="surface" style={[styles.card, { borderColor: theme.border }]}>
+              {registration.enabled === null && !registration.hasError ? (
+                <ActivityIndicator color={theme.accent} accessibilityLabel={t("auth.registrationLoading")} />
+              ) : (
+                <>
+                  <ThemedText accessibilityRole="alert" themeColor="textSecondary">
+                    {t(registration.hasError ? "auth.registrationUnavailable" : "auth.registrationClosed")}
+                  </ThemedText>
+                  <Button icon="refresh" label={t("admin.retry")} onPress={() => void registration.refresh()} variant="secondary" />
+                </>
+              )}
+              <Button icon="account" label={t("auth.signIn")} onPress={switchMode} />
+            </ThemedView>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -366,30 +383,6 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                     />
 
                     <View style={styles.field}>
-                      <ThemedText type="smallBold">{t("auth.age")}</ThemedText>
-                      <TextInput
-                        accessibilityLabel={t("auth.age")}
-                        autoComplete="off"
-                        editable={!isSubmitting}
-                        inputMode="numeric"
-                        keyboardType="number-pad"
-                        maxLength={3}
-                        onChangeText={setAge}
-                        placeholder={t("auth.agePlaceholder")}
-                        placeholderTextColor={theme.textSecondary}
-                        style={[
-                          styles.input,
-                          {
-                            backgroundColor: theme.background,
-                            borderColor: theme.border,
-                            color: theme.text,
-                          },
-                        ]}
-                        value={age}
-                      />
-                    </View>
-
-                    <View style={styles.field}>
                       <ThemedText type="smallBold">
                         {t("auth.memberTypeTitle")}
                       </ThemedText>
@@ -448,7 +441,7 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                           const id = nextFamilyMemberId.current++;
                           setFamilyMembers(current =>
                             current.length < maximumRegistrationFamilyMembers
-                              ? [...current, { id, name: "", surname: "", birthDate: "", age: "" }]
+                              ? [...current, { id, name: "", surname: "", birthDate: "" }]
                               : current,
                           );
                         }}
@@ -609,29 +602,9 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                   )}
                 </Pressable>
 
-                {isRegister ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={isSubmitting}
-                    onPress={continueWithoutAccount}
-                    style={({ pressed }) => [
-                      styles.guestButton,
-                      {
-                        backgroundColor: theme.backgroundElement,
-                        borderColor: theme.border,
-                      },
-                      pressed && styles.pressed,
-                      isSubmitting && styles.disabled,
-                    ]}
-                  >
-                    <ThemedText type="smallBold">
-                      {t("auth.continueWithoutAccount")}
-                    </ThemedText>
-                  </Pressable>
-                ) : null}
               </ThemedView>
 
-              <View style={styles.switchRow}>
+              {isRegister || registration.enabled === true ? <View style={styles.switchRow}>
                 <ThemedText type="small" themeColor="textSecondary">
                   {t(isRegister ? "auth.haveAccount" : "auth.noAccount")}
                 </ThemedText>
@@ -645,7 +618,9 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
                     {t(isRegister ? "auth.signIn" : "auth.signUp")}
                   </ThemedText>
                 </Pressable>
-              </View>
+              </View> : registration.enabled === false ? (
+                <ThemedText type="small" themeColor="textSecondary">{t("auth.registrationClosed")}</ThemedText>
+              ) : null}
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>

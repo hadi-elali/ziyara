@@ -4,6 +4,7 @@ export type WakeUpNotificationClaim = {
   expo_push_token: string;
   locale: string;
   message: string;
+  wake_up_channel_id?: 'wake-up-calls-v1' | 'wake-up-calls-v2';
 };
 
 type WakeUpPushNotification = {
@@ -12,7 +13,7 @@ type WakeUpPushNotification = {
   body: string;
   sound: 'weckruf.wav';
   priority: 'high';
-  channelId: 'wake-up-calls-v1';
+  channelId: 'wake-up-calls-v1' | 'wake-up-calls-v2';
   data: { kind: 'wake_up_call'; callId: number; route: '/alarm' };
 };
 
@@ -76,7 +77,9 @@ export async function dispatchWakeUpNotifications(
         body: claim.message,
         sound: 'weckruf.wav',
         priority: 'high',
-        channelId: 'wake-up-calls-v1',
+        channelId: claim.wake_up_channel_id === 'wake-up-calls-v2'
+          ? 'wake-up-calls-v2'
+          : 'wake-up-calls-v1',
         data: { kind: 'wake_up_call', callId: claim.call_id, route: '/alarm' },
       })));
       expoHttpStatus = response.status;

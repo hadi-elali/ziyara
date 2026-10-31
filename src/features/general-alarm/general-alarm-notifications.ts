@@ -16,6 +16,7 @@ import type {
 } from '@/features/general-alarm/general-alarm-notifications.types';
 
 const channelId = 'general-alarm';
+const wakeUpChannelId = 'wake-up-calls-v2';
 const pushTokenStorageKey = 'ziyara.general-alarm.expo-push-token';
 const reminderKind = 'general_alarm_reminder';
 const runsInExpoGo = isRunningInExpoGo();
@@ -46,11 +47,10 @@ function getProjectId() {
     : Constants.easConfig?.projectId;
 }
 
-async function ensureAndroidChannels() {
+async function ensureAndroidChannels(): Promise<typeof wakeUpChannelId | undefined> {
   if (Platform.OS !== 'android' || !Notifications) return;
 
-  // Channel sounds are immutable on Android. Use a new ID for the bundled wake-up tone.
-  // Keep this ID and filename aligned with _shared/wake-up-dispatch/handler.ts.
+  // Keep v1 for older dispatchers and clients during the rollout.
   await Notifications.setNotificationChannelAsync('wake-up-calls-v1', {
     description: 'Weckrufe der Reiseleitung',
     enableVibrate: true,
@@ -60,6 +60,24 @@ async function ensureAndroidChannels() {
     showBadge: true,
     sound: 'weckruf.wav',
     vibrationPattern: [0, 300, 180, 300],
+  });
+  const previous = await Notifications.getNotificationChannelAsync('wake-up-calls-v1');
+  // Vibration patterns are immutable too. Preserve disabled vibration, muted
+  // channels and the other exposed user preferences when creating v2.
+  const wakeUpChannel = await Notifications.setNotificationChannelAsync(wakeUpChannelId, {
+    audioAttributes: previous?.audioAttributes,
+    bypassDnd: previous?.bypassDnd ?? false,
+    description: 'Weckrufe der Reiseleitung mit längeren Vibrationsimpulsen',
+    enableLights: previous?.enableLights ?? false,
+    enableVibrate: previous?.enableVibrate ?? true,
+    groupId: previous?.groupId,
+    importance: previous?.importance ?? Notifications.AndroidImportance.HIGH,
+    lightColor: previous?.lightColor,
+    lockscreenVisibility: previous?.lockscreenVisibility ?? Notifications.AndroidNotificationVisibility.PUBLIC,
+    name: 'Weckrufe',
+    showBadge: previous?.showBadge ?? true,
+    sound: previous && previous.sound !== 'custom' ? previous.sound : 'weckruf.wav',
+    vibrationPattern: [0, 800, 250, 800, 250, 800, 250, 800],
   });
   await Notifications.setNotificationChannelAsync(channelId, {
     description: 'Weckrufe und Erinnerungen der Reiseleitung',
@@ -81,6 +99,7 @@ async function ensureAndroidChannels() {
     sound: 'default',
     vibrationPattern: [0, 450, 180, 450],
   });
+  return wakeUpChannel?.id === wakeUpChannelId ? wakeUpChannelId : undefined;
 }
 
 export async function inspectGeneralAlarmNotificationState(): Promise<GeneralAlarmNotificationState> {
@@ -122,7 +141,7 @@ export async function registerGeneralAlarmNotifications(
   let permissionGranted = false;
 
   try {
-    await ensureAndroidChannels();
+    const registeredWakeUpChannel = await ensureAndroidChannels();
     let permission = await Notifications.getPermissionsAsync();
 
     if (!permission.granted && requestPermission && permission.canAskAgain) {
@@ -147,11 +166,20 @@ export async function registerGeneralAlarmNotifications(
 
     const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
     const platform = Platform.OS === 'ios' ? 'ios' : 'android';
-    const { error } = await supabase.rpc('register_push_notification_device', {
+    const registration = {
       p_expo_push_token: token,
       p_locale: language,
       p_platform: platform,
+    } as const;
+    let { error } = await supabase.rpc('register_push_notification_device', {
+      ...registration,
+      ...(registeredWakeUpChannel ? { p_wake_up_channel_id: registeredWakeUpChannel } : {}),
     });
+    // A client may arrive before the additive migration. Register normally and
+    // keep v1 until a later registration can advertise the installed v2 channel.
+    if (registeredWakeUpChannel && error?.code === 'PGRST202') {
+      ({ error } = await supabase.rpc('register_push_notification_device', registration));
+    }
 
     if (error) throw error;
     await AsyncStorage.setItem(pushTokenStorageKey, token);
@@ -316,6 +344,54 @@ export function subscribeToEmergencyDashboardNotificationResponses(
 
   return Notifications.addNotificationResponseReceivedListener((response) => {
     if (isEmergencyDashboardNotificationResponse(response)) listener();
+  });
+}
+
+export function subscribeToQuestionRoundNotificationResponses(
+  listener: () => void,
+): NotificationResponseSubscription {
+  if (!Notifications) return { remove: () => undefined };
+
+  const matches = (response: NotificationResponse | null) =>
+    response?.notification.request.content.data?.route === '/question-round';
+  if (matches(Notifications.getLastNotificationResponse())) {
+    Notifications.clearLastNotificationResponse();
+    queueMicrotask(listener);
+  }
+  return Notifications.addNotificationResponseReceivedListener((response) => {
+    if (matches(response)) listener();
+  });
+}
+
+export function subscribeToDailyProgramNotificationResponses(
+  listener: () => void,
+): NotificationResponseSubscription {
+  if (!Notifications) return { remove: () => undefined };
+
+  const matches = (response: NotificationResponse | null) =>
+    response?.notification.request.content.data?.route === '/program';
+  if (matches(Notifications.getLastNotificationResponse())) {
+    Notifications.clearLastNotificationResponse();
+    queueMicrotask(listener);
+  }
+  return Notifications.addNotificationResponseReceivedListener((response) => {
+    if (matches(response)) listener();
+  });
+}
+
+export function subscribeToGroupLocationNotificationResponses(
+  listener: () => void,
+): NotificationResponseSubscription {
+  if (!Notifications) return { remove: () => undefined };
+
+  const matches = (response: NotificationResponse | null) =>
+    response?.notification.request.content.data?.route === '/group';
+  if (matches(Notifications.getLastNotificationResponse())) {
+    Notifications.clearLastNotificationResponse();
+    queueMicrotask(listener);
+  }
+  return Notifications.addNotificationResponseReceivedListener((response) => {
+    if (matches(response)) listener();
   });
 }
 

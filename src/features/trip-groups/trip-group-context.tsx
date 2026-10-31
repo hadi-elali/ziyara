@@ -34,6 +34,7 @@ type SyncState = 'error' | 'loading' | 'ready' | 'refreshing';
 
 type TripGroupActionResult = {
   error: PostgrestError | null;
+  pushFailed?: boolean;
 };
 
 export type SaveTripGroupInput = {
@@ -304,14 +305,35 @@ export function TripGroupProvider({ children }: PropsWithChildren) {
   );
 
   const requestLeaderLocation = useCallback(
-    (groupId: number, leaderUserId: string) =>
-      runMutation(() =>
-        supabase.rpc('admin_request_organization_group_location', {
+    async (groupId: number, leaderUserId: string): Promise<TripGroupActionResult> => {
+      let requestId: number | null = null;
+      const result = await runMutation(async () => {
+        const saved = await supabase.rpc('admin_request_organization_group_location', {
           p_group_id: groupId,
           p_leader_user_id: leaderUserId,
-        })
-      ),
-    [runMutation],
+        });
+        requestId = saved.data?.id ?? null;
+        return saved;
+      });
+      if (result.error) return result;
+
+      // A push failure must never recreate or roll back the saved consent request.
+      if (requestId === null || userIdRef.current !== userId) {
+        return { error: null, pushFailed: true };
+      }
+      try {
+        const push = await supabase.functions.invoke('dispatch-group-location', {
+          body: { requestId },
+        });
+        return {
+          error: null,
+          pushFailed: Boolean(push.error) || push.data?.code !== 'processed' || push.data?.pushFailed !== false,
+        };
+      } catch {
+        return { error: null, pushFailed: true };
+      }
+    },
+    [runMutation, userId],
   );
 
   const respondToLocationRequest = useCallback(
