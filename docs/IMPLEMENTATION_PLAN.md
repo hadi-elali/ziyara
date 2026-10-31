@@ -715,7 +715,7 @@ Tests/checks:
 - TypeScript, lint, coverage validation, Expo Doctor and web export.
 - Manual iOS/Android/Web checks for registration, account updates, family moves, small widths, themes, languages and dynamic text.
 
-## Phase 17: First-run video and language onboarding
+## Phase 17: Video intro and language selection (updated 31 October 2026)
 
 Files to create or modify:
 
@@ -730,16 +730,19 @@ Files to create or modify:
 
 Acceptance criteria:
 
-- A fresh installation opens a locally bundled introduction video with German, English and Arabic language choices.
-- Choosing a language persists the selection and opens registration in that language without replaying onboarding on later starts.
+- Every normal app launch opens the locally bundled introduction video after the native splash, including restored accounts and admins.
+- Ask for a language only while no valid saved language exists. Choosing one persists it without leaving the first-run screen; Continue also persists an accepted default. Existing saved languages count as completed selection.
+- Later launches show only the video playing once and an immediately visible Continue button at the bottom. Automatically continue on `playToEnd`; preserve explicit confirmation for first-run language selection. Keep Continue outside all entrance animations, including on the first launch.
+- Keep the video mounted while an end/skip request waits for initial authentication and mandatory-check loading. Then release the intro guard once, letting the navigator choose Home or a real check-in/profile-error screen directly. Avoid a redundant router replacement and the green startup fallback. Use the Home theme background beneath the normal video surface; retain the readable brand fallback on playback errors.
+- A root-scoped provider remembers intro completion only for this launch. Do not read or write the old persisted completion flag; do not replay the intro on ordinary navigation or background resume in the same process.
 - Registration offers account creation, sign-in for existing accounts and an explicit guest path into the public offline guide.
-- A video playback failure never blocks the language selection.
-- Login and password-recovery deep links remain public and usable independently of the first-run tab gate.
+- A video playback failure never blocks language selection or Continue.
+- Login, password-recovery and emergency deep links remain usable independently of the root intro gate.
 
 Tests/checks:
 
-- Jest tests for the validated onboarding state and navigation decision.
-- Playwright smoke from first start through language selection, registration screen, guest entry and reload persistence.
+- Jest tests for per-launch intro state, restored-account startup and mandatory-check guards.
+- Playwright smoke through first-run language selection, explicit Continue and Home; reload shows the video and immediate Continue without asking for language again, and the video-ended event opens Home automatically.
 - TypeScript, lint, Expo dependency alignment, Expo Doctor and web export.
 - Manual iOS/Android/Web checks for fullscreen cropping, muted autoplay, small widths, themes, languages and Arabic text direction.
 

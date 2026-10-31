@@ -37,6 +37,9 @@ export function isStartupRouteReady(state: StartupState): boolean {
   // Keep notification and deep-link emergency entry available during a check.
   if (['/emergency', '/emergency-dashboard'].includes(pathname)) return true;
 
+  // Every normal launch must reach the intro before Home or mandatory checks.
+  if (!state.hasCompletedOnboarding) return false;
+
   if (pathname === '/check-in') {
     if (!state.hasSession) return false; // RequireAuth is about to open login.
     if (state.hasProfileError) return true;
@@ -49,7 +52,5 @@ export function isStartupRouteReady(state: StartupState): boolean {
     return state.isAdmin || !state.isGroupCheckLoading;
   }
 
-  // The tab layout redirects a fresh installation to language selection.
-  const isTab = ['/', '/map', '/search', '/bookmarks', '/settings'].includes(pathname);
-  return !isTab || state.hasCompletedOnboarding;
+  return true;
 }

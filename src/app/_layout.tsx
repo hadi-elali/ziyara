@@ -25,7 +25,7 @@ import { useHomeLock } from '@/features/home-lock/use-home-lock';
 import { AppI18nProvider, useI18n } from '@/features/i18n/i18n';
 import { isStartupNavigationPending, isStartupRouteReady } from '@/features/navigation/startup-state';
 import { useEmergencyBackNavigation } from '@/features/navigation/use-emergency-back-navigation';
-import { useOnboarding } from '@/features/onboarding/onboarding-state';
+import { OnboardingProvider, useOnboarding } from '@/features/onboarding/onboarding-state';
 import { useScreenCaptureProtection } from '@/features/privacy/use-screen-capture-protection';
 import { QuestionRoundProvider } from '@/features/question-round/question-round-context';
 import { AppThemeProvider, useThemeMode } from '@/features/theme/theme-mode';
@@ -51,7 +51,9 @@ export default function RootLayout() {
                       <TripGuidanceProvider>
                         <GroupCheckProvider>
                           <QuestionRoundProvider>
-                            <RootNavigation />
+                            <OnboardingProvider>
+                              <RootNavigation />
+                            </OnboardingProvider>
                           </QuestionRoundProvider>
                         </GroupCheckProvider>
                       </TripGuidanceProvider>
@@ -73,7 +75,7 @@ function RootNavigation() {
   const { loaded: isThemeLoaded, resolvedTheme: scheme } = useThemeMode();
   const colors = Colors[scheme];
   const { loaded: isLanguageLoaded, t } = useI18n();
-  const { hasCompletedOnboarding, loaded: isOnboardingLoaded } = useOnboarding();
+  const { hasCompletedOnboarding } = useOnboarding();
   const {
     hasProfileError,
     isAdmin,
@@ -85,7 +87,7 @@ function RootNavigation() {
   const { activeCheck, hasSyncError, isBlocking, isLoading: isGroupCheckLoading } = useGroupCheck();
   const [hasNavigationLayout, setHasNavigationLayout] = useState(false);
   const hasHiddenSplash = useRef(false);
-  const isLocalStateLoaded = isLanguageLoaded && isOnboardingLoaded && isThemeLoaded;
+  const isLocalStateLoaded = isLanguageLoaded && isThemeLoaded;
   const isStartupReady = isStartupRouteReady({
     hasActiveCheck: Boolean(activeCheck),
     hasCompletedOnboarding,
@@ -105,7 +107,7 @@ function RootNavigation() {
     isAuthLoading,
     isGroupCheckLoading,
   });
-  const canAccessAppRoutes = !isStartupPending && canAccessNonBlockingRoutes({
+  const canAccessAppRoutes = hasCompletedOnboarding && !isStartupPending && canAccessNonBlockingRoutes({
     hasProfileError,
     hasSession: Boolean(session),
     isAuthLoading,
@@ -113,7 +115,7 @@ function RootNavigation() {
   });
   const goBackFromEmergency = useEmergencyBackNavigation(
     pathname,
-    isStartupPending ? '/startup' : canAccessAppRoutes ? '/' : '/check-in',
+    !hasCompletedOnboarding ? '/onboarding' : isStartupPending ? '/startup' : canAccessAppRoutes ? '/' : '/check-in',
   );
 
   useEffect(() => {
@@ -123,7 +125,7 @@ function RootNavigation() {
     }
   }, [hasNavigationLayout, isLocalStateLoaded, isStartupReady]);
 
-  if (!isLanguageLoaded || !isOnboardingLoaded || !isThemeLoaded) {
+  if (!isLocalStateLoaded) {
     return null;
   }
 
@@ -151,7 +153,14 @@ function RootNavigation() {
             headerShadowVisible: false,
             contentStyle: { backgroundColor: colors.background },
           }}>
-          <Stack.Protected guard={isStartupPending}>
+          <Stack.Protected guard={!hasCompletedOnboarding}>
+            <Stack.Screen
+              name="onboarding"
+              options={{ animation: 'none', headerShown: false, title: t('onboarding.title') }}
+            />
+          </Stack.Protected>
+
+          <Stack.Protected guard={hasCompletedOnboarding && isStartupPending}>
             <Stack.Screen name="startup" options={{ animation: 'none', headerShown: false }} />
           </Stack.Protected>
 
@@ -180,16 +189,12 @@ function RootNavigation() {
             />
           </Stack.Protected>
 
-          <Stack.Protected guard={!isStartupPending}>
+          <Stack.Protected guard={hasCompletedOnboarding && !isStartupPending}>
             <Stack.Screen
               name="check-in"
               options={{ animation: 'none', headerShown: !isBlocking, title: t('groupCheck.navTitle') }}
             />
           </Stack.Protected>
-          <Stack.Screen
-            name="onboarding"
-            options={{ headerShown: false, title: t('onboarding.title') }}
-          />
           <Stack.Screen
             name="login"
             options={{ headerShown: false, title: t('auth.loginTitle') }}
@@ -214,11 +219,13 @@ function RootNavigation() {
             name="emergency-dashboard"
             options={{ ...emergencyBackOptions, title: t('emergencyDashboard.navTitle') }}
           />
-          <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
+          <Stack.Protected guard={hasCompletedOnboarding}>
+            <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
+          </Stack.Protected>
         </Stack>
       </NavigationThemeProvider>
 
-      {profileRefreshError && !isBlocking ? (
+      {hasCompletedOnboarding && profileRefreshError && !isBlocking ? (
         <View
           accessibilityLiveRegion="polite"
           accessibilityRole="alert"

@@ -12,6 +12,7 @@ export type Language = "de" | "en" | "ar";
 type TranslationParams = Record<string, number | string>;
 
 type I18nContextValue = {
+  hasSelectedLanguage: boolean;
   isRTL: boolean;
   language: Language;
   loaded: boolean;
@@ -29,9 +30,9 @@ export const languageOptions: {
   { label: "Arabic", nativeLabel: "العربية", value: "ar" },
 ];
 
-const useLanguageState = createPersistentState<Language>(
+const useLanguageState = createPersistentState<Language | null>(
   "ziyara.language",
-  "de",
+  null,
   (value) =>
     value === "de" || value === "en" || value === "ar" ? value : undefined,
 );
@@ -1236,15 +1237,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Das Passwort muss mindestens einen Buchstaben und eine Zahl enthalten.",
     "auth.validation.passwordRequired": "Gib dein Passwort ein.",
     "onboarding.body":
-      "Wähle deine Sprache. Danach kannst du ein Konto erstellen, dich anmelden oder die App ohne Konto nutzen.",
+      "Wähle bei Bedarf deine Sprache und tippe auf Weiter, um die App zu öffnen.",
     "onboarding.brandName": "Al Batoul",
     "onboarding.brandSubtitle": "Ziyara Reise-App",
-    "onboarding.languageHint": "Öffnet die Registrierung in dieser Sprache.",
+    "onboarding.continue": "Weiter",
+    "onboarding.languageHint": "Wählt die Sprache für die App aus.",
     "onboarding.tagline": "Gemeinsam reisen. Gemeinsam erleben.",
     "onboarding.title": "Sprache wählen",
     "onboarding.videoLabel": "Einführungsvideo zur Ziyara-App",
     "onboarding.videoUnavailable":
-      "Das Einführungsvideo kann gerade nicht abgespielt werden. Du kannst trotzdem eine Sprache auswählen.",
+      "Das Einführungsvideo kann gerade nicht abgespielt werden. Du kannst trotzdem fortfahren.",
     "recovery.backToLogin": "Zurück zur Anmeldung",
     "recovery.checkingLink": "Recovery-Link wird geprüft …",
     "recovery.forgotBody":
@@ -2670,15 +2672,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "The password must contain at least one letter and one number.",
     "auth.validation.passwordRequired": "Enter your password.",
     "onboarding.body":
-      "Choose your language. You can then create an account, sign in, or use the app without an account.",
+      "Change your language if needed, then tap Continue to open the app.",
     "onboarding.brandName": "Al Batoul",
     "onboarding.brandSubtitle": "Ziyara Travel App",
-    "onboarding.languageHint": "Opens registration in this language.",
+    "onboarding.continue": "Continue",
+    "onboarding.languageHint": "Selects the app language.",
     "onboarding.tagline": "Travel together. Experience together.",
     "onboarding.title": "Choose your language",
     "onboarding.videoLabel": "Introduction video for the Ziyara app",
     "onboarding.videoUnavailable":
-      "The introduction video cannot be played right now. You can still choose a language.",
+      "The introduction video cannot be played right now. You can still continue.",
     "recovery.backToLogin": "Back to sign in",
     "recovery.checkingLink": "Checking recovery link…",
     "recovery.forgotBody":
@@ -4056,15 +4059,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "يجب أن تحتوي كلمة المرور على حرف واحد ورقم واحد على الأقل.",
     "auth.validation.passwordRequired": "أدخل كلمة المرور.",
     "onboarding.body":
-      "اختر لغتك. بعد ذلك يمكنك إنشاء حساب أو تسجيل الدخول أو استخدام التطبيق بدون حساب.",
+      "غيّر لغتك عند الحاجة، ثم اضغط على متابعة لفتح التطبيق.",
     "onboarding.brandName": "Al Batoul",
     "onboarding.brandSubtitle": "تطبيق سفر الزيارة",
-    "onboarding.languageHint": "يفتح التسجيل بهذه اللغة.",
+    "onboarding.continue": "متابعة",
+    "onboarding.languageHint": "يحدد لغة التطبيق.",
     "onboarding.tagline": "نسافر معًا. نعيش التجربة معًا.",
     "onboarding.title": "اختر اللغة",
     "onboarding.videoLabel": "فيديو تعريفي بتطبيق Ziyara",
     "onboarding.videoUnavailable":
-      "يتعذر تشغيل الفيديو التعريفي حالياً. لا يزال بإمكانك اختيار اللغة.",
+      "يتعذر تشغيل الفيديو التعريفي حالياً. لا يزال بإمكانك المتابعة.",
     "recovery.backToLogin": "العودة إلى تسجيل الدخول",
     "recovery.checkingLink": "جارٍ التحقق من رابط الاسترداد…",
     "recovery.forgotBody":
@@ -4318,6 +4322,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
 };
 
 const defaultContext: I18nContextValue = {
+  hasSelectedLanguage: false,
   isRTL: false,
   language: "de",
   loaded: false,
@@ -4346,17 +4351,20 @@ export function translate(
 }
 
 export function AppI18nProvider({ children }: PropsWithChildren) {
-  const [language, setLanguage, loaded] = useLanguageState();
+  const [savedLanguage, setLanguage, loaded] = useLanguageState();
+  const language = savedLanguage ?? "de";
+  const hasSelectedLanguage = savedLanguage !== null;
 
   const value = useMemo<I18nContextValue>(
     () => ({
+      hasSelectedLanguage,
       isRTL: language === "ar",
       language,
       loaded,
       setLanguage,
       t: (key, params) => translate(language, key, params),
     }),
-    [language, loaded, setLanguage],
+    [hasSelectedLanguage, language, loaded, setLanguage],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

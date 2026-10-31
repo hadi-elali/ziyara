@@ -22,6 +22,20 @@ async function login(page: Page, email: string, password: string) {
   await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
 }
 
+async function continueIntro(page: Page) {
+  await page.getByRole('button', { name: 'Weiter', exact: true }).click();
+}
+
+async function openHome(page: Page) {
+  await page.goto('/');
+  await continueIntro(page);
+}
+
+async function openAdmin(page: Page) {
+  await openHome(page);
+  await page.getByRole('button', { name: 'Adminbereich öffnen', exact: true }).click();
+}
+
 async function openAuthenticatedPage(
   browser: Browser,
   email: string,
@@ -83,18 +97,22 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await login(page, memberEmail, memberResetPassword);
   });
 
-  test('Erststart führt per Sprache und Gastzugang in den öffentlichen Guide', async ({ page }) => {
+  test('Intro öffnet Home per Weiter oder nach dem Videoende', async ({ page }) => {
     await page.route('http://127.0.0.1:54321/**', (route) => route.abort('internetdisconnected'));
     await page.goto('/');
 
     await expect(page.getByText('Sprache wählen', { exact: true })).toBeVisible();
     await expect(page.locator('video')).toBeVisible();
     await page.getByRole('button', { name: 'Deutsch' }).click();
-    await expect(page.getByText('Konto erstellen', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Ohne Konto fortfahren' }).click();
+    await expect(page.getByText('Sprache wählen', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Weiter', exact: true }).click();
     await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
     await page.reload();
-    await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sprache wählen', { exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Deutsch' })).toHaveCount(0);
+    await expect(page.locator('video')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Weiter', exact: true })).toBeVisible();
+    await page.locator('video').evaluate(video => video.dispatchEvent(new Event('ended')));
     await expect(page.getByRole('button', { name: 'Karbala' })).toBeVisible();
     await page.getByRole('tab', { name: 'Suche' }).click();
     await expect(page.getByPlaceholder('Karbala, Ziyarah, Najaf suchen...')).toBeVisible();
@@ -108,22 +126,23 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const admin = await openAuthenticatedPage(browser, adminEmail, adminPassword);
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
-    await admin.page.goto('/admin');
+    await openAdmin(admin.page);
     await admin.page.getByRole('button', { name: /Statusabfrage/u }).click();
     await admin.page.getByLabel('Frage').fill('Sind alle E2E-Teilnehmenden da?');
     await admin.page.getByRole('button', { name: 'Frage stellen' }).click();
     await expect(admin.page.getByText('Sind alle E2E-Teilnehmenden da?')).toBeVisible();
 
-    await admin.page.goto('/check-in');
+    await openHome(admin.page);
+    await admin.page.getByRole('button', { name: 'Statusabfrage beantworten', exact: true }).click();
     await admin.page.getByRole('button', { name: /Bestätigen/u }).click();
     await expect(admin.page.getByText('Deine Antwort wurde gespeichert.')).toBeVisible();
     await admin.page.getByRole('button', { name: /Zurück zur App/u }).click();
     await expect(admin.page).toHaveURL(/\/$/u);
-    await admin.page.goto('/admin');
+    await openAdmin(admin.page);
     await admin.page.getByRole('button', { name: /Statusabfrage/u }).click();
     await admin.page.getByRole('button', { name: /^Ja: Namen anzeigen/u }).click();
 
-    await member.page.goto('/check-in');
+    await openHome(member.page);
     await expect(member.page.getByText('Sind alle E2E-Teilnehmenden da?')).toBeVisible();
     await member.page.getByRole('button', { name: 'Bestätigen' }).click();
     await expect(member.page.getByText('Deine Antwort wurde gespeichert.')).toBeVisible();
@@ -174,7 +193,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const admin = await openAuthenticatedPage(browser, adminEmail, adminPassword);
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
-    await admin.page.goto('/admin');
+    await openAdmin(admin.page);
     await admin.page.getByRole('button', { name: /Fahrten & Busse/u }).click();
     await admin.page.getByLabel('Name der Fahrt').fill('E2E Ziyara Reise');
     await admin.page.getByRole('button', { name: 'Fahrt anlegen', exact: true }).click();
@@ -185,11 +204,14 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
       await expect(admin.page.getByRole('button', { name: `${name} · 0 Konten`, exact: true })).toBeVisible();
     }
 
-    await member.page.goto('/bus');
+    await openHome(member.page);
+    await member.page.getByRole('button', { name: 'Buszuordnung öffnen', exact: true }).click();
     await expect(member.page.getByText('E2E Ziyara Reise')).toBeVisible();
     await member.page.getByRole('button', { name: 'Bus 1 auswählen', exact: true }).click();
     await expect(member.page.getByText('Dein Bus: Bus 1', { exact: true })).toBeVisible();
     await member.page.reload();
+    await continueIntro(member.page);
+    await member.page.getByRole('button', { name: 'Buszuordnung öffnen', exact: true }).click();
     await expect(member.page.getByText('Dein Bus: Bus 1', { exact: true })).toBeVisible();
 
     const busOne = admin.page.getByRole('button', { name: 'Bus 1 · 1 Konten', exact: true });
@@ -213,7 +235,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const admin = await openAuthenticatedPage(browser, adminEmail, adminPassword);
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
-    await admin.page.goto('/admin');
+    await openAdmin(admin.page);
     await admin.page.getByRole('button', { name: /Tagesprogramm/u }).click();
     await admin.page.getByLabel('Erster Tag (JJJJ-MM-TT)').fill(
       new Date().toLocaleDateString('sv-SE'),
@@ -230,7 +252,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await admin.page.getByRole('button', { name: '2 Tagesprogramme speichern' }).click();
     await expect(admin.page.getByText('Das Tagesprogramm wurde veröffentlicht.')).toBeVisible();
 
-    await member.page.goto('/');
+    await openHome(member.page);
     await expect(member.page.getByText('Tagesprogramm', { exact: true })).toBeVisible();
     await expect(member.page.getByText('Heute', { exact: true })).toBeVisible();
     await expect(member.page.getByText('E2E Heute', { exact: true })).toBeVisible();
@@ -240,8 +262,9 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await member.page.route('**/rest/v1/daily_programs*', (route) =>
       route.abort('internetdisconnected'),
     );
-    await member.page.goto('/');
+    await openHome(member.page);
     await member.page.reload();
+    await continueIntro(member.page);
     await expect(member.page.getByText('E2E Heute', { exact: true })).toBeVisible();
     await expect(
       member.page.getByText('Zuletzt gespeicherter Stand · Aktualisierung fehlgeschlagen'),
@@ -255,7 +278,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     const admin = await openAuthenticatedPage(browser, adminEmail, adminPassword);
     const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
 
-    await admin.page.goto('/admin');
+    await openAdmin(admin.page);
     await admin.page.getByRole('button', { name: /Reiseziele auf Karte markieren/u }).click();
     await admin.page.getByLabel('Name des Reiseziels').fill('E2E Tor 3');
     await admin.page.getByLabel('Breitengrad des Treffpunkts').fill('32.617');
@@ -263,7 +286,8 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await admin.page.getByRole('button', { name: /Reiseziel veröffentlichen$/u }).click();
     await expect(admin.page.getByText('„E2E Tor 3“ wurde auf der Karte veröffentlicht.')).toBeVisible();
 
-    await member.page.goto('/map');
+    await openHome(member.page);
+    await member.page.getByRole('tab', { name: 'Karte', exact: true }).click();
     await expect(member.page.getByRole('button', { name: 'Reiseziel: E2E Tor 3' })).toBeVisible();
     await member.page.getByRole('button', { name: 'Reiseziele', exact: true }).click();
     await expect(member.page.getByText('E2E Tor 3', { exact: true })).toBeVisible();
@@ -274,7 +298,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
 
   test('Rollenänderung über die Admin-Oberfläche', async ({ page }) => {
     await login(page, adminEmail, adminPassword);
-    await page.goto('/admin');
+    await openAdmin(page);
     await page.getByRole('button', { name: /Benutzer Familienpakete/u }).click();
     await page.getByLabel('Personen oder Familien nach Namen suchen').fill(memberName);
     await expect(page.getByText(memberName)).toBeVisible();

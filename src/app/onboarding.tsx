@@ -1,9 +1,9 @@
 import { useEventListener } from 'expo';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Platform,
   Pressable,
@@ -17,9 +17,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Fonts, OnboardingPalette, Spacing } from '@/constants/theme';
-import { languageOptions, type Language, useI18n } from '@/features/i18n/i18n';
-import { registerRoute } from '@/features/navigation/routes';
+import { useAuth } from '@/features/auth/auth-context';
+import { useGroupCheck } from '@/features/group-check/group-check-context';
+import { languageOptions, useI18n } from '@/features/i18n/i18n';
+import { isStartupNavigationPending } from '@/features/navigation/startup-state';
 import { useOnboarding } from '@/features/onboarding/onboarding-state';
+import { useTheme } from '@/hooks/use-theme';
 
 // Metro resolves bundled local media through a static require expression.
 const onboardingVideo = require('../../assets/videos/intro.mp4');
@@ -27,14 +30,23 @@ const onboardingLogo = require('../../assets/images/logo.png');
 
 export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
-  const { language, setLanguage, t } = useI18n();
+  const theme = useTheme();
+  const { hasSelectedLanguage, language, setLanguage, t } = useI18n();
   const { completeOnboarding } = useOnboarding();
+  const { hasProfileError, isAdmin, isLoading: isAuthLoading, session } = useAuth();
+  const { isLoading: isGroupCheckLoading } = useGroupCheck();
+  const isStartupPending = isStartupNavigationPending({
+    hasProfileError, hasSession: Boolean(session), isAdmin, isAuthLoading, isGroupCheckLoading,
+  });
+  const [showLanguageSelection] = useState(() => !hasSelectedLanguage);
+  const [continueRequested, setContinueRequested] = useState(false);
+  const hasCompleted = useRef(false);
   const [videoUnavailable, setVideoUnavailable] = useState(false);
   const [brandOpacity] = useState(() => new Animated.Value(0));
   const [languageOpacity] = useState(() => new Animated.Value(0));
   const player = useVideoPlayer(onboardingVideo, (videoPlayer) => {
     videoPlayer.audioMixingMode = 'doNotMix';
-    videoPlayer.loop = true;
+    videoPlayer.loop = false;
     videoPlayer.muted = false;
     videoPlayer.volume = 1;
     videoPlayer.play();
@@ -46,7 +58,23 @@ export default function OnboardingScreen() {
     }
   });
 
+  useEventListener(player, 'playToEnd', () => {
+    // Never dismiss the one-time language choice before it is confirmed.
+    if (!showLanguageSelection) setContinueRequested(true);
+  });
+
   useEffect(() => {
+    if (!continueRequested || isStartupPending || hasCompleted.current) return;
+    hasCompleted.current = true;
+    if (!hasSelectedLanguage) setLanguage(language);
+    player.pause();
+    // Removing the intro guard selects Home/check-in in one navigation update.
+    completeOnboarding();
+  }, [completeOnboarding, continueRequested, hasSelectedLanguage, isStartupPending, language, player, setLanguage]);
+
+  useEffect(() => {
+    if (!showLanguageSelection) return;
+
     const entranceAnimation = Animated.parallel([
       Animated.sequence([
         Animated.delay(1650),
@@ -69,19 +97,18 @@ export default function OnboardingScreen() {
     entranceAnimation.start();
 
     return () => entranceAnimation.stop();
-  }, [brandOpacity, languageOpacity]);
+  }, [brandOpacity, languageOpacity, showLanguageSelection]);
 
-  const chooseLanguage = (nextLanguage: Language) => {
-    setLanguage(nextLanguage);
-    completeOnboarding();
-    router.replace(registerRoute());
+  const continueToHome = () => {
+    player.pause();
+    setContinueRequested(true);
   };
 
   const logoSize = Math.min(172, Math.max(122, width * 0.38));
   const titleSize = Math.min(54, Math.max(42, width * 0.125));
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: videoUnavailable ? OnboardingPalette.background : theme.background }]}>
       {videoUnavailable ? null : (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <VideoView
@@ -97,78 +124,103 @@ export default function OnboardingScreen() {
       )}
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            !showLanguageSelection && styles.returningScrollContent,
+          ]}
           showsVerticalScrollIndicator={false}>
           <View style={styles.container}>
-            <Animated.View style={[styles.brand, { opacity: brandOpacity }]}>
-              <Image
-                accessible={false}
-                contentFit="contain"
-                source={onboardingLogo}
-                style={{ height: logoSize, width: logoSize }}
-              />
-              <ThemedText
-                numberOfLines={1}
-                style={[styles.centeredText, styles.brandName, { fontSize: titleSize }]}>
-                {t('onboarding.brandName')}
-              </ThemedText>
-              <View style={styles.brandSubtitleRow}>
-                <View style={styles.brandLine} />
-                <ThemedText style={[styles.centeredText, styles.brandSubtitle]}>
-                  {t('onboarding.brandSubtitle')}
+            {showLanguageSelection ? (
+              <Animated.View style={[styles.brand, { opacity: brandOpacity }]}>
+                <Image
+                  accessible={false}
+                  contentFit="contain"
+                  source={onboardingLogo}
+                  style={{ height: logoSize, width: logoSize }}
+                />
+                <ThemedText
+                  numberOfLines={1}
+                  style={[styles.centeredText, styles.brandName, { fontSize: titleSize }]}>
+                  {t('onboarding.brandName')}
                 </ThemedText>
-                <View style={styles.brandLine} />
-              </View>
-              <ThemedText style={[styles.centeredText, styles.tagline]}>
-                {t('onboarding.tagline')}
-              </ThemedText>
-            </Animated.View>
+                <View style={styles.brandSubtitleRow}>
+                  <View style={styles.brandLine} />
+                  <ThemedText style={[styles.centeredText, styles.brandSubtitle]}>
+                    {t('onboarding.brandSubtitle')}
+                  </ThemedText>
+                  <View style={styles.brandLine} />
+                </View>
+                <ThemedText style={[styles.centeredText, styles.tagline]}>
+                  {t('onboarding.tagline')}
+                </ThemedText>
+              </Animated.View>
+            ) : null}
 
-            <Animated.View style={[styles.languageSection, { opacity: languageOpacity }]}>
-              <ThemedText style={[styles.centeredText, styles.languageTitle]} type="heading">
-                {t('onboarding.title')}
-              </ThemedText>
+            {showLanguageSelection ? (
+              <Animated.View style={[styles.languageSection, { opacity: languageOpacity }]}>
+                <ThemedText style={[styles.centeredText, styles.languageTitle]} type="heading">
+                  {t('onboarding.title')}
+                </ThemedText>
 
-              <View style={styles.languageList}>
-                {languageOptions.map((option) => {
-                  const isSelected = option.value === language;
+                <View style={styles.languageList}>
+                  {languageOptions.map((option) => {
+                    const isSelected = option.value === language;
 
-                  return (
-                    <Pressable
-                      accessibilityHint={t('onboarding.languageHint')}
-                      accessibilityRole="button"
-                      key={option.value}
-                      onPress={() => chooseLanguage(option.value)}
-                      style={({ pressed }) => [
-                        styles.languageButton,
-                        isSelected && styles.languageButtonSelected,
-                        pressed && styles.languageButtonPressed,
-                      ]}>
-                      <SymbolIcon
-                        color={isSelected ? OnboardingPalette.background : OnboardingPalette.text}
-                        name="globe"
-                        size={22}
-                      />
-                      <ThemedText
-                        numberOfLines={1}
-                        style={[
-                          styles.languageLabel,
-                          isSelected && styles.languageLabelSelected,
-                        ]}
-                        type="smallBold">
-                        {option.nativeLabel}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </View>
+                    return (
+                      <Pressable
+                        accessibilityHint={t('onboarding.languageHint')}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: isSelected }}
+                        key={option.value}
+                        onPress={() => setLanguage(option.value)}
+                        style={({ pressed }) => [
+                          styles.languageButton,
+                          isSelected && styles.languageButtonSelected,
+                          pressed && styles.languageButtonPressed,
+                        ]}>
+                        <SymbolIcon
+                          color={isSelected ? OnboardingPalette.background : OnboardingPalette.text}
+                          name="globe"
+                          size={22}
+                        />
+                        <ThemedText
+                          numberOfLines={1}
+                          style={[
+                            styles.languageLabel,
+                            isSelected && styles.languageLabelSelected,
+                          ]}
+                          type="smallBold">
+                          {option.nativeLabel}
+                        </ThemedText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </Animated.View>
+            ) : null}
+
+            <View style={styles.actions}>
+              <Pressable
+                accessibilityState={{ busy: continueRequested, disabled: continueRequested }}
+                accessibilityRole="button"
+                disabled={continueRequested}
+                onPress={continueToHome}
+                style={({ pressed }) => [
+                  styles.continueButton,
+                  pressed && styles.languageButtonPressed,
+                ]}>
+                {continueRequested ? <ActivityIndicator color={OnboardingPalette.background} size="small" /> : null}
+                <ThemedText style={styles.continueLabel} type="smallBold">
+                  {t('onboarding.continue')}
+                </ThemedText>
+              </Pressable>
 
               {videoUnavailable ? (
                 <ThemedText style={[styles.centeredText, styles.videoUnavailable]} type="small">
                   {t('onboarding.videoUnavailable')}
                 </ThemedText>
               ) : null}
-            </Animated.View>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -178,7 +230,6 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: OnboardingPalette.background,
     flex: 1,
   },
   backgroundVideo: {
@@ -194,6 +245,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: Spacing.three,
+  },
+  returningScrollContent: {
+    justifyContent: 'flex-end',
   },
   container: {
     gap: Spacing.five,
@@ -285,6 +339,26 @@ const styles = StyleSheet.create({
   },
   languageLabelSelected: {
     color: OnboardingPalette.background,
+  },
+  continueButton: {
+    alignItems: 'center',
+    backgroundColor: OnboardingPalette.gold,
+    borderRadius: 18,
+    flexDirection: 'row',
+    gap: Spacing.two,
+    justifyContent: 'center',
+    minHeight: 56,
+    padding: Spacing.two,
+    width: '100%',
+  },
+  actions: {
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  continueLabel: {
+    color: OnboardingPalette.background,
+    textAlign: 'center',
+    writingDirection: 'auto',
   },
   videoUnavailable: {
     color: OnboardingPalette.textSecondary,

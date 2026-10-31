@@ -16,6 +16,15 @@ const restoredAccount = {
 };
 
 describe('startup navigation', () => {
+  it('blendet den Splash beim normalen Start erst auf dem Intro aus, auch mit wiederhergestelltem Konto', () => {
+    const introPending = { ...restoredAccount, hasCompletedOnboarding: false };
+    expect(isStartupRouteReady(introPending)).toBe(false);
+    expect(isStartupRouteReady({ ...introPending, pathname: '/onboarding', isAuthLoading: true })).toBe(true);
+    expect(isStartupRouteReady({ ...introPending, pathname: '/check-in', hasActiveCheck: true })).toBe(false);
+    expect(isStartupRouteReady({ ...introPending, pathname: '/reset-password' })).toBe(true);
+    expect(isStartupRouteReady({ ...introPending, pathname: '/emergency' })).toBe(true);
+  });
+
   it('hält Auth- und initiales Gruppencheck-Laden aus der Statusabfrage heraus', () => {
     expect(isStartupNavigationPending({ ...restoredAccount, hasSession: false, isAuthLoading: true })).toBe(true);
     expect(isStartupNavigationPending({ ...restoredAccount, isGroupCheckLoading: true })).toBe(true);

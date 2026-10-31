@@ -21,6 +21,7 @@ const mockAuth = {
 };
 const mockCheck = { activeCheck: null, hasSyncError: false, isBlocking: false, isLoading: true };
 let mockHomeLocked = false;
+let mockHasCompletedOnboarding = true;
 
 jest.mock('@/features/home-lock/use-home-lock', () => ({ useHomeLock: () => mockHomeLocked }));
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
@@ -73,7 +74,8 @@ jest.mock('@/features/theme/theme-mode', () => ({
   useThemeMode: () => ({ loaded: true, resolvedTheme: 'light' }),
 }));
 jest.mock('@/features/onboarding/onboarding-state', () => ({
-  useOnboarding: () => ({ loaded: true, hasCompletedOnboarding: true }),
+  OnboardingProvider: ({ children }: PropsWithChildren) => children,
+  useOnboarding: () => ({ hasCompletedOnboarding: mockHasCompletedOnboarding }),
 }));
 jest.mock('@/features/errors/AppErrorBoundary', () => ({
   AppErrorBoundary: ({ children }: PropsWithChildren) => children,
@@ -139,6 +141,7 @@ describe('root startup route guards', () => {
       return { remove: removeBackListener };
     });
     mockHomeLocked = false;
+    mockHasCompletedOnboarding = true;
     Object.assign(mockAuth, { hasProfileError: false, isAdmin: false, isLoading: true, session: null });
     Object.assign(mockCheck, { hasSyncError: false, isBlocking: false, isLoading: true });
   });
@@ -148,6 +151,47 @@ describe('root startup route guards', () => {
     jest.restoreAllMocks();
   });
   afterAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = originalActEnvironment; });
+
+  it('zeigt beim Start das Intro vor Auth-Laden, Home und einer Pflichtabfrage', async () => {
+    mockHasCompletedOnboarding = false;
+    expect((await renderNavigation())[0]).toBe('onboarding');
+
+    Object.assign(mockAuth, { isLoading: false, session: { user: { id: 'restored-user' } } });
+    Object.assign(mockCheck, { isLoading: false, isBlocking: true });
+    let routes = await renderNavigation();
+    expect(routes[0]).toBe('onboarding');
+    expect(routes).not.toContain('(tabs)');
+    expect(routes).not.toContain('check-in');
+    expect(routes).not.toContain('admin');
+
+    mockHasCompletedOnboarding = true;
+    routes = await renderNavigation();
+    expect(routes[0]).toBe('check-in');
+    expect(routes).not.toContain('onboarding');
+  });
+
+  it.each([false, true])('zeigt auch Gästen und Admins das Intro (Admin: %s)', async (isAdmin) => {
+    mockHasCompletedOnboarding = false;
+    Object.assign(mockAuth, {
+      isAdmin, isLoading: false, session: isAdmin ? { user: { id: 'admin' } } : null,
+    });
+    expect((await renderNavigation())[0]).toBe('onboarding');
+
+    mockHasCompletedOnboarding = true;
+    const routes = await renderNavigation();
+    expect(routes[0]).toBe('(tabs)');
+    expect(routes).not.toContain('onboarding');
+  });
+
+  it('führt einen direkten Notfalleinstieg ohne vorheriges Intro beim Zurückgehen zum Intro', async () => {
+    mockHasCompletedOnboarding = false;
+    mockPathname = '/emergency';
+    mockAuth.isLoading = false;
+    const routes = await renderNavigation();
+    expect(routes).toContain('emergency');
+    expect(hardwareBack?.(backPressEvent)).toBe(true);
+    expect(mockRouter.replace).toHaveBeenCalledWith('/onboarding');
+  });
 
   it('registriert während des Kaltstarts keine Statusabfrage und öffnet danach direkt Home', async () => {
     let routes = await renderNavigation();
