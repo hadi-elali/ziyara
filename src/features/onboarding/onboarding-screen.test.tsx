@@ -98,26 +98,24 @@ describe('intro interaction', () => {
   });
 
   it('bestätigt die Sprache einmal und leitet später am Videoende erst nach bereiter Startprüfung weiter', async () => {
+    mockAuth.isLoading = true;
     await renderIntro();
-    expect(button('Weiter')).toBeDefined();
-    expect(renderer!.root.findAllByType(Animated.View).every(node =>
-      node.findAll(text => text.props.children === 'Weiter').length === 0,
-    )).toBe(true);
+    expect(renderer!.root.findAll(node => node.props.children === 'Weiter')).toHaveLength(0);
     await act(async () => { jest.advanceTimersByTime(2200); });
-    await act(async () => button('English').props.onPress());
-    expect(button('English').props.accessibilityState.selected).toBe(true);
-    expect(button('Continue')).toBeDefined();
-    expect(hasCompletedIntro).toBe(false);
-    expect(router.replace).not.toHaveBeenCalled();
     await act(async () => videoEnded());
     expect(hasCompletedIntro).toBe(false);
 
     const reportStatus = jest.mocked(useEventListener).mock.calls[0][2] as (event: { status: string }) => void;
     await act(async () => reportStatus({ status: 'error' }));
+    await act(async () => button('English').props.onPress());
+    expect(button('English').props.accessibilityState).toEqual({ busy: true, disabled: true, selected: true });
+    expect(renderer!.root.findAll(node => node.props.children === 'Continue')).toHaveLength(0);
+    expect(hasCompletedIntro).toBe(false);
     expect(renderer!.root.findAll(node =>
       node.props.children === 'The introduction video cannot be played right now. You can still continue.',
     ).length).toBeGreaterThan(0);
-    await act(async () => button('Continue').props.onPress());
+    mockAuth.isLoading = false;
+    await renderIntro();
     expect(hasCompletedIntro).toBe(true);
     expect(router.replace).not.toHaveBeenCalled();
     expect(await AsyncStorage.getItem('ziyara.language')).toBe('"en"');

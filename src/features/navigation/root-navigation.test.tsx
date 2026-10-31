@@ -24,6 +24,12 @@ let mockHomeLocked = false;
 let mockHasCompletedOnboarding = true;
 
 jest.mock('@/features/home-lock/use-home-lock', () => ({ useHomeLock: () => mockHomeLocked }));
+jest.mock('@/features/onboarding/HomeFeatureTour', () => {
+  const { View: MockView } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    HomeFeatureTour: ({ available }: { available: boolean }) => <MockView testID="home-tour-availability" accessibilityLabel={String(available)} />,
+  };
+});
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 
 jest.mock('expo-router', () => {
@@ -303,6 +309,28 @@ describe('root startup route guards', () => {
     mockHomeLocked = false;
     await renderNavigation();
     expect(renderer?.root.findAllByType(Modal)).toHaveLength(0);
+  });
+
+  it('bietet die Funktionseinführung erst auf dem freigegebenen Homebildschirm an', async () => {
+    const available = () => renderer!.root.findByProps({ testID: 'home-tour-availability' }).props.accessibilityLabel === 'true';
+    await renderNavigation();
+    expect(available()).toBe(false);
+    mockAuth.isLoading = false;
+    await renderNavigation();
+    expect(available()).toBe(true);
+    for (const pathname of ['/emergency', '/check-in', '/settings', '/map']) {
+      mockPathname = pathname;
+      await renderNavigation();
+      expect(available()).toBe(false);
+    }
+    mockPathname = '/';
+    mockHomeLocked = true;
+    await renderNavigation();
+    expect(available()).toBe(false);
+    mockHomeLocked = false;
+    mockHasCompletedOnboarding = false;
+    await renderNavigation();
+    expect(available()).toBe(false);
   });
 
   it.each(['/emergency', '/emergency-dashboard'])(

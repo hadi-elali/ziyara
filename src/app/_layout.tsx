@@ -26,6 +26,7 @@ import { AppI18nProvider, useI18n } from '@/features/i18n/i18n';
 import { isStartupNavigationPending, isStartupRouteReady } from '@/features/navigation/startup-state';
 import { useEmergencyBackNavigation } from '@/features/navigation/use-emergency-back-navigation';
 import { OnboardingProvider, useOnboarding } from '@/features/onboarding/onboarding-state';
+import { HomeFeatureTour } from '@/features/onboarding/HomeFeatureTour';
 import { useScreenCaptureProtection } from '@/features/privacy/use-screen-capture-protection';
 import { QuestionRoundProvider } from '@/features/question-round/question-round-context';
 import { AppThemeProvider, useThemeMode } from '@/features/theme/theme-mode';
@@ -245,6 +246,7 @@ function RootNavigation() {
         </View>
       ) : null}
       <HomeLockScreen locked={isHomeLocked && canAccessAppRoutes} pathname={pathname} />
+      <HomeFeatureTour available={canAccessAppRoutes && pathname === '/' && !isHomeLocked} />
     </GestureHandlerRootView>
   );
 }

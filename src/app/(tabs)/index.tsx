@@ -77,7 +77,6 @@ export default function HomeScreen() {
     .map((place) => localizePlace(place, language));
   const cities = ["Kadhimayn", "Samarra", "Balad", "Karbala", "Najaf", "Kufa"];
 
-
   return (
     <>
     <Screen>

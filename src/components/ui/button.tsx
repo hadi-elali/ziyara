@@ -55,6 +55,7 @@ export function Button({
 
   return (
     <Pressable
+      accessibilityLabel={label}
       accessibilityRole="button"
       accessibilityState={{ ...accessibilityState, disabled }}
       disabled={disabled}

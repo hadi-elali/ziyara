@@ -19,7 +19,7 @@ import { SymbolIcon } from '@/components/ui/symbol-icon';
 import { Fonts, OnboardingPalette, Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
-import { languageOptions, useI18n } from '@/features/i18n/i18n';
+import { languageOptions, type Language, useI18n } from '@/features/i18n/i18n';
 import { isStartupNavigationPending } from '@/features/navigation/startup-state';
 import { useOnboarding } from '@/features/onboarding/onboarding-state';
 import { useTheme } from '@/hooks/use-theme';
@@ -66,11 +66,10 @@ export default function OnboardingScreen() {
   useEffect(() => {
     if (!continueRequested || isStartupPending || hasCompleted.current) return;
     hasCompleted.current = true;
-    if (!hasSelectedLanguage) setLanguage(language);
     player.pause();
     // Removing the intro guard selects Home/check-in in one navigation update.
     completeOnboarding();
-  }, [completeOnboarding, continueRequested, hasSelectedLanguage, isStartupPending, language, player, setLanguage]);
+  }, [completeOnboarding, continueRequested, isStartupPending, player]);
 
   useEffect(() => {
     if (!showLanguageSelection) return;
@@ -102,6 +101,12 @@ export default function OnboardingScreen() {
   const continueToHome = () => {
     player.pause();
     setContinueRequested(true);
+  };
+
+  const chooseLanguage = (nextLanguage: Language) => {
+    if (continueRequested) return;
+    setLanguage(nextLanguage);
+    continueToHome();
   };
 
   const logoSize = Math.min(172, Math.max(122, width * 0.38));
@@ -170,19 +175,28 @@ export default function OnboardingScreen() {
                       <Pressable
                         accessibilityHint={t('onboarding.languageHint')}
                         accessibilityRole="button"
-                        accessibilityState={{ selected: isSelected }}
+                        accessibilityState={{
+                          busy: continueRequested && isSelected,
+                          disabled: continueRequested,
+                          selected: isSelected,
+                        }}
+                        disabled={continueRequested}
                         key={option.value}
-                        onPress={() => setLanguage(option.value)}
+                        onPress={() => chooseLanguage(option.value)}
                         style={({ pressed }) => [
                           styles.languageButton,
                           isSelected && styles.languageButtonSelected,
                           pressed && styles.languageButtonPressed,
                         ]}>
-                        <SymbolIcon
-                          color={isSelected ? OnboardingPalette.background : OnboardingPalette.text}
-                          name="globe"
-                          size={22}
-                        />
+                        {continueRequested && isSelected ? (
+                          <ActivityIndicator color={OnboardingPalette.background} size="small" />
+                        ) : (
+                          <SymbolIcon
+                            color={isSelected ? OnboardingPalette.background : OnboardingPalette.text}
+                            name="globe"
+                            size={22}
+                          />
+                        )}
                         <ThemedText
                           numberOfLines={1}
                           style={[
@@ -199,28 +213,32 @@ export default function OnboardingScreen() {
               </Animated.View>
             ) : null}
 
-            <View style={styles.actions}>
-              <Pressable
-                accessibilityState={{ busy: continueRequested, disabled: continueRequested }}
-                accessibilityRole="button"
-                disabled={continueRequested}
-                onPress={continueToHome}
-                style={({ pressed }) => [
-                  styles.continueButton,
-                  pressed && styles.languageButtonPressed,
-                ]}>
-                {continueRequested ? <ActivityIndicator color={OnboardingPalette.background} size="small" /> : null}
-                <ThemedText style={styles.continueLabel} type="smallBold">
-                  {t('onboarding.continue')}
-                </ThemedText>
-              </Pressable>
+            {!showLanguageSelection || videoUnavailable ? (
+              <View style={styles.actions}>
+                {!showLanguageSelection ? (
+                  <Pressable
+                    accessibilityState={{ busy: continueRequested, disabled: continueRequested }}
+                    accessibilityRole="button"
+                    disabled={continueRequested}
+                    onPress={continueToHome}
+                    style={({ pressed }) => [
+                      styles.continueButton,
+                      pressed && styles.languageButtonPressed,
+                    ]}>
+                    {continueRequested ? <ActivityIndicator color={OnboardingPalette.background} size="small" /> : null}
+                    <ThemedText style={styles.continueLabel} type="smallBold">
+                      {t('onboarding.continue')}
+                    </ThemedText>
+                  </Pressable>
+                ) : null}
 
-              {videoUnavailable ? (
-                <ThemedText style={[styles.centeredText, styles.videoUnavailable]} type="small">
-                  {t('onboarding.videoUnavailable')}
-                </ThemedText>
-              ) : null}
-            </View>
+                {videoUnavailable ? (
+                  <ThemedText style={[styles.centeredText, styles.videoUnavailable]} type="small">
+                    {t('onboarding.videoUnavailable')}
+                  </ThemedText>
+                ) : null}
+              </View>
+            ) : null}
           </View>
         </ScrollView>
       </SafeAreaView>

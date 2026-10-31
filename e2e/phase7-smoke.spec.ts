@@ -20,10 +20,19 @@ async function login(page: Page, email: string, password: string) {
   await page.locator('input[type="password"]').fill(password);
   await page.getByRole('button', { name: 'Anmelden' }).click();
   await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
+  await dismissHomeTour(page);
+}
+
+async function dismissHomeTour(page: Page) {
+  const skip = page.getByRole('button', { name: 'Überspringen', exact: true });
+  if (await skip.isVisible()) await skip.click();
 }
 
 async function continueIntro(page: Page) {
-  await page.getByRole('button', { name: 'Weiter', exact: true }).click();
+  await page.getByRole('button', { name: 'Deutsch', exact: true })
+    .or(page.getByRole('button', { name: 'Weiter', exact: true })).click();
+  await expect(page.getByRole('button', { name: 'Karbala', exact: true })).toBeVisible();
+  await dismissHomeTour(page);
 }
 
 async function openHome(page: Page) {
@@ -71,6 +80,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await passwords.nth(1).fill(memberPassword);
     await page.getByRole('button', { name: 'Registrieren' }).click();
     await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
+    await dismissHomeTour(page);
 
     await page.getByText('Einstellungen', { exact: true }).click();
     await page.getByRole('button', { name: 'Abmelden' }).click();
@@ -103,9 +113,18 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
 
     await expect(page.getByText('Sprache wählen', { exact: true })).toBeVisible();
     await expect(page.locator('video')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Weiter', exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: 'Deutsch' }).click();
-    await expect(page.getByText('Sprache wählen', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('home-feature-tour')).toBeVisible();
+    await expect(page.getByText('1 von 6', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Weiter', exact: true }).click();
+    await expect(page.getByText('2 von 6', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Zurück', exact: true }).click();
+    for (let index = 0; index < 5; index += 1) {
+      await page.getByRole('button', { name: 'Weiter', exact: true }).click();
+    }
+    await page.getByRole('button', { name: 'Los geht’s', exact: true }).click();
+    await expect(page.getByTestId('home-feature-tour')).toHaveCount(0);
     await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
     await page.reload();
     await expect(page.getByText('Sprache wählen', { exact: true })).toHaveCount(0);
@@ -114,12 +133,16 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await expect(page.getByRole('button', { name: 'Weiter', exact: true })).toBeVisible();
     await page.locator('video').evaluate(video => video.dispatchEvent(new Event('ended')));
     await expect(page.getByRole('button', { name: 'Karbala' })).toBeVisible();
+    await expect(page.getByTestId('home-feature-tour')).toHaveCount(0);
     await page.getByRole('tab', { name: 'Suche' }).click();
     await expect(page.getByPlaceholder('Karbala, Ziyarah, Najaf suchen...')).toBeVisible();
     await page.getByRole('tab', { name: 'Merkliste' }).click();
     await expect(page.getByText('Noch keine Einträge')).toBeVisible();
     await page.getByRole('tab', { name: 'Einstellungen' }).click();
     await expect(page.getByText('Darstellung')).toBeVisible();
+    await page.getByRole('button', { name: 'Einführung erneut ansehen' }).click();
+    await expect(page.getByText('1 von 6', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Überspringen', exact: true }).click();
   });
 
   test('Gruppencheck von der Admin-Frage bis zur bestätigten Antwort', async ({ browser }) => {

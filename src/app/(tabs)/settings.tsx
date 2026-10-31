@@ -1,4 +1,5 @@
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
+import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Switch, View } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
@@ -11,6 +12,7 @@ import { useAuth } from "@/features/auth/auth-context";
 import { useGeneralAlarmNotifications } from "@/features/general-alarm/general-alarm-notifications-context";
 import { languageOptions, useI18n } from "@/features/i18n/i18n";
 import { ReaderPreferenceControls } from "@/features/reader/ReaderPreferenceControls";
+import { FeatureTourSlides } from "@/features/onboarding/HomeFeatureTour";
 import {
   busRoute,
   alarmRoute,
@@ -25,6 +27,8 @@ import { useTheme } from "@/hooks/use-theme";
 const themeModeOptions: ThemeMode[] = ["system", "light", "dark"];
 
 export default function SettingsScreen() {
+  const [showFeatureTour, setShowFeatureTour] = useState(false);
+  const pathname = usePathname();
   const theme = useTheme();
   const { mode, resolvedTheme, setMode } = useThemeMode();
   const { language, setLanguage, t } = useI18n();
@@ -199,7 +203,9 @@ export default function SettingsScreen() {
       <Section title={t("settings.reader")}>
         <ReaderPreferenceControls />
       </Section>
-
+      <Section title={t("homeTour.label")}>
+        <Button icon="info" label={t("homeTour.replay")} onPress={() => setShowFeatureTour(true)} variant="secondary" />
+      </Section>
       <Section title={t("settings.account")}>
         <ThemedView
           type="surface"
@@ -275,6 +281,9 @@ export default function SettingsScreen() {
           )}
         </ThemedView>
       </Section>
+      {showFeatureTour && pathname === "/settings" ? (
+        <FeatureTourSlides onDismiss={() => setShowFeatureTour(false)} />
+      ) : null}
     </Screen>
   );
 }

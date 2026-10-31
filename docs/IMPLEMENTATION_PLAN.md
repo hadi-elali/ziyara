@@ -4,6 +4,17 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 31 October 2026: First-use feature slides on Home
+
+- Add six swipeable, translated DE/EN/AR slides explaining Home/travel notices, the full daily program with dates and ordered activities immediately after Home, map/destinations, place details/search/bookmarks/reader, settings/language/notifications, and emergency help with optional location. Keep bus/group/question guidance on Home. Explain which features require sign-in without requesting permissions or triggering those features.
+- Bundle the six real iOS screenshots supplied by the user unchanged under `assets/images/onboarding/`, at 942 × 2048 pixels. Match every screenshot to its slide. Preserve the German capture contents as examples while translating surrounding explanations. Do not generate substitutes or import screenshot text into religious content data.
+- Allow tapping each preview to open a full-screen, pinch/pan/double-tap image view in the same modal using the existing image-zoom and gesture-handler dependencies. Closing it or pressing Android Back returns to the same slide without completing the tour.
+- Show the tour only after the video intro and startup guards have released Home, after local hydration and while Home is unlocked. Defer it on other routes, mandatory checks and emergency deep links. Preserve the existing video on every app launch.
+- Persist Skip/Finish/Android Back independently as the validated device-wide `ziyara.home-tour.completed.v1` Boolean. Interruptions do not count as completion. Offer replay from Settings without resetting that status.
+- Use existing symbols, theme tokens, safe areas, accessible button names, hidden inactive slides, scrollable slide content and always-visible navigation. Keep the selected page aligned after viewport resizing.
+- Add focused interaction, restart-persistence and root-guard tests, and extend the existing browser smoke. No new dependencies, routes, native configuration or backend changes; deliver the updated client without another development build. Actual native swipe and screenreader checks remain pending.
+- Validation after screenshot integration: 41 focused Jest tests in five suites, iOS/Android Hermes exports including all six screenshots, and diff checks pass. Cover screenshot enlargement, return to the selected slide and Android Back without premature completion. Lint retains four existing warnings; TypeScript reports only the existing bus-management return-type conflict at line 326. Dependencies are unchanged; the earlier local Expo alignment passed with its offline caveat and online Doctor reported seven existing patch mismatches (20/21). Native mobile is the user's priority; no further web checking. No device run of the image viewer or deployment.
+
 ## 30 October 2026: Restrict abusive emergency senders
 
 - Let admins manage 1-hour/24-hour sending restrictions or restrict until manual release in user details and directly on incoming emergencies. Require a private 5–500-character reason, display the expiry or manual-release requirement and responsible admin, and allow immediate revocation. Translate loading, pending, failure/retry and sender notices into DE/EN/AR.
@@ -731,8 +742,8 @@ Files to create or modify:
 Acceptance criteria:
 
 - Every normal app launch opens the locally bundled introduction video after the native splash, including restored accounts and admins.
-- Ask for a language only while no valid saved language exists. Choosing one persists it without leaving the first-run screen; Continue also persists an accepted default. Existing saved languages count as completed selection.
-- Later launches show only the video playing once and an immediately visible Continue button at the bottom. Automatically continue on `playToEnd`; preserve explicit confirmation for first-run language selection. Keep Continue outside all entrance animations, including on the first launch.
+- Ask for a language only while no valid saved language exists. Show no Continue button on this first-run screen: tapping a language persists it and directly requests the transition. Disable language buttons and show the chosen language as busy while startup checks settle. Video end alone must not accept the default language. Existing saved languages count as completed selection.
+- Later launches show only the video playing once and an immediately visible Continue button at the bottom. Automatically continue on `playToEnd`. Keep Continue outside all entrance animations and hide it during first-run language selection.
 - Keep the video mounted while an end/skip request waits for initial authentication and mandatory-check loading. Then release the intro guard once, letting the navigator choose Home or a real check-in/profile-error screen directly. Avoid a redundant router replacement and the green startup fallback. Use the Home theme background beneath the normal video surface; retain the readable brand fallback on playback errors.
 - A root-scoped provider remembers intro completion only for this launch. Do not read or write the old persisted completion flag; do not replay the intro on ordinary navigation or background resume in the same process.
 - Registration offers account creation, sign-in for existing accounts and an explicit guest path into the public offline guide.
@@ -742,7 +753,7 @@ Acceptance criteria:
 Tests/checks:
 
 - Jest tests for per-launch intro state, restored-account startup and mandatory-check guards.
-- Playwright smoke through first-run language selection, explicit Continue and Home; reload shows the video and immediate Continue without asking for language again, and the video-ended event opens Home automatically.
+- Playwright smoke through first-run language selection without Continue and directly into Home; reload shows the video and immediate Continue without asking for language again, and the video-ended event opens Home automatically.
 - TypeScript, lint, Expo dependency alignment, Expo Doctor and web export.
 - Manual iOS/Android/Web checks for fullscreen cropping, muted autoplay, small widths, themes, languages and Arabic text direction.
 
