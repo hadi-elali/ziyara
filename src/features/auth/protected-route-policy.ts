@@ -75,7 +75,6 @@ export function canAccessNonBlockingRoutes({
   isGroupCheckBlocking: boolean;
 }) {
   return (
-    !hasSession ||
-    (!isAuthLoading && !hasProfileError && !isGroupCheckBlocking)
+    hasSession && !isAuthLoading && !hasProfileError && !isGroupCheckBlocking
   );
 }

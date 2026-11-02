@@ -29,6 +29,7 @@ import {
   getAdminUserStats,
 } from '@/features/admin/admin-user-list';
 import { AdminSectionHeader } from '@/features/admin/AdminSectionHeader';
+import { AdminDeleteUserDialog } from '@/features/admin/AdminDeleteUserDialog';
 import { AdminPushPanel } from '@/features/admin/AdminPushPanel';
 import { AdminRegistrationPanel } from '@/features/admin/AdminRegistrationPanel';
 import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrganizationPanel';
@@ -153,6 +154,11 @@ function AdminContent() {
   const [expandedRoleUserId, setExpandedRoleUserId] = useState<string | null>(null);
   const [roleFeedback, setRoleFeedback] = useState<RoleFeedback | null>(null);
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUserSummary | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+  const [deletedUserName, setDeletedUserName] = useState<string | null>(null);
+  const deletionInProgress = useRef(false);
   const usersRequestSequence = useRef(0);
   const hasError = readErrorMessage !== null;
   const [expandedSections, setExpandedSections] = useState<Record<AdminSection, boolean>>({
@@ -234,6 +240,7 @@ function AdminContent() {
 
   const assignRole = useCallback(
     async (userId: string, role: AppRole) => {
+      if (deletionInProgress.current) return;
       setRoleFeedback(null);
       setUpdatingRoleUserId(userId);
 
@@ -273,6 +280,58 @@ function AdminContent() {
     [profile, refreshProfile],
   );
 
+  const deleteUser = async () => {
+    if (!deleteTarget || deletionInProgress.current || updatingRoleUserId !== null) return;
+    if (deleteTarget.user_id === profile?.user_id) {
+      setDeleteErrorMessage(t('admin.deleteUser.ownAccount'));
+      return;
+    }
+
+    const target = deleteTarget;
+    deletionInProgress.current = true;
+    setDeletingUserId(target.user_id);
+    setDeleteErrorMessage(null);
+
+    try {
+      const { data, error } = await supabase.rpc('admin_delete_user', {
+        p_user_id: target.user_id,
+      });
+      if (error) {
+        const messageKey = error.code === '42501'
+          ? 'admin.deleteUser.denied'
+          : error.code === 'P0002'
+            ? 'admin.deleteUser.notFound'
+            : error.code === '22023'
+              ? 'admin.deleteUser.ownAccount'
+              : error.code === 'P0001'
+                ? 'admin.deleteUser.lastAdmin'
+                : 'admin.deleteUser.error';
+        setDeleteErrorMessage(t(messageKey));
+        return;
+      }
+      if (data !== target.user_id) {
+        setDeleteErrorMessage(t('admin.deleteUser.error'));
+        return;
+      }
+
+      // Earlier list reads must not restore an account after its confirmed deletion.
+      usersRequestSequence.current += 1;
+      setReadErrorMessage(null);
+      setIsLoading(false);
+      setUsers((current) => current.filter((user) => user.user_id !== target.user_id));
+      setExpandedUserId((current) => current === target.user_id ? null : current);
+      setExpandedRoleUserId((current) => current === target.user_id ? null : current);
+      setRoleFeedback((current) => current?.userId === target.user_id ? null : current);
+      setDeletedUserName(target.display_name);
+      setDeleteTarget(null);
+    } catch {
+      setDeleteErrorMessage(t('admin.deleteUser.error'));
+    } finally {
+      deletionInProgress.current = false;
+      setDeletingUserId(null);
+    }
+  };
+
   useEffect(() => {
     const initialLoadTimeout = setTimeout(() => void loadUsers(), 0);
 
@@ -308,6 +367,7 @@ function AdminContent() {
           expandedUserId,
           roleFeedback,
           updatingRoleUserId,
+          deletingUserId,
         }}
         keyboardShouldPersistTaps="handled"
         keyExtractor={(item) => item.key}
@@ -574,6 +634,11 @@ function AdminContent() {
                   statusColor={hasError ? 'danger' : 'textSecondary'}
                   title={t('admin.section.users.title')}
                 />
+                {deletedUserName ? (
+                  <ThemedText accessibilityLiveRegion="polite" themeColor="success" type="small">
+                    {t('admin.deleteUser.deleted', { name: deletedUserName })}
+                  </ThemedText>
+                ) : null}
 
                 {expandedSections.users ? (
                   isLoading && !hasLoaded ? (
@@ -684,6 +749,13 @@ function AdminContent() {
               expanded={expandedUserId === user.user_id}
               key={user.user_id}
               onAssignRole={(role) => void assignRole(user.user_id, role)}
+              onDelete={() => {
+                setDeleteTarget(user);
+                setDeleteErrorMessage(null);
+                setDeletedUserName(null);
+              }}
+              deletionDisabled={updatingRoleUserId !== null || deletingUserId !== null}
+              ownAccount={profile?.user_id === user.user_id}
               onToggleDetails={() => toggleUserDetails(user.user_id)}
               onToggleRoleAssignment={() => {
                 setRoleFeedback(null);
@@ -696,7 +768,7 @@ function AdminContent() {
                 roleFeedback?.userId === user.user_id ? roleFeedback : null
               }
               roleChoicesDisabled={
-                updatingRoleUserId !== null
+                updatingRoleUserId !== null || deletingUserId !== null
               }
               updatingRole={updatingRoleUserId === user.user_id}
               user={user}
@@ -728,28 +800,43 @@ function AdminContent() {
           />
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+      {deleteTarget ? (
+        <AdminDeleteUserDialog
+          errorMessage={deleteErrorMessage}
+          isDeleting={deletingUserId !== null}
+          onCancel={() => { if (!deletionInProgress.current) setDeleteTarget(null); }}
+          onConfirm={() => void deleteUser()}
+          user={deleteTarget}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
 
 function AdminUserDisclosure({
+  deletionDisabled,
   expanded,
   onAssignRole,
+  onDelete,
   onToggleDetails,
   onToggleRoleAssignment,
   roleAssignmentExpanded,
   roleChoicesDisabled,
   roleFeedback,
+  ownAccount,
   updatingRole,
   user,
 }: {
+  deletionDisabled: boolean;
   expanded: boolean;
   onAssignRole: (role: AppRole) => void;
+  onDelete: () => void;
   onToggleDetails: () => void;
   onToggleRoleAssignment: () => void;
   roleAssignmentExpanded: boolean;
   roleChoicesDisabled: boolean;
   roleFeedback: RoleFeedback | null;
+  ownAccount: boolean;
   updatingRole: boolean;
   user: AdminUserSummary;
 }) {
@@ -906,6 +993,18 @@ function AdminUserDisclosure({
               {roleFeedback.type === 'success'
                 ? t('admin.roleAssignment.saved')
                 : roleFeedback.message}
+            </ThemedText>
+          ) : null}
+          <Button
+            disabled={deletionDisabled || ownAccount}
+            icon="close"
+            label={t('admin.deleteUser.action')}
+            onPress={onDelete}
+            variant="danger"
+          />
+          {ownAccount ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('admin.deleteUser.ownAccount')}
             </ThemedText>
           ) : null}
         </View>

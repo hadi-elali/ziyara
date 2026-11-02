@@ -32,7 +32,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
   const theme = useTheme();
   const { t } = useI18n();
   const {
-    continueWithoutAccount,
+    signOut,
     hasProfileError,
     isAdmin,
     profileRefreshError,
@@ -47,32 +47,32 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     respond,
     syncErrorMessage,
   } = useGroupCheck();
-  const [continueWithoutAccountError, setContinueWithoutAccountError] = useState<string | null>(null);
-  const [isContinuingWithoutAccount, setIsContinuingWithoutAccount] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleContinueWithoutAccount = async () => {
-    if (isContinuingWithoutAccount) {
+  const handleSignOut = async () => {
+    if (isSigningOut) {
       return;
     }
 
-    setContinueWithoutAccountError(null);
-    setIsContinuingWithoutAccount(true);
+    setSignOutError(null);
+    setIsSigningOut(true);
 
     try {
-      const { error } = await continueWithoutAccount();
+      const { error } = await signOut();
 
       if (error) {
-        setContinueWithoutAccountError(error.message);
+        setSignOutError(error.message);
         return;
       }
 
-      router.replace('/');
+      router.replace('/login');
     } catch (error) {
-      setContinueWithoutAccountError(getOriginalErrorMessage(error));
+      setSignOutError(getOriginalErrorMessage(error));
     } finally {
-      setIsContinuingWithoutAccount(false);
+      setIsSigningOut(false);
     }
   };
 
@@ -117,29 +117,29 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
                   : syncErrorMessage}
               </ThemedText>
               <Button
-                disabled={isContinuingWithoutAccount}
+                disabled={isSigningOut}
                 icon="refresh"
                 label={t(hasProfileError ? 'auth.profileRetry' : 'groupCheck.retry')}
                 onPress={() => void (hasProfileError ? refreshProfile() : refresh())}
               />
               {hasProfileError ? (
                 <Button
-                  disabled={isContinuingWithoutAccount}
+                  disabled={isSigningOut}
                   icon="logout"
-                  label={t('auth.signOutAndContinueWithoutAccount')}
-                  onPress={() => void handleContinueWithoutAccount()}
+                  label={t('settings.signOut')}
+                  onPress={() => void handleSignOut()}
                   variant="secondary"
                 />
               ) : null}
-              {isContinuingWithoutAccount ? (
+              {isSigningOut ? (
                 <ActivityIndicator color={theme.accent} />
               ) : null}
-              {continueWithoutAccountError ? (
+              {signOutError ? (
                 <ThemedText
                   accessibilityLiveRegion="polite"
                   themeColor="danger"
                   type="small">
-                  {continueWithoutAccountError}
+                  {signOutError}
                 </ThemedText>
               ) : null}
             </Card>

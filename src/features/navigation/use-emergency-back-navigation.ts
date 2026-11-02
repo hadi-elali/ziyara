@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 import { BackHandler, Platform } from 'react-native';
 
-type EmergencyBackFallback = '/' | '/check-in' | '/onboarding' | '/startup';
+type EmergencyBackFallback = '/' | '/check-in' | '/login' | '/onboarding' | '/startup';
 
 /** A notification can leave an emergency screen as the only route after startup guards settle. */
 export function useEmergencyBackNavigation(pathname: string, fallback: EmergencyBackFallback) {

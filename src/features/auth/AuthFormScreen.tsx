@@ -44,7 +44,6 @@ import {
   type ProtectedRoutePath,
 } from "@/features/navigation/routes";
 import { getOriginalErrorMessage } from "@/features/network/supabase-read";
-import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { useTheme } from "@/hooks/use-theme";
 
 type AuthMode = "login" | "register";
@@ -63,7 +62,6 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
   const { t } = useI18n();
   const { signIn, signUp } = useAuth();
   const registration = useRegistrationAvailability();
-  const { completeOnboarding } = useOnboarding();
   const [firstName, setFirstName] = useState("");
   const [surname, setSurname] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -207,8 +205,6 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
           const stillEnabled = await registration.refresh();
           if (stillEnabled === true) showFeedback(result.error.message, true);
         } else {
-          completeOnboarding();
-
           if (result.requiresEmailConfirmation) {
             setPassword("");
             setPasswordConfirmation("");
@@ -220,8 +216,6 @@ export function AuthFormScreen({ mode, returnTo }: AuthFormScreenProps) {
 
         if (result.error) {
           showFeedback(result.error.message, true);
-        } else {
-          completeOnboarding();
         }
       }
     } catch (error) {

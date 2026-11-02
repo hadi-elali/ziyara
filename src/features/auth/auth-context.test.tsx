@@ -17,6 +17,7 @@ import {
   type AuthChangeEvent,
   type Session,
   type User,
+  type UserResponse,
 } from '@supabase/supabase-js';
 import { useEffect } from 'react';
 import { AppState, Platform, type AppStateStatus, type NativeEventSubscription } from 'react-native';
@@ -25,7 +26,7 @@ import type { Mock } from 'jest-mock';
 
 import type { UserProfile } from '@/domain/database';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
-import { readPersistedSession, supabase } from '@/features/auth/supabase';
+import { readPersistedSession, supabase, verifySessionUser } from '@/features/auth/supabase';
 
 jest.mock('expo-linking', () => ({
   addEventListener: jest.fn(),
@@ -35,6 +36,7 @@ jest.mock('expo-linking', () => ({
 
 jest.mock('@/features/auth/supabase', () => ({
   readPersistedSession: jest.fn(),
+  verifySessionUser: jest.fn(),
   supabase: {
     auth: {
       exchangeCodeForSession: jest.fn(),
@@ -100,6 +102,7 @@ type Deferred<T> = {
 
 const mockSupabase = supabase as unknown as MockSupabase;
 const mockReadPersistedSession = jest.mocked(readPersistedSession);
+const mockVerifySessionUser = jest.mocked(verifySessionUser);
 const mockLinking = Linking as unknown as {
   addEventListener: MockFunction;
   createURL: MockFunction;
@@ -114,6 +117,7 @@ let appStateListeners: Set<(state: AppStateStatus) => void>;
 let authStateChangeCallback: AuthStateChangeCallback | null;
 let currentAuthValue: AuthValue | null;
 let profileChangeCallback: (() => void) | null;
+let profileDeleteCallback: ((payload: { old: { id: number } }) => void) | null;
 let profileResponses: Promise<ProfileQueryResponse>[];
 let renderer: ReactTestRenderer | null;
 
@@ -267,6 +271,7 @@ describe('AuthProvider profile synchronization', () => {
     authStateChangeCallback = null;
     currentAuthValue = null;
     profileChangeCallback = null;
+    profileDeleteCallback = null;
     profileResponses = [];
     renderer = null;
 
@@ -291,6 +296,9 @@ describe('AuthProvider profile synchronization', () => {
         error: null,
       }),
     );
+    mockVerifySessionUser.mockReset().mockImplementation(() => Promise.resolve({
+      data: { user: currentAuthValue?.session?.user ?? createSession('user-a').user }, error: null,
+    }));
     mockSupabase.auth.onAuthStateChange.mockImplementation(
       (callback: AuthStateChangeCallback) => {
         authStateChangeCallback = callback;
@@ -364,8 +372,9 @@ describe('AuthProvider profile synchronization', () => {
         subscribe: jest.fn(),
       };
       channel.on.mockImplementation(
-        (_type: string, _filter: object, callback: () => void) => {
-          profileChangeCallback = callback;
+        (_type: string, filter: { event: string }, callback: () => void) => {
+          if (filter.event === 'DELETE') profileDeleteCallback = callback;
+          else profileChangeCallback = callback;
           return channel;
         },
       );
@@ -440,6 +449,152 @@ describe('AuthProvider profile synchronization', () => {
     expect(mockReadPersistedSession).not.toHaveBeenCalled();
   });
 
+  it('prüft gespeicherte Tokens serverseitig, bevor Profil oder Inhalte freigegeben werden', async () => {
+    const session = createSession('user-a');
+    const verification = createDeferred<UserResponse>();
+    mockSupabase.auth.getSession.mockImplementation(async () => ({ data: { session }, error: null }));
+    mockVerifySessionUser.mockImplementationOnce(() => verification.promise);
+    profileResponses.push(Promise.resolve({ data: createProfile('user-a'), error: null }));
+    await renderAuthProvider();
+    expect(getAuthValue()).toMatchObject({ isLoading: true, profile: null });
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+
+    await act(async () => {
+      verification.resolve({ data: { user: null }, error: new AuthApiError('User not found', 403, 'user_not_found') });
+      await flushAsyncWork();
+    });
+    expect(getAuthValue()).toMatchObject({ isLoading: false, session: null, profile: null });
+    expect(mockSupabase.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+  });
+
+  it('behält bei einer nicht erreichbaren Auth-Prüfung die Zugangsdaten und sperrt Inhalte zur Wiederholung', async () => {
+    const session = createSession('user-a');
+    mockSupabase.auth.getSession.mockImplementation(async () => ({ data: { session }, error: null }));
+    mockVerifySessionUser.mockImplementationOnce(async () => ({
+      data: { user: null }, error: new AuthRetryableFetchError('Offline', 0),
+    }));
+    await renderAuthProvider();
+    await waitForCondition(() => getAuthValue().hasProfileError);
+    expect(getAuthValue()).toMatchObject({ session, profile: null, isAdmin: false });
+    expect(mockSupabase.auth.signOut).not.toHaveBeenCalled();
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+
+    profileResponses.push(Promise.resolve({ data: createProfile('user-a'), error: null }));
+    await act(async () => { await getAuthValue().refreshProfile(); });
+    expect(getAuthValue()).toMatchObject({ hasProfileError: false, profile: createProfile('user-a') });
+  });
+
+  it('meldet ein Konto nach einer erfolgreich bestätigten fehlenden Profilzeile ab', async () => {
+    await renderAuthProvider();
+    profileResponses.push(Promise.resolve({ data: null, error: null }));
+    await emitAuthState(createSession('user-a'));
+    await waitForCondition(() => getAuthValue().session === null);
+    expect(mockSupabase.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(getAuthValue().profile).toBeNull();
+  });
+
+  it('prüft das eigene gelöschte Profil unmittelbar über Realtime und ignoriert fremde Löschungen', async () => {
+    const profile = createProfile('user-a');
+    await renderAuthProvider();
+    await loadInitialProfile(profile);
+    const previousChecks = mockVerifySessionUser.mock.calls.length;
+    await act(async () => { profileDeleteCallback?.({ old: { id: 999 } }); });
+    expect(mockVerifySessionUser).toHaveBeenCalledTimes(previousChecks);
+    mockVerifySessionUser.mockImplementationOnce(async () => ({
+      data: { user: null }, error: new AuthApiError('User not found', 403, 'user_not_found'),
+    }));
+    await act(async () => {
+      profileDeleteCallback?.({ old: { id: profile.id } });
+      await flushAsyncWork();
+    });
+    expect(getAuthValue()).toMatchObject({ session: null, profile: null, isAdmin: false });
+  });
+
+  it('meldet ein inzwischen gelöschtes Konto bei App-Rückkehr auch ohne Realtime-Ereignis ab', async () => {
+    await renderAuthProvider();
+    await loadInitialProfile(createProfile('user-a'));
+    mockVerifySessionUser.mockImplementationOnce(async () => ({
+      data: { user: null }, error: new AuthApiError('User not found', 403, 'user_not_found'),
+    }));
+    await act(async () => { emitAppResume(); await flushAsyncWork(); });
+    expect(getAuthValue()).toMatchObject({ session: null, profile: null });
+  });
+
+  it('hält die Anmeldung während alter Sessionbereinigung gesperrt und wartet mit einem neuen Login', async () => {
+    await renderAuthProvider();
+    await loadInitialProfile(createProfile('user-a'));
+    const cleanup = createDeferred<{ error: null }>();
+    mockSupabase.auth.signOut.mockImplementationOnce(() => cleanup.promise);
+    mockVerifySessionUser.mockImplementationOnce(async () => ({
+      data: { user: null }, error: new AuthApiError('User not found', 403, 'user_not_found'),
+    }));
+    await act(async () => { emitAppResume(); await flushAsyncWork(); });
+    expect(getAuthValue()).toMatchObject({ session: null, profile: null, isLoading: true });
+
+    let nextLogin: Promise<unknown> | undefined;
+    await act(async () => {
+      nextLogin = getAuthValue().signIn('user-b@example.com', 'Passwort123');
+      await Promise.resolve();
+    });
+    expect(mockSupabase.auth.signInWithPassword).not.toHaveBeenCalled();
+
+    const nextSession = createSession('user-b');
+    profileResponses.push(Promise.resolve({ data: createProfile('user-b'), error: null }));
+    mockSupabase.auth.signInWithPassword.mockImplementationOnce(async () => {
+      authStateChangeCallback?.('SIGNED_IN', nextSession);
+      return { error: null };
+    });
+    await act(async () => {
+      cleanup.resolve({ error: null });
+      await nextLogin;
+      await flushAsyncWork();
+    });
+    await waitForCondition(() => getAuthValue().profile?.user_id === 'user-b');
+    expect(getAuthValue()).toMatchObject({ session: nextSession, isLoading: false });
+  });
+
+  it('erkennt eine verpasste Kontolöschung beim Vordergrundabgleich nach 30 Sekunden', async () => {
+    const originalState = AppState.currentState;
+    AppState.currentState = 'active';
+    try {
+      const intervals = jest.spyOn(globalThis, 'setInterval');
+      await renderAuthProvider();
+      await loadInitialProfile(createProfile('user-a'));
+      const poll = intervals.mock.calls.find(([, delay]) => delay === 30_000)?.[0];
+      expect(typeof poll).toBe('function');
+      mockVerifySessionUser.mockImplementationOnce(async () => ({
+        data: { user: null }, error: new AuthApiError('User not found', 403, 'user_not_found'),
+      }));
+      await act(async () => {
+        if (typeof poll === 'function') poll();
+        await flushAsyncWork();
+      });
+      expect(getAuthValue()).toMatchObject({ session: null, profile: null });
+    } finally {
+      AppState.currentState = originalState;
+    }
+  });
+
+  it('lässt eine verspätete Tokenablehnung nicht die erneuerte Anmeldung desselben Kontos löschen', async () => {
+    const profile = createProfile('user-a');
+    await renderAuthProvider();
+    await loadInitialProfile(profile);
+    const outdated = createDeferred<UserResponse>();
+    mockVerifySessionUser.mockImplementationOnce(() => outdated.promise);
+    await act(async () => { void getAuthValue().refreshProfile(); await Promise.resolve(); });
+    profileResponses.push(Promise.resolve({ data: profile, error: null }));
+    await emitAuthState({ ...createSession('user-a'), access_token: 'renewed-token' }, 'TOKEN_REFRESHED');
+    await waitForCondition(() => !getAuthValue().isRefreshing);
+    await act(async () => {
+      outdated.resolve({ data: { user: null }, error: new AuthApiError('Session missing', 403, 'session_not_found') });
+      await flushAsyncWork();
+    });
+    expect(getAuthValue().session?.access_token).toBe('renewed-token');
+    expect(getAuthValue().profile).toEqual(profile);
+    expect(mockSupabase.auth.signOut).not.toHaveBeenCalled();
+  });
+
   it.each(['android', 'ios'] as const)(
     'erhält auf %s nach einer Pause die Anmeldung bei einem temporären Refreshfehler',
     async (platform) => {
@@ -451,16 +606,14 @@ describe('AuthProvider profile synchronization', () => {
         authStateChangeCallback?.('INITIAL_SESSION', null);
         return { data: { session: null }, error: new AuthRetryableFetchError('Offline', 0) };
       });
-      profileResponses.push(
-        Promise.resolve({ data: null, error: createPostgrestError('Netzwerkfehler') }),
-      );
-
       await renderAuthProvider();
       await waitForCondition(() => getAuthValue().hasProfileError);
 
       expect(getAuthValue()).toMatchObject({ session: storedSession, profile: null, isAdmin: false });
       expect(mockSupabase.auth.signOut).not.toHaveBeenCalled();
       expect(mockSupabase.auth.setSession).not.toHaveBeenCalled();
+      expect(mockVerifySessionUser).not.toHaveBeenCalled();
+      expect(mockSupabase.from).not.toHaveBeenCalled();
 
       // Once the SDK refresh succeeds, retry the failed profile read automatically.
       profileResponses.push(Promise.resolve({ data: profile, error: null }));
@@ -731,7 +884,7 @@ describe('AuthProvider profile synchronization', () => {
     });
   });
 
-  it('entfernt bei einem initialen Profilfehler nur die lokale Session für den öffentlichen Guide', async () => {
+  it('erlaubt bei einem initialen Profilfehler die lokale Abmeldung zur Anmeldung', async () => {
     profileResponses.push(
       Promise.resolve({ data: null, error: createPostgrestError('JWT abgelehnt') }),
     );
@@ -743,7 +896,7 @@ describe('AuthProvider profile synchronization', () => {
     expect(getAuthValue().profileRefreshError?.message).toBe('JWT abgelehnt');
 
     await act(async () => {
-      await expect(getAuthValue().continueWithoutAccount()).resolves.toEqual({ error: null });
+      await expect(getAuthValue().signOut()).resolves.toEqual({ error: null });
       await flushAsyncWork();
     });
 

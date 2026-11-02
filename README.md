@@ -1,8 +1,8 @@
 # Shia Ziyarah Iraq
 
-Produktionsorientierte Expo-SDK-57-App für eine schiitische Ziyarah-Reise im Irak. Stand dieser Dokumentation: 15. Oktober 2026.
+Produktionsorientierte Expo-SDK-57-App für eine schiitische Ziyarah-Reise im Irak. Stand dieser Dokumentation: 2. November 2026.
 
-Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, Einstellungs-, About-, Disclaimer- und Quelleninhalten lokal gebündelt und startet ohne Anmeldung sowie ohne Supabase-Verbindung. Konto-, Tagesprogramm-, Bus-, Reisegruppen-, Generalalarm-, Gruppencheck-, Fragerunden- und Administrationsfunktionen bleiben durch Supabase Auth, Row Level Security und serverseitig geprüfte RPCs geschützt.
+Die gesamte App setzt eine gültige Anmeldung voraus. Ohne Anmeldung sind ausschließlich Login, Registrierung und Passwort-Recovery erreichbar. Die Orts-, Stadt-, Such-, Lesezeichen- und Readerinhalte bleiben lokal gebündelt; beim Start wird das gespeicherte Konto serverseitig geprüft. Konto-, Tagesprogramm-, Bus-, Reisegruppen-, Generalalarm-, Gruppencheck-, Fragerunden- und Administrationsfunktionen bleiben zusätzlich durch Row Level Security und serverseitig geprüfte RPCs geschützt.
 
 ## Dokumentation
 
@@ -11,12 +11,13 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md): ursprüngliche Roadmap; nicht ungeprüft als Ist-Zustand verwenden
 - [`docs/GENERAL_ALARM.md`](./docs/GENERAL_ALARM.md): Push-/Scheduler-Aktivierung und verbindliche Plattformgrenzen
 - [`docs/EMERGENCY_ALERTS.md`](./docs/EMERGENCY_ALERTS.md): Notfall-Empfänger, Push und produktive Bereitstellung
+- [`docs/USER_ADMINISTRATION.md`](./docs/USER_ADMINISTRATION.md): Benutzer löschen, Anmeldung und Bereitstellung
 
 ## Aktuell umgesetzt
 
-### Öffentlicher Offline-Guide
+### Lokal gebündelter Guide mit Anmeldung
 
-- Start/Guide, native Karte beziehungsweise Web-Fallback, Suche, Lesezeichen, Einstellungen, Städte, Orte, Reader, About, Disclaimer und Quellen funktionieren ohne Session.
+- Start/Guide, native Karte beziehungsweise Web-Fallback, Suche, Lesezeichen, Einstellungen, Städte, Orte, Reader, About, Disclaimer und Quellen sind ausschließlich mit Session erreichbar. Das Intro erscheint erst nach erfolgreicher Kontoprüfung.
 - Orts-, Quellen- und Readerdaten sowie Bilder sind im App-Bundle enthalten. Bookmarks, Sprache, Theme, Reader-Einstellungen und Lesepositionen werden über einen race-sicheren AsyncStorage-Store lokal gespeichert.
 - Supabase-Lesezugriffe besitzen einen 10-Sekunden-Timeout mit `AbortController`/`abortSignal`. Lade-, Offline-, Timeout- und Serverzustände werden getrennt behandelt.
 - Geschützte Screens verwenden gezielte Route Guards und leiten ohne Session zum Login mit geprüftem internem Rücksprungziel weiter.
@@ -27,7 +28,8 @@ Der Guide ist mit seinen Orts-, Stadt-, Karten-, Such-, Lesezeichen-, Reader-, E
 - Registrierung, Login und Kontoverwaltung unterstützen Anzeigename, `member_type`, `party_size`, Kofferanzahl, E-Mail und Passwort. Die Kofferanzahl gilt für alle durch das Konto vertretenen Personen, kann bei der Registrierung `0` bis `50` betragen und später über die Kontoseite in den Einstellungen geändert werden. Profile können die Rollen `user`, `medical_staff`, `organization_team`, `scholar` (Gelehrter) und `admin` besitzen.
 - Admins können eigenständige Benutzerkonten im Punkt **Familien** zu benannten Familien zusammenfassen. Ein Konto gehört höchstens einer Familie; eine neue Zuordnung verschiebt es atomar aus der bisherigen Familie. Diese Kontofamilien bleiben von `party_size` und Reisegruppen getrennt und können unter **Gruppen & Gruppenleitung** sowie **Fahrten & Busse** als Einheit ausgewählt werden.
 - „Passwort vergessen“ und der vollständige Recovery-Deep-Link laufen ausschließlich über `/reset-password` beziehungsweise `ziyara:///reset-password`. Normale Login-/Signup-Links werden nicht als Recovery-Link behandelt; nach erfolgreicher Passwortänderung wird die lokale Session entfernt.
-- Nutzer können ausschließlich das eigene Konto über `supabase/functions/delete-account` löschen. Die Function nimmt keine Ziel-User-ID an, prüft den Bearer-Token selbst, schützt den letzten Admin und hält Service-Role-Zugangsdaten vollständig aus dem Client.
+- Nutzer löschen ihr eigenes Konto weiterhin über `supabase/functions/delete-account`. Zusätzlich können Admins unter **Benutzer → Details → Benutzer löschen** andere Konten nach Bestätigung endgültig entfernen. Die neue RPC `admin_delete_user` prüft die aktuelle Adminrolle und schützt das eigene Konto sowie den letzten Admin. Die Migration `20261102000000_allow_admin_user_deletion.sql` muss vor dem aktualisierten Client bereitgestellt werden.
+- Gelöschte Konten verlieren ihre Sessions und Refresh-Tokens. Der Client prüft das Konto beim Start, bei App-Rückkehr und regelmäßig im Vordergrund; bestätigte Löschungen entfernen die lokale Anmeldung und öffnen Login.
 
 ### Gruppencheck und anonyme Fragerunde
 

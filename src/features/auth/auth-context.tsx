@@ -1,6 +1,7 @@
 import {
   FunctionsHttpError,
   isAuthRetryableFetchError,
+  isAuthSessionMissingError,
   type AuthError,
   type PostgrestError,
   type Session,
@@ -25,7 +26,7 @@ import {
   parsePasswordRecoveryLink,
   passwordRecoveryRedirectUrl,
 } from '@/features/auth/password-recovery-link';
-import { readPersistedSession, supabase } from '@/features/auth/supabase';
+import { readPersistedSession, supabase, verifySessionUser } from '@/features/auth/supabase';
 import { withSupabaseReadTimeout } from '@/features/network/supabase-read';
 
 type AuthResult = {
@@ -56,7 +57,6 @@ type AuthContextValue = {
   changeEmail: (currentPassword: string, newEmail: string) => Promise<AuthResult>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<AuthResult>;
   completePasswordRecovery: (newPassword: string) => Promise<AuthResult>;
-  continueWithoutAccount: () => Promise<AuthResult>;
   deleteAccount: () => Promise<DeleteAccountResult>;
   handlePasswordRecoveryUrl: (url: string) => Promise<boolean>;
   hasCheckedPasswordRecoveryLink: boolean;
@@ -118,6 +118,15 @@ const initialPasswordRecoveryState: PasswordRecoveryState = {
   status: 'idle',
 };
 
+function isRejectedSession(error: AuthError) {
+  return (
+    isAuthSessionMissingError(error) ||
+    error.status === 401 || error.status === 403 || error.status === 404 ||
+    ['bad_jwt', 'user_not_found', 'session_not_found', 'user_banned',
+      'refresh_token_not_found', 'refresh_token_already_used'].includes(error.code ?? '')
+  );
+}
+
 function getProfileRefreshError(error: unknown) {
   if (error instanceof Error) {
     return error;
@@ -163,6 +172,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const profileSyncStateRef = useRef(initialProfileSyncState);
   const profileRequestSequence = useRef(0);
   const sessionUserIdRef = useRef<string | null>(null);
+  const sessionRef = useRef<Session | null>(null);
+  const pendingSessionCleanup = useRef<Promise<void> | null>(null);
 
   const updateProfileSyncState = useCallback(
     (update: (current: ProfileSyncState) => ProfileSyncState) => {
@@ -176,6 +187,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const applySession = useCallback(
     (nextSession: Session | null) => {
       const nextUserId = nextSession?.user.id ?? null;
+      const hasNewAccessToken = sessionRef.current?.access_token !== nextSession?.access_token;
+      sessionRef.current = nextSession;
 
       if (sessionUserIdRef.current !== nextUserId) {
         sessionUserIdRef.current = nextUserId;
@@ -186,12 +199,32 @@ export function AuthProvider({ children }: PropsWithChildren) {
           status: nextUserId ? 'loading' : 'idle',
           userId: nextUserId,
         }));
+      } else if (hasNewAccessToken) {
+        // A delayed rejection of the previous token cannot revoke its renewal.
+        profileRequestSequence.current += 1;
       }
 
       setSession(nextSession);
     },
     [updateProfileSyncState],
   );
+
+  const discardRejectedSession = useCallback(async () => {
+    // A new login must wait until the SDK finishes removing the old credentials.
+    setIsSessionLoading(true);
+    applySession(null);
+    const cleanup = supabase.auth.signOut({ scope: 'local' }).then(() => undefined);
+    pendingSessionCleanup.current = cleanup;
+
+    try {
+      await cleanup;
+    } finally {
+      if (pendingSessionCleanup.current === cleanup) {
+        pendingSessionCleanup.current = null;
+        setIsSessionLoading(false);
+      }
+    }
+  }, [applySession]);
 
   const handlePasswordRecoveryUrl = useCallback(
     async (url: string) => {
@@ -216,6 +249,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         return true;
       }
 
+      await pendingSessionCleanup.current?.catch(() => undefined);
       const result =
         recoveryLink.kind === 'implicit'
           ? await supabase.auth.setSession({
@@ -282,7 +316,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           });
         }
 
-        setIsSessionLoading(false);
+        setIsSessionLoading(Boolean(pendingSessionCleanup.current));
       }
     });
 
@@ -313,7 +347,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       })
       .finally(() => {
         if (isMounted) {
-          setIsSessionLoading(false);
+          setIsSessionLoading(Boolean(pendingSessionCleanup.current));
         }
       });
 
@@ -381,7 +415,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [handlePasswordRecoveryUrl]);
 
   const refreshProfile = useCallback(async () => {
-    const userId = sessionUserIdRef.current;
+    const currentSession = sessionRef.current;
+    const userId = currentSession?.user.id;
     const requestSequence = ++profileRequestSequence.current;
 
     if (!userId) {
@@ -406,6 +441,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
 
     try {
+      if (currentSession.expires_at && currentSession.expires_at <= Date.now() / 1000 + 30) {
+        // The main SDK owns token renewal. Do not mistake an expired token for
+        // deletion or feed an old token into its shared authentication state.
+        throw new Error('Die Anmeldung wird erneuert. Bitte versuche es erneut.');
+      }
+
+      // getSession can restore a still-unexpired JWT for a deleted account.
+      // Verify the account with Auth before trusting any stored profile/role.
+      const { data: authData, error: authError } = await withSupabaseReadTimeout((signal) =>
+        verifySessionUser(currentSession.access_token, signal),
+      );
+
+      if (requestSequence !== profileRequestSequence.current || sessionUserIdRef.current !== userId) {
+        return;
+      }
+
+      if ((authError && isRejectedSession(authError)) || (!authError && authData.user?.id !== userId)) {
+        await discardRejectedSession();
+        return;
+      }
+
+      if (authError) throw authError;
+
       const { data, error } = await withSupabaseReadTimeout((signal) =>
         supabase
           .from('profiles')
@@ -423,18 +481,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
         requestSequence === profileRequestSequence.current &&
         sessionUserIdRef.current === userId
       ) {
+        if (!data) {
+          // A successful empty read means this account no longer has a profile.
+          await discardRejectedSession();
+          return;
+        }
+
         updateProfileSyncState((current) => {
           if (current.userId !== userId) {
             return current;
-          }
-
-          if (!data) {
-            return {
-              error: new Error('Das Profil wurde nicht gefunden.'),
-              profile: null,
-              status: 'error',
-              userId,
-            };
           }
 
           return { error: null, profile: data, status: 'ready', userId };
@@ -463,7 +518,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         });
       }
     }
-  }, [updateProfileSyncState]);
+  }, [discardRejectedSession, updateProfileSyncState]);
 
   useEffect(() => {
     if (!session?.user.id || isSessionLoading) {
@@ -497,20 +552,52 @@ export function AuthProvider({ children }: PropsWithChildren) {
         },
         () => void refreshProfile(),
       )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'profiles' },
+        (payload) => {
+          // DELETE events cannot use a Realtime filter; only the primary key
+          // is available under RLS with the default replica identity.
+          if (payload.old.id === profileSyncStateRef.current.profile?.id) {
+            void refreshProfile();
+          }
+        },
+      )
       .subscribe();
     const appStateSubscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         void refreshProfile();
       }
     });
+    const refreshWhenVisible = () => {
+      if (Platform.OS === 'web'
+        ? typeof document === 'undefined' || document.visibilityState === 'visible'
+        : AppState.currentState === 'active') {
+        void refreshProfile();
+      }
+    };
+    const refreshInterval = setInterval(refreshWhenVisible, 30_000);
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.addEventListener('focus', refreshWhenVisible);
+      window.addEventListener('online', refreshWhenVisible);
+      document.addEventListener('visibilitychange', refreshWhenVisible);
+    }
 
     return () => {
+      clearInterval(refreshInterval);
       appStateSubscription.remove();
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.removeEventListener('focus', refreshWhenVisible);
+        window.removeEventListener('online', refreshWhenVisible);
+        document.removeEventListener('visibilitychange', refreshWhenVisible);
+      }
       void supabase.removeChannel(channel);
     };
   }, [refreshProfile, session?.user.id]);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    await pendingSessionCleanup.current?.catch(() => undefined);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   }, []);
@@ -529,6 +616,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       familyMembers?: RegistrationFamilyMemberInput[],
       birthDate?: string,
     ) => {
+      await pendingSessionCleanup.current?.catch(() => undefined);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -561,20 +649,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     if (!error) {
       applySession(null);
-    }
-
-    return { error };
-  }, [applySession]);
-
-  const continueWithoutAccount = useCallback(async () => {
-    const { error } = await supabase.auth.signOut({ scope: 'local' });
-
-    if (!error) {
-      applySession(null);
-      setPasswordRecoveryState({
-        ...initialPasswordRecoveryState,
-        hasCheckedLink: true,
-      });
     }
 
     return { error };
@@ -814,7 +888,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       changeEmail,
       changePassword,
       completePasswordRecovery,
-      continueWithoutAccount,
       deleteAccount,
       handlePasswordRecoveryUrl,
       hasProfileError,
@@ -841,7 +914,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       changeEmail,
       changePassword,
       completePasswordRecovery,
-      continueWithoutAccount,
       currentProfile,
       deleteAccount,
       handlePasswordRecoveryUrl,

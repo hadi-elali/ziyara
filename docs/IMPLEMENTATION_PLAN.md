@@ -4,6 +4,16 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 2 November 2026: Admin user deletion and required sign-in
+
+- Add a permanent-delete action to each user's expanded dashboard details, with a named confirmation, pending/error/retry/success states and DE/EN/AR copy. Block dashboard self-deletion and duplicate submissions. Remove confirmed deletions from all shared user selections and invalidate older list responses; preserve existing families.
+- Add `admin_delete_user(uuid)` in `20261102000000_allow_admin_user_deletion.sql`. Verify the current administrator before and after the shared role/deletion advisory lock; delete the target Auth account atomically using the existing last-admin protection, cascades and audit anonymization. Revoke sessions and refresh tokens without exposing service credentials. Leave self-service account deletion unchanged.
+- Require a checked account for all app routes, including bundled guide, intro, details, disclaimer, emergency deep links and admin. Keep only login, registration and password recovery public. Startup and profile-error guards must not reveal app content; logout returns to login. This supersedes older public/guest-guide acceptance criteria below.
+- Check the actual Auth user before profile refresh, including stored sessions on startup, foreground/browser-focus, a matching own-profile Realtime DELETE and a 30-second visible-app fallback. Definitive deletion/revocation or a successful empty profile clears local credentials; temporary network failures retain them and keep initial app access closed.
+- Disable Expo's outer built-in sitemap and unmatched screens via `extra.router.sitemap: false` and `extra.router.notFound: false`; use a protected custom `+not-found` route. These outer screens bypass user-layout guards and must be checked in a real browser.
+- Cover mutation confirmation, server rejection, stale list/auth responses, deleted-session startup/resume and anonymous direct links. Apply the additive migration before shipping the updated client. No dependency or Edge Function change. The app/router config changed; per repository rules a new development/preview build and native checks remain required. See `docs/USER_ADMINISTRATION.md` for rollout and practical limits.
+- Validation: 587 Jest tests in 68 suites (88.51% global line coverage), 30 new plus 18 existing isolated PostgreSQL assertions, clean web export with `--clear`, and 14 actual anonymous Chrome direct-link checks pass. Clear Metro after router config changes to refresh its embedded `APP_MANIFEST`. Lint retains four existing warnings; TypeScript retains only the known bus-management return-type conflict at line 326. Local dependency alignment passes with an offline caveat; online Doctor retains seven existing patch mismatches (20/21). Full local Supabase/Playwright, multiple SQL connections, native build/device checks and remote deployment remain outstanding.
+
 ## 31 October 2026: First-use feature slides on Home
 
 - Add six swipeable, translated DE/EN/AR slides explaining Home/travel notices, the full daily program with dates and ordered activities immediately after Home, map/destinations, place details/search/bookmarks/reader, settings/language/notifications, and emergency help with optional location. Keep bus/group/question guidance on Home. Explain which features require sign-in without requesting permissions or triggering those features.
@@ -746,9 +756,9 @@ Acceptance criteria:
 - Later launches show only the video playing once and an immediately visible Continue button at the bottom. Automatically continue on `playToEnd`. Keep Continue outside all entrance animations and hide it during first-run language selection.
 - Keep the video mounted while an end/skip request waits for initial authentication and mandatory-check loading. Then release the intro guard once, letting the navigator choose Home or a real check-in/profile-error screen directly. Avoid a redundant router replacement and the green startup fallback. Use the Home theme background beneath the normal video surface; retain the readable brand fallback on playback errors.
 - A root-scoped provider remembers intro completion only for this launch. Do not read or write the old persisted completion flag; do not replay the intro on ordinary navigation or background resume in the same process.
-- Registration offers account creation, sign-in for existing accounts and an explicit guest path into the public offline guide.
+- Registration offers account creation and sign-in for existing accounts. Since 2 November 2026, all guide content requires a verified account; no guest path is available.
 - A video playback failure never blocks language selection or Continue.
-- Login, password-recovery and emergency deep links remain usable independently of the root intro gate.
+- Login and password-recovery remain public. Emergency deep links require a verified account and remain usable independently of the root intro gate.
 
 Tests/checks:
 

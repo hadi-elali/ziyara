@@ -1397,6 +1397,10 @@ export type Database = {
         Args: never;
         Returns: AccountFamily[];
       };
+      admin_delete_user: {
+        Args: { p_user_id: string };
+        Returns: string;
+      };
       admin_set_user_role: {
         Args: { p_role: AppRole; p_user_id: string };
         Returns: UserProfile;

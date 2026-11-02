@@ -89,6 +89,7 @@ function RootNavigation() {
   const [hasNavigationLayout, setHasNavigationLayout] = useState(false);
   const hasHiddenSplash = useRef(false);
   const isLocalStateLoaded = isLanguageLoaded && isThemeLoaded;
+  const hasVerifiedSession = Boolean(session) && !isAuthLoading && !hasProfileError;
   const isStartupReady = isStartupRouteReady({
     hasActiveCheck: Boolean(activeCheck),
     hasCompletedOnboarding,
@@ -116,7 +117,7 @@ function RootNavigation() {
   });
   const goBackFromEmergency = useEmergencyBackNavigation(
     pathname,
-    !hasCompletedOnboarding ? '/onboarding' : isStartupPending ? '/startup' : canAccessAppRoutes ? '/' : '/check-in',
+    !session ? '/login' : isStartupPending ? '/startup' : !hasCompletedOnboarding && !hasProfileError ? '/onboarding' : canAccessAppRoutes ? '/' : '/check-in',
   );
 
   useEffect(() => {
@@ -154,14 +155,14 @@ function RootNavigation() {
             headerShadowVisible: false,
             contentStyle: { backgroundColor: colors.background },
           }}>
-          <Stack.Protected guard={!hasCompletedOnboarding}>
+          <Stack.Protected guard={hasVerifiedSession && !hasCompletedOnboarding}>
             <Stack.Screen
               name="onboarding"
               options={{ animation: 'none', headerShown: false, title: t('onboarding.title') }}
             />
           </Stack.Protected>
 
-          <Stack.Protected guard={hasCompletedOnboarding && isStartupPending}>
+          <Stack.Protected guard={isAuthLoading || (Boolean(session) && hasCompletedOnboarding && isStartupPending)}>
             <Stack.Screen name="startup" options={{ animation: 'none', headerShown: false }} />
           </Stack.Protected>
 
@@ -180,6 +181,8 @@ function RootNavigation() {
             <Stack.Screen name="group" options={{ title: t('tripGroups.navTitle') }} />
             <Stack.Screen name="program" options={{ title: t('dailyProgram.overviewTitle') }} />
             <Stack.Screen name="sources" options={{ title: t('nav.sources') }} />
+            <Stack.Screen name="disclaimer" options={{ title: t('nav.disclaimer') }} />
+            <Stack.Screen name="+not-found" options={{ headerShown: false }} />
             <Stack.Screen
               name="question-round"
               options={{ title: t('questionRound.navTitle') }}
@@ -190,7 +193,7 @@ function RootNavigation() {
             />
           </Stack.Protected>
 
-          <Stack.Protected guard={hasCompletedOnboarding && !isStartupPending}>
+          <Stack.Protected guard={Boolean(session) && !isStartupPending && (hasCompletedOnboarding || hasProfileError)}>
             <Stack.Screen
               name="check-in"
               options={{ animation: 'none', headerShown: !isBlocking, title: t('groupCheck.navTitle') }}
@@ -212,15 +215,17 @@ function RootNavigation() {
             name="reset-password"
             options={{ title: t('nav.resetPassword') }}
           />
-          <Stack.Screen
-            name="emergency"
-            options={{ ...emergencyBackOptions, title: t('emergency.navTitle') }}
-          />
-          <Stack.Screen
-            name="emergency-dashboard"
-            options={{ ...emergencyBackOptions, title: t('emergencyDashboard.navTitle') }}
-          />
-          <Stack.Protected guard={hasCompletedOnboarding}>
+          <Stack.Protected guard={hasVerifiedSession}>
+            <Stack.Screen
+              name="emergency"
+              options={{ ...emergencyBackOptions, title: t('emergency.navTitle') }}
+            />
+            <Stack.Screen
+              name="emergency-dashboard"
+              options={{ ...emergencyBackOptions, title: t('emergencyDashboard.navTitle') }}
+            />
+          </Stack.Protected>
+          <Stack.Protected guard={hasVerifiedSession && hasCompletedOnboarding}>
             <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
           </Stack.Protected>
         </Stack>

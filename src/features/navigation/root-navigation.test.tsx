@@ -148,8 +148,8 @@ describe('root startup route guards', () => {
     });
     mockHomeLocked = false;
     mockHasCompletedOnboarding = true;
-    Object.assign(mockAuth, { hasProfileError: false, isAdmin: false, isLoading: true, session: null });
-    Object.assign(mockCheck, { hasSyncError: false, isBlocking: false, isLoading: true });
+    Object.assign(mockAuth, { hasProfileError: false, isAdmin: false, isLoading: true, session: { user: { id: 'restored-user' } } });
+    Object.assign(mockCheck, { hasSyncError: false, isBlocking: false, isLoading: false });
   });
   afterEach(async () => {
     await act(async () => renderer?.unmount());
@@ -158,9 +158,9 @@ describe('root startup route guards', () => {
   });
   afterAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = originalActEnvironment; });
 
-  it('zeigt beim Start das Intro vor Auth-Laden, Home und einer Pflichtabfrage', async () => {
+  it('wartet vor dem Intro auf eine gültige Anmeldung und hält Home und Pflichtabfrage verborgen', async () => {
     mockHasCompletedOnboarding = false;
-    expect((await renderNavigation())[0]).toBe('onboarding');
+    expect((await renderNavigation())[0]).toBe('startup');
 
     Object.assign(mockAuth, { isLoading: false, session: { user: { id: 'restored-user' } } });
     Object.assign(mockCheck, { isLoading: false, isBlocking: true });
@@ -176,10 +176,10 @@ describe('root startup route guards', () => {
     expect(routes).not.toContain('onboarding');
   });
 
-  it.each([false, true])('zeigt auch Gästen und Admins das Intro (Admin: %s)', async (isAdmin) => {
+  it.each([false, true])('zeigt angemeldeten Benutzern und Admins das Intro (Admin: %s)', async (isAdmin) => {
     mockHasCompletedOnboarding = false;
     Object.assign(mockAuth, {
-      isAdmin, isLoading: false, session: isAdmin ? { user: { id: 'admin' } } : null,
+      isAdmin, isLoading: false, session: { user: { id: isAdmin ? 'admin' : 'user' } },
     });
     expect((await renderNavigation())[0]).toBe('onboarding');
 
@@ -200,11 +200,12 @@ describe('root startup route guards', () => {
   });
 
   it('registriert während des Kaltstarts keine Statusabfrage und öffnet danach direkt Home', async () => {
+    mockCheck.isLoading = true;
     let routes = await renderNavigation();
     expect(routes[0]).toBe('startup');
     expect(routes).not.toContain('check-in');
     expect(routes).not.toContain('(tabs)');
-    expect(routes).toContain('emergency-dashboard');
+    expect(routes).not.toContain('emergency-dashboard');
 
     Object.assign(mockAuth, { isLoading: false, session: { user: { id: 'restored-user' } } });
     mockCheck.isBlocking = true;
@@ -229,14 +230,29 @@ describe('root startup route guards', () => {
     expect((await renderNavigation())[0]).toBe('check-in');
   });
 
-  it('öffnet den Gastguide ohne private Gruppencheck-Abfragen', async () => {
+  it.each(['/', '/map', '/onboarding', '/city/najaf', '/reader/example', '/disclaimer', '/admin', '/emergency', '/emergency-dashboard', '/_sitemap', '/unknown-link'])(
+    'beschränkt abgemeldete Benutzer auch über Direktlinks auf %s auf die Anmeldung', async (pathname) => {
+    mockPathname = pathname;
+    mockHasCompletedOnboarding = false;
+    mockAuth.session = null;
     mockAuth.isLoading = false;
-    expect((await renderNavigation())[0]).toBe('(tabs)');
+    const routes = await renderNavigation();
+    expect(routes).toEqual(['login', 'register', 'forgot-password', 'reset-password']);
+  });
+
+  it('entfernt nach einer Kontolöschung alle Inhalte und Einführungen sofort aus dem Navigator', async () => {
+    mockAuth.isLoading = false;
+    mockCheck.isLoading = false;
+    expect(await renderNavigation()).toContain('(tabs)');
+    mockAuth.session = null;
+    expect(await renderNavigation()).toEqual(['login', 'register', 'forgot-password', 'reset-password']);
   });
 
   it('wartet nach Registrierung auf Profil und Gruppencheck, bevor es zum freigegebenen Home weiterleitet', async () => {
     jest.replaceProperty(Platform, 'OS', 'ios');
     mockPathname = '/register';
+    mockAuth.session = null;
+    mockCheck.isLoading = true;
     mockAuth.isLoading = false;
     await renderNavigation(true);
     expect(renderer!.root.findAllByType(AuthFormScreen)).toHaveLength(1);

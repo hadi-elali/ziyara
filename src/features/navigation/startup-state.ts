@@ -25,14 +25,23 @@ export function isStartupRouteReady(state: StartupState): boolean {
 
   if (pathname === '/startup') return false;
 
-  // These public entry points do not depend on the profile or group check.
-  if (['/onboarding', '/forgot-password', '/reset-password'].includes(pathname)) {
+  // Password links belong to the public login flow.
+  if (['/forgot-password', '/reset-password'].includes(pathname)) {
     return true;
   }
 
   if (state.isAuthLoading) return false;
 
   if (['/login', '/register'].includes(pathname)) return !state.hasSession;
+
+  // Stored credentials alone must never open the guide or an intro/deep link.
+  if (!state.hasSession) return false;
+
+  if (pathname === '/onboarding') return !state.hasProfileError;
+
+  if (pathname === '/check-in' && state.hasProfileError) return true;
+
+  if (state.hasProfileError) return false;
 
   // Keep notification and deep-link emergency entry available during a check.
   if (['/emergency', '/emergency-dashboard'].includes(pathname)) return true;
@@ -52,5 +61,5 @@ export function isStartupRouteReady(state: StartupState): boolean {
     return state.isAdmin || !state.isGroupCheckLoading;
   }
 
-  return true;
+  return false;
 }

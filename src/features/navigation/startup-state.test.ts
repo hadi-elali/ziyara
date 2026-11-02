@@ -19,7 +19,8 @@ describe('startup navigation', () => {
   it('blendet den Splash beim normalen Start erst auf dem Intro aus, auch mit wiederhergestelltem Konto', () => {
     const introPending = { ...restoredAccount, hasCompletedOnboarding: false };
     expect(isStartupRouteReady(introPending)).toBe(false);
-    expect(isStartupRouteReady({ ...introPending, pathname: '/onboarding', isAuthLoading: true })).toBe(true);
+    expect(isStartupRouteReady({ ...introPending, pathname: '/onboarding', isAuthLoading: true })).toBe(false);
+    expect(isStartupRouteReady({ ...introPending, pathname: '/onboarding' })).toBe(true);
     expect(isStartupRouteReady({ ...introPending, pathname: '/check-in', hasActiveCheck: true })).toBe(false);
     expect(isStartupRouteReady({ ...introPending, pathname: '/reset-password' })).toBe(true);
     expect(isStartupRouteReady({ ...introPending, pathname: '/emergency' })).toBe(true);
@@ -70,8 +71,8 @@ describe('startup navigation', () => {
     }
   });
 
-  it('zeigt Erststart und Passwortlinks unabhängig von privaten Serverabfragen', () => {
-    for (const pathname of ['/onboarding', '/forgot-password', '/reset-password']) {
+  it('zeigt nur Passwortlinks unabhängig von privaten Serverabfragen', () => {
+    for (const pathname of ['/forgot-password', '/reset-password']) {
       expect(isStartupRouteReady({ ...restoredAccount, pathname, isAuthLoading: true })).toBe(true);
     }
     expect(isStartupRouteReady({
@@ -79,8 +80,8 @@ describe('startup navigation', () => {
     })).toBe(false);
   });
 
-  it('öffnet den Gastguide und Admin-Home ohne Gruppencheck-Abfrage', () => {
-    expect(isStartupRouteReady({ ...restoredAccount, hasSession: false, isGroupCheckLoading: true })).toBe(true);
+  it('verbirgt den Guide für Gäste und öffnet Admin-Home ohne Gruppencheck-Abfrage', () => {
+    expect(isStartupRouteReady({ ...restoredAccount, hasSession: false, isGroupCheckLoading: true })).toBe(false);
     expect(isStartupRouteReady({ ...restoredAccount, isAdmin: true, isGroupCheckLoading: true })).toBe(true);
   });
 

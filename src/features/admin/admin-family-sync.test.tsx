@@ -7,6 +7,7 @@ import { Button, type ButtonProps } from '@/components/ui/button';
 import type { AccountFamily, AdminUserSummary } from '@/domain/database';
 import { AdminAccountFamilyPanel } from '@/features/account-families/AdminAccountFamilyPanel';
 import { AdminSectionHeader } from '@/features/admin/AdminSectionHeader';
+import { AdminDeleteUserDialog } from '@/features/admin/AdminDeleteUserDialog';
 import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrganizationPanel';
 import type { AdminUserListItem } from '@/features/admin/admin-user-list';
 import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
@@ -16,18 +17,24 @@ const mockReadUsers = jest.fn<() => Promise<Result<AdminUserSummary[]>>>();
 const mockReadFamilies = jest.fn<() => Promise<Result<AccountFamily[]>>>();
 const mockSave = jest.fn<(args: unknown) => Promise<Result<AccountFamily>>>();
 const mockDelete = jest.fn<(args: unknown) => Promise<Result<AccountFamily>>>();
+const mockDeleteUser = jest.fn<(args: unknown) => Promise<{
+  data: string | null;
+  error: { code: string; message: string } | null;
+}>>();
+let mockCurrentUserId = 'current-admin';
 
 jest.mock('@/features/auth/supabase', () => ({ supabase: {
   rpc: (name: string, args: unknown) => {
     if (name === 'admin_upsert_account_family') return mockSave(args);
     if (name === 'admin_delete_account_family') return mockDelete(args);
+    if (name === 'admin_delete_user') return mockDeleteUser(args);
     if (name === 'admin_list_account_families') return { abortSignal: () => mockReadFamilies() };
     if (name === 'admin_list_users') return { range: () => ({ abortSignal: () => mockReadUsers() }) };
     throw new Error(`Unexpected RPC: ${name}`);
   },
 } }));
 jest.mock('@/features/auth/RequireAuth', () => ({ RequireAuth: ({ children }: { children: React.ReactNode }) => children }));
-jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => ({ profile: null, refreshProfile: jest.fn() }) }));
+jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => ({ profile: { user_id: mockCurrentUserId }, refreshProfile: jest.fn() }) }));
 jest.mock('@/features/bus-management/bus-management-context', () => ({ useBusManagement: () => ({ activeTrip: null }) }));
 jest.mock('@/features/daily-program/daily-program-context', () => ({ useDailyProgram: () => ({ programs: [] }) }));
 jest.mock('@/features/group-check/group-check-context', () => ({ useGroupCheck: () => ({ activeCheck: null }) }));
@@ -44,7 +51,15 @@ jest.mock('@/features/daily-program/AdminDailyProgramPanel', () => ({ AdminDaily
 jest.mock('@/features/group-check/AdminGroupCheckPanel', () => ({ AdminGroupCheckPanel: () => null }));
 jest.mock('@/features/question-round/AdminQuestionRoundPanel', () => ({ AdminQuestionRoundPanel: () => null }));
 jest.mock('@/features/trip-guidance/AdminMeetingPointPanel', () => ({ AdminMeetingPointPanel: () => null }));
-jest.mock('@/features/i18n/i18n', () => ({ useI18n: () => ({ t: (key: string) => key, language: 'de', isRTL: false }) }));
+jest.mock('@/features/emergency/AdminEmergencySendRestriction', () => ({ AdminEmergencySendRestriction: () => null }));
+jest.mock('@/features/i18n/i18n', () => ({ useI18n: () => ({
+  t: (key: string, values?: { name?: string; count?: number }) => {
+    if (key.startsWith('admin.deleteUser.') && values?.name) return `${key}: ${values.name}`;
+    if (['admin.personCount', 'admin.userCount', 'admin.familyCount'].includes(key)) return `${key}: ${values?.count}`;
+    return key;
+  },
+  language: 'de', isRTL: false,
+}) }));
 jest.mock('@/constants/theme', () => ({ MaxContentWidth: 1100, Spacing: { half: 2, one: 4, two: 8, three: 16, four: 24, five: 32, six: 40 } }));
 jest.mock('@/hooks/use-theme', () => ({ useTheme: () => ({ background: '#fff', surface: '#fff', accent: '#175', text: '#111', textSecondary: '#666', border: '#888' }) }));
 jest.mock('@/components/ui/symbol-icon', () => ({ SymbolIcon: () => null }));
@@ -125,8 +140,24 @@ async function confirmDelete() {
   const destructive = confirmation.mock.calls[0][2]!.find(action => action.style === 'destructive')!;
   await act(async () => { destructive.onPress!(); });
 }
+async function expandUser(userId: string) {
+  await act(async () => {
+    root().find(node => node.props.user?.user_id === userId && typeof node.props.onToggleDetails === 'function')
+      .props.onToggleDetails();
+  });
+}
+function adminButton(label: string) {
+  return root().findAllByType(Button).find(node => node.props.label === `admin.deleteUser.${label}`)!;
+}
+async function requestUserDeletion(userId = users[0].user_id) {
+  await expandUser(userId);
+  await act(async () => { adminButton('action').props.onPress(); });
+}
+async function confirmUserDeletion() {
+  await act(async () => { adminButton('confirm').props.onPress(); });
+}
 
-describe('admin family synchronization', () => {
+describe('admin family and user synchronization', () => {
   beforeAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = true; });
   beforeEach(() => {
     jest.useFakeTimers();
@@ -135,6 +166,8 @@ describe('admin family synchronization', () => {
     mockReadFamilies.mockReset().mockResolvedValue({ data: [], error: null });
     mockSave.mockReset().mockResolvedValue({ data: family, error: null });
     mockDelete.mockReset().mockResolvedValue({ data: family, error: null });
+    mockDeleteUser.mockReset().mockResolvedValue({ data: users[0].user_id, error: null });
+    mockCurrentUserId = 'current-admin';
   });
   afterEach(async () => {
     await act(async () => { renderer?.unmount(); });
@@ -254,5 +287,94 @@ describe('admin family synchronization', () => {
     await act(async () => { root().findByType(FlatList).props.refreshControl.props.onRefresh(); });
     expect(panel().props.families).toEqual([]);
     expect(listItems().every(item => item.type === 'user')).toBe(true);
+  });
+
+  it('identifies the account in a confirmation and leaves it untouched when cancelled', async () => {
+    await render(); await requestUserDeletion();
+    expect(root().findByType(AdminDeleteUserDialog).props.user).toEqual(users[0]);
+    expect(hasText(`admin.deleteUser.body: ${users[0].display_name}`)).toBe(true);
+    expect(mockDeleteUser).not.toHaveBeenCalled();
+    await act(async () => { adminButton('cancel').props.onPress(); });
+    expect(root().findAllByType(AdminDeleteUserDialog)).toHaveLength(0);
+    expect(panel().props.users).toEqual(users);
+    expect(mockDeleteUser).not.toHaveBeenCalled();
+  });
+
+  it('prevents deleting the current admin from the user list', async () => {
+    mockCurrentUserId = users[0].user_id;
+    await render(); await expandUser(mockCurrentUserId);
+    expect(adminButton('action').props.disabled).toBe(true);
+    expect(hasText('admin.deleteUser.ownAccount')).toBe(true);
+    expect(mockDeleteUser).not.toHaveBeenCalled();
+  });
+
+  it('locks duplicate confirmation and cancellation while deleting, then updates all account consumers', async () => {
+    mockReadUsers.mockResolvedValue({ data: assignedUsers, error: null });
+    mockReadFamilies.mockResolvedValue({ data: [family, otherFamily], error: null });
+    const deleting = deferred<Awaited<ReturnType<typeof mockDeleteUser>>>();
+    mockDeleteUser.mockReturnValueOnce(deleting.promise);
+    await render();
+    await toggleSection('admin.section.organization.title');
+    await toggleSection('admin.transport.title');
+    await requestUserDeletion();
+    const confirm = root().findByType(AdminDeleteUserDialog).props.onConfirm;
+    await act(async () => { confirm(); confirm(); });
+    expect(mockDeleteUser).toHaveBeenCalledTimes(1);
+    expect(mockDeleteUser).toHaveBeenCalledWith({ p_user_id: users[0].user_id });
+    expect(adminButton('deleting').props.disabled).toBe(true);
+    expect(adminButton('cancel').props.disabled).toBe(true);
+    expect(panel().props.users).toHaveLength(4);
+    expect(hasText('admin.personCount: 10')).toBe(true);
+    await act(async () => { deleting.resolve({ data: users[0].user_id, error: null }); });
+
+    expect(root().findAllByType(AdminDeleteUserDialog)).toHaveLength(0);
+    expect(panel().props.users).toEqual(assignedUsers.slice(1));
+    expect(panel().props.families).toEqual([family, otherFamily]);
+    expect(listItems().filter(item => item.type === 'family').flatMap(item => item.members.map(member => member.user_id)))
+      .toEqual(['user-2', 'user-3', 'user-1']);
+    expect(hasText('admin.personCount: 9')).toBe(true);
+    expect(hasText('admin.userCount: 3')).toBe(true);
+    expect(hasText('admin.familyCount: 2')).toBe(true);
+    for (const consumer of [AdminTravelOrganizationPanel, AdminBusManagementPanel]) {
+      expect(root().findByType(consumer).props.users).toEqual(assignedUsers.slice(1));
+    }
+    expect(hasText(`admin.deleteUser.deleted: ${users[0].display_name}`)).toBe(true);
+    expect(mockReadUsers).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['42501', 'denied'], ['P0002', 'notFound'], ['22023', 'ownAccount'],
+    ['P0001', 'lastAdmin'], ['OTHER', 'error'],
+  ])('keeps the account and allows retry after server rejection %s', async (code, message) => {
+    mockDeleteUser.mockResolvedValueOnce({ data: null, error: { code, message: 'Server rejection' } });
+    await render(); await requestUserDeletion(); await confirmUserDeletion();
+    expect(panel().props.users).toEqual(users);
+    expect(hasText(`admin.deleteUser.${message}`)).toBe(true);
+    expect(adminButton('confirm').props.disabled).toBe(false);
+    expect(root().findByType(AdminDeleteUserDialog).props.user).toEqual(users[0]);
+    await confirmUserDeletion();
+    expect(panel().props.users).toEqual(users.slice(1));
+  });
+
+  it.each([null, 'wrong-account'])('does not treat an unconfirmed response as a deletion (%s)', async data => {
+    mockDeleteUser.mockResolvedValueOnce({ data, error: null });
+    await render(); await requestUserDeletion(); await confirmUserDeletion();
+    expect(panel().props.users).toEqual(users);
+    expect(hasText('admin.deleteUser.error')).toBe(true);
+    expect(hasText(`admin.deleteUser.deleted: ${users[0].display_name}`)).toBe(false);
+  });
+
+  it.each([false, true])('does not resurrect a deleted user after an earlier refresh settles (error: %s)', async fails => {
+    const reading = deferred<Result<AdminUserSummary[]>>();
+    await render();
+    mockReadUsers.mockReturnValueOnce(reading.promise);
+    await act(async () => { root().findByType(FlatList).props.refreshControl.props.onRefresh(); });
+    await requestUserDeletion(); await confirmUserDeletion();
+    await act(async () => {
+      reading.resolve(fails ? { data: null, error: { message: 'Old read failed' } } : { data: users, error: null });
+    });
+    expect(panel().props.users).toEqual(users.slice(1));
+    expect(hasText('Old read failed')).toBe(false);
+    expect(root().findByType(FlatList).props.refreshControl.props.refreshing).toBe(false);
   });
 });

@@ -14,11 +14,20 @@ import {
   resetE2EAccounts,
 } from './support/local-supabase';
 
-async function login(page: Page, email: string, password: string) {
+async function login(page: Page, email: string, password: string, openHomeAfterLogin = true) {
   await page.goto('/login');
   await page.getByPlaceholder('name@beispiel.de').fill(email);
   await page.locator('input[type="password"]').fill(password);
   await page.getByRole('button', { name: 'Anmelden' }).click();
+  if (openHomeAfterLogin) await finishSignIn(page);
+}
+
+async function finishSignIn(page: Page) {
+  const home = page.getByText('Städte (5)', { exact: true });
+  const introContinue = page.getByRole('button', { name: 'Deutsch', exact: true })
+    .or(page.getByRole('button', { name: 'Weiter', exact: true }));
+  await expect(home.or(introContinue)).toBeVisible();
+  if (!await home.isVisible()) await introContinue.click();
   await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
   await dismissHomeTour(page);
 }
@@ -66,6 +75,16 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await resetE2EAccounts();
   });
 
+  test('Ohne Anmeldung führen App-Routen ausschließlich zum Login', async ({ page }) => {
+    for (const path of ['/', '/map', '/settings', '/onboarding', '/emergency', '/admin', '/_sitemap', '/unbekannt']) {
+      await page.goto(path);
+      await expect(page.getByRole('button', { name: 'Anmelden', exact: true })).toBeVisible();
+      await expect(page.getByRole('tab')).toHaveCount(0);
+      await expect(page.locator('video')).toHaveCount(0);
+      await expect(page.getByText('Städte (5)', { exact: true })).toHaveCount(0);
+    }
+  });
+
   test('Registrierung und Login', async ({ page }) => {
     await page.goto('/register');
     const [firstName, ...surname] = memberName.split(' ');
@@ -79,12 +98,12 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     await passwords.nth(0).fill(memberPassword);
     await passwords.nth(1).fill(memberPassword);
     await page.getByRole('button', { name: 'Registrieren' }).click();
-    await expect(page.getByText('Städte (5)', { exact: true })).toBeVisible();
-    await dismissHomeTour(page);
+    await finishSignIn(page);
 
     await page.getByText('Einstellungen', { exact: true }).click();
     await page.getByRole('button', { name: 'Abmelden' }).click();
-    await expect(page.getByText(/Für Konto- und Gruppenfunktionen ist eine Anmeldung erforderlich/u)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Anmelden', exact: true })).toBeVisible();
+    await expect(page.getByRole('tab')).toHaveCount(0);
 
     await login(page, memberEmail, memberPassword);
   });
@@ -108,8 +127,8 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
   });
 
   test('Intro öffnet Home per Weiter oder nach dem Videoende', async ({ page }) => {
-    await page.route('http://127.0.0.1:54321/**', (route) => route.abort('internetdisconnected'));
-    await page.goto('/');
+    // The first intro and tour now follow a server-validated sign-in.
+    await login(page, memberEmail, memberResetPassword, false);
 
     await expect(page.getByText('Sprache wählen', { exact: true })).toBeVisible();
     await expect(page.locator('video')).toBeVisible();
@@ -346,5 +365,44 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     expect(profile.error).toBeNull();
     expect(profile.data?.role).toBe('medical_staff');
     await memberClient.auth.signOut();
+  });
+
+  test('Admin löscht ein Konto und dessen geöffnete App kehrt zum Login zurück', async ({ browser }) => {
+    test.setTimeout(90_000);
+    const admin = await openAuthenticatedPage(browser, adminEmail, adminPassword);
+    const member = await openAuthenticatedPage(browser, memberEmail, memberResetPassword);
+
+    try {
+      await openAdmin(admin.page);
+      await admin.page.getByRole('button', { name: /Benutzer Familienpakete/u }).click();
+      await admin.page.getByLabel('Personen oder Familien nach Namen suchen').fill(memberName);
+      await admin.page.getByRole('button', { name: new RegExp(`^Details von ${memberName}`, 'u') }).click();
+      await admin.page.getByRole('button', { name: 'Benutzer löschen', exact: true }).click();
+      await admin.page.getByRole('button', { name: 'Abbrechen', exact: true }).click();
+      await expect(member.page.getByText('Städte (5)', { exact: true })).toBeVisible();
+
+      await admin.page.getByRole('button', { name: 'Benutzer löschen', exact: true }).click();
+      await admin.page.getByRole('button', { name: 'Ja, Benutzer endgültig löschen', exact: true }).click();
+      await expect(admin.page.getByText(`Das Konto von ${memberName} wurde gelöscht.`, { exact: true })).toBeVisible();
+      await expect(member.page.getByRole('button', { name: 'Anmelden', exact: true })).toBeVisible({ timeout: 45_000 });
+      await expect(member.page.getByRole('tab')).toHaveCount(0);
+
+      await member.page.reload();
+      await expect(member.page.getByRole('button', { name: 'Anmelden', exact: true })).toBeVisible();
+      await member.page.goto('/map');
+      await expect(member.page.getByRole('button', { name: 'Anmelden', exact: true })).toBeVisible();
+      await expect(member.page.getByRole('tab')).toHaveCount(0);
+
+      const deletedClient = createPublicTestClient();
+      const deniedLogin = await deletedClient.auth.signInWithPassword({
+        email: memberEmail,
+        password: memberResetPassword,
+      });
+      expect(deniedLogin.error).not.toBeNull();
+      expect(deniedLogin.data.session).toBeNull();
+    } finally {
+      await admin.context.close();
+      await member.context.close();
+    }
   });
 });
