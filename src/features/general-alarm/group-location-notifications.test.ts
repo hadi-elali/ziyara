@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NotificationResponse } from 'expo-notifications';
 import * as Notifications from 'expo-notifications';
 
-import { subscribeToGroupLocationNotificationResponses } from './general-alarm-notifications';
+import {
+  subscribeToGroupCheckNotificationResponses,
+  subscribeToGroupLocationNotificationResponses,
+} from './general-alarm-notifications';
 
 jest.mock('expo', () => ({ isRunningInExpoGo: () => false }));
 jest.mock('expo-notifications', () => ({
@@ -31,16 +34,19 @@ function response(route: string): NotificationResponse {
   };
 }
 
-describe('location request notification responses', () => {
+describe.each([
+  { feature: 'group location', route: '/group', subscribe: subscribeToGroupLocationNotificationResponses },
+  { feature: 'status check', route: '/check-in', subscribe: subscribeToGroupCheckNotificationResponses },
+])('$feature notification responses', ({ route, subscribe }) => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.mocked(Notifications.getLastNotificationResponse).mockReturnValue(null);
   });
 
   it('handles a group notification saved before a cold start exactly once', async () => {
-    jest.mocked(Notifications.getLastNotificationResponse).mockReturnValue(response('/group'));
+    jest.mocked(Notifications.getLastNotificationResponse).mockReturnValue(response(route));
     const listener = jest.fn();
-    subscribeToGroupLocationNotificationResponses(listener);
+    subscribe(listener);
     await Promise.resolve();
     expect(Notifications.clearLastNotificationResponse).toHaveBeenCalledTimes(1);
     expect(listener).toHaveBeenCalledTimes(1);
@@ -48,11 +54,11 @@ describe('location request notification responses', () => {
 
   it('handles group taps and ignores other routes', () => {
     const listener = jest.fn();
-    const subscription = subscribeToGroupLocationNotificationResponses(listener);
+    const subscription = subscribe(listener);
     const onResponse = jest.mocked(Notifications.addNotificationResponseReceivedListener).mock.calls[0][0];
     onResponse(response('/bus'));
     expect(listener).not.toHaveBeenCalled();
-    onResponse(response('/group'));
+    onResponse(response(route));
     expect(listener).toHaveBeenCalledTimes(1);
     subscription.remove();
     expect(Notifications.addNotificationResponseReceivedListener).toHaveBeenCalledTimes(1);
@@ -60,7 +66,7 @@ describe('location request notification responses', () => {
 
   it('preserves a saved response for a different feature', () => {
     jest.mocked(Notifications.getLastNotificationResponse).mockReturnValue(response('/alarm'));
-    subscribeToGroupLocationNotificationResponses(jest.fn());
+    subscribe(jest.fn());
     expect(Notifications.clearLastNotificationResponse).not.toHaveBeenCalled();
   });
 });

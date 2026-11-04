@@ -47,6 +47,9 @@ export type AdminPushNotificationAttempt = {
   expo_ticket_id: string | null;
 };
 export type TripGroupLocationStatus = 'declined' | 'pending' | 'shared';
+export type GroupCheckPushAttempt = Omit<AdminPushNotificationAttempt, 'message_id'> & {
+  check_id: number;
+};
 export type TripGuidanceStatus =
   | 'almost_there'
   | 'at_meeting_point'
@@ -784,6 +787,12 @@ export type Database = {
           error_code?: string | null;
         };
       };
+      group_check_push_attempts: {
+        Insert: never;
+        Relationships: [];
+        Row: GroupCheckPushAttempt;
+        Update: never;
+      };
       group_check_responses: {
         Insert: {
           answer: boolean;
@@ -1474,6 +1483,10 @@ export type Database = {
       can_dispatch_general_alarm: {
         Args: { p_user_id: string };
         Returns: boolean;
+      };
+      claim_group_check_notifications: {
+        Args: { p_check_id: number; p_requester_user_id: string };
+        Returns: { attempt_id: number; expo_push_token: string; title: string; body: string }[];
       };
       claim_emergency_notification_attempts: {
         Args: { p_request_id: number; p_requester_user_id: string };

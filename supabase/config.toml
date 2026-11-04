@@ -464,3 +464,8 @@ entrypoint = "./functions/dispatch-bus-selection/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/dispatch-group-location/index.ts"
+
+[functions.dispatch-group-check]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/dispatch-group-check/index.ts"

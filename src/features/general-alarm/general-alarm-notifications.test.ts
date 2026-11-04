@@ -4,6 +4,7 @@ import {
   inspectGeneralAlarmNotificationState,
   registerGeneralAlarmNotifications,
   subscribeToGeneralAlarmNotificationResponses,
+  subscribeToGroupCheckNotificationResponses,
   syncGeneralAlarmReminders,
 } from '@/features/general-alarm/general-alarm-notifications';
 
@@ -34,5 +35,6 @@ describe('general alarm notifications in Expo Go', () => {
 
     const subscription = subscribeToGeneralAlarmNotificationResponses(jest.fn());
     expect(() => subscription.remove()).not.toThrow();
+    expect(() => subscribeToGroupCheckNotificationResponses(jest.fn()).remove()).not.toThrow();
   });
 });

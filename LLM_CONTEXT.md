@@ -1,6 +1,6 @@
 # Ziyarah – verbindlicher Projektkontext für LLMs
 
-Stand: 2. November 2026
+Stand: 4. November 2026
 
 ## Zweck und Pflege
 
@@ -22,6 +22,20 @@ Wenn Dokumentation und Code voneinander abweichen, den Code prüfen, die richtig
 Ziyarah ist eine produktionsorientierte Expo-App für eine schiitische Ziyarah-Reise in den Irak. Die gesamte App benötigt eine gültige Supabase-Anmeldung; ohne Session bleiben ausschließlich Login, Registrierung und Passwort-Recovery erreichbar. Der lokal gebündelte Katalog enthält wichtige Städte und Orte, Karteninformationen, Suche, Merkliste und religiöse Reader-Inhalte. Die App bietet Deutsch, Englisch und Arabisch, Light/Dark Mode sowie administrative Gruppenfunktionen: dauerhafte Notfallmeldungen mit optionalem einmaligem Standort und Push, Tagesprogramme, Karten- und Navigationsziele, Buswahl, Gruppen mit mehreren Leitern, Familienzuordnung und zustimmungsbasierte Standortanfragen, Weckruf, verpflichtende Statusabfragen, anonyme Fragerunden und Benutzerverwaltung einschließlich endgültiger Kontolöschung durch Admins. Passwort-Recovery und sichere Eigenkonto-Löschung sind implementiert. Religiöse, historische und ortsbezogene Inhalte bleiben bis zu einer qualifizierten Prüfung sichtbar als `needs_review` markiert.
 
 ## Aktueller Funktionsumfang
+
+### Push beim Start einer Statusabfrage vom 4. November 2026
+
+- `GroupCheckProvider.startCheck` löst nach erfolgreicher Start-RPC den neuen Dispatcher `dispatch-group-check` aus. Der private Insert-Trigger aus `20261104010000_notify_group_checks.sql` speichert die registrierten Geräte aller Rollen einschließlich Admins atomar mit der Abfrage; keine Fahrt nötig, keine Nachbefüllung alter Abfragen. Die Claim-RPC prüft die aktuelle Adminrolle pro Batch, serialisiert gegen Schließen und überspringt bereits beantwortende Konten sowie entfernte/umgehängte Geräte. Höchstens 100 Geräte pro Claim, jeder Versuch wird nur einmal beansprucht.
+- Nachrichten sind in DE/EN/AR, nutzen den vorhandenen Standardton/Android-Kanal und zeigen keine frei eingegebene Frage auf dem Sperrbildschirm. Antippen öffnet `/check-in`; eine Kaltstartantwort bleibt gespeichert, bis Anmeldung, Intro und Startprüfung die Route tatsächlich freigeben. Web und Expo Go bleiben unterstützt über die vorhandenen No-op-Subscriptions.
+- Ein Pushfehler erhält die gespeicherte aktive Abfrage. Das Adminpanel zeigt einen übersetzten Hinweis und „Push-Versand fortsetzen“ ausschließlich für bislang unbeanspruchte Geräte. Bereits fehlgeschlagene/ungewisse Versuche werden zur Vermeidung von Doppelversand nicht wiederholt. Der lokale Fehlerhinweis überlebt kein Schließen/Neustarten des Panels. Alte Clients und ein Abbruch direkt nach der RPC starten keinen Versand; kein neuer Scheduler. Expo-Tickets sind keine Zustellbestätigung.
+- Migration und neue Function sind lokal vorbereitet; vor Clientauslieferung remote bereitstellen. Keine Pakete, native Konfiguration oder sonstige Pushwege geändert; kein zusätzlicher Development Build allein für diese Erweiterung. Kein echter Push, kein Remote-Deployment oder nativer Gerätetest. Gezielte Prüfung und Rollout: `docs/GROUP_CHECK_PUSH.md`.
+- Prüfung: 56 gezielte Jest-Tests, Deno, Lint (vier bekannte Warnungen), Web-Export und lokaler Expo-Abgleich (Offline-Hinweis) bestehen. TypeScript meldet nur den bekannten Busmanagement-Rückgabetypkonflikt in Zeile 326. Expo Doctor konnte wegen gesperrtem npm-Zugriff nicht starten. 29 SQL-Assertions vorbereitet, mangels Docker/Supabase nicht ausgeführt; kein zusätzliches Testpaket installiert. Auf Nutzerwunsch keine breiten Tests.
+
+### Reparatur der Tagesprogramm-Push-RPC vom 4. November 2026
+
+- Die ursprünglichen Migrationen einschließlich `20261029180000` waren auf dem verknüpften Supabase-Projekt bereits eingetragen. Wegen des gemeldeten Schema-Cache-Fehlers wurde `20261104000000_restore_daily_program_item_push_rpc.sql` erfolgreich remote angewandt. Sie stellt `admin_schedule_daily_program_item_push(p_item_id bigint, p_scheduled_at timestamptz, p_send_now boolean default false)` mit bisheriger Adminprüfung, Sperrreihenfolge und Ausführungsrechten wieder her und lädt über `NOTIFY pgrst, 'reload schema'` den Cache neu. Programminhalte und bestehende Termine werden dabei nicht geändert.
+- Der Dry-Run vor der Bereitstellung enthielt ausschließlich diese Reparatur; der anschließende Dry-Run führt sie nicht mehr als ausstehend. Währenddessen hinzugekommene Gruppencheck-Änderungen gehören zu einem anderen Auftrag und wurden hier nicht ausgerollt.
+- Die anschließende Live-Diagnose des ausbleibenden Versands bestätigte einen aktiven Minutenscheduler mit HTTP 200 und zwölf registrierten Geräten, aber einen fälligen Auftrag ohne Versandversuche. Die separat heruntergeladene Remote-Function `dispatch-general-alarm` enthielt noch keinen Tagesprogramm-Dispatcher. Die aktuelle Repository-Version wurde daraufhin einschließlich `_shared/daily-program-dispatch` und ihrer Abhängigkeiten erfolgreich bereitgestellt; die bestehende interne Admin-/Cron-Autorisierung bleibt erhalten. Der reguläre Lauf am 4. November um 20:23 UTC (21:23 Uhr Berlin) verarbeitete den bereits vom Nutzer geplanten Auftrag: zwölf Versuche, alle von Expo mit HTTP 200 und `accepted=true` angenommen, keine Fehlercodes. Keine zusätzliche Testnachricht und keine Testsuite ausgeführt. Keine Appänderung oder neuer Build nötig; die sichtbare Anzeige auf dem Gerät bleibt zu bestätigen. Der bereitgestellte gemeinsame Weckruf-Handler entspricht ebenfalls dem aktuellen Repository einschließlich kompatibler v1/v2-Kanalwahl; `dispatch-wake-up-call` wurde dabei nicht bereitgestellt.
 
 ### Benutzer durch Admin löschen und Anmeldung für die gesamte App vom 2. November 2026
 

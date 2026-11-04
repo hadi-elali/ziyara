@@ -14,6 +14,7 @@ import { AppState, Platform } from 'react-native';
 import type { GroupCheck } from '@/domain/database';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
+import { dispatchGroupCheckPush } from '@/features/group-check/group-check-push';
 import {
   getOriginalErrorMessage,
   getSupabaseReadFailureKind,
@@ -22,7 +23,9 @@ import {
 } from '@/features/network/supabase-read';
 
 type GroupCheckActionResult = {
+  checkId?: number;
   error: PostgrestError | null;
+  pushFailed?: boolean;
 };
 
 type SyncState = 'error' | 'loading' | 'ready';
@@ -209,7 +212,9 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
           setSyncState('ready');
         }
 
-        await refresh();
+        // A delivery failure must not turn a saved check into a failed start.
+        const [pushAccepted] = await Promise.all([dispatchGroupCheckPush(data.id), refresh()]);
+        return { checkId: data.id, error: null, pushFailed: !pushAccepted };
       }
 
       return { error };

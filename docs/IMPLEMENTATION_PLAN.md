@@ -4,6 +4,14 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 4 November 2026: Push when starting status checks
+
+- After a successful start, invoke `dispatch-group-check` using the existing Expo batching/ticket handling. Snapshot all registered devices, including admins, atomically through an insert trigger in `20261104010000_notify_group_checks.sql`. No trip prerequisite, no old-check or later-device backfill.
+- Verify the session and current admin role, independently recheck it per service-only claim, serialize with closure, skip answered accounts and removed/reassigned devices, and claim at most 100 devices once. Never resend uncertain attempts.
+- Use DE/EN/AR device-language copy, standard sound and the existing Android channel. Keep the custom question inside the app. Tapping opens protected `/check-in` after sign-in, intro and startup guards release it, including cold starts.
+- Preserve a saved check when dispatch fails and show translated failure/resume controls in its admin panel. Resume only unclaimed attempts; local warnings do not survive panel remounts. No scheduler or automatic recovery after an interrupted start.
+- Deploy the additive migration and new Function before delivering the updated client. No dependency/native config change or additional development build solely for this feature. No remote deployment or real push in this task; validation and limits in `docs/GROUP_CHECK_PUSH.md`.
+
 ## 2 November 2026: Admin user deletion and required sign-in
 
 - Add a permanent-delete action to each user's expanded dashboard details, with a named confirmation, pending/error/retry/success states and DE/EN/AR copy. Block dashboard self-deletion and duplicate submissions. Remove confirmed deletions from all shared user selections and invalidate older list responses; preserve existing families.

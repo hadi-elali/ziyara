@@ -19,6 +19,7 @@ import {
   subscribeToEmergencyDashboardNotificationResponses,
   subscribeToEmergencyNotificationResponses,
   subscribeToGeneralAlarmNotificationResponses,
+  subscribeToGroupCheckNotificationResponses,
   subscribeToGroupLocationNotificationResponses,
   subscribeToQuestionRoundNotificationResponses,
   subscribeToWakeUpCallNotificationResponses,
@@ -63,6 +64,9 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
   const [pendingRoute, setPendingRoute] = useState<ProtectedRoutePath | null>(null);
 
   useEffect(() => {
+    const groupCheckSubscription = subscribeToGroupCheckNotificationResponses(() => {
+      setPendingRoute('/check-in');
+    });
     const groupLocationSubscription = subscribeToGroupLocationNotificationResponses(() => {
       setPendingRoute('/group');
     });
@@ -86,6 +90,7 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
         setPendingRoute('/emergency-dashboard');
       });
     return () => {
+      groupCheckSubscription.remove();
       groupLocationSubscription.remove();
       programSubscription.remove();
       questionRoundSubscription.remove();
@@ -98,9 +103,13 @@ export function GeneralAlarmNotificationsProvider({ children }: PropsWithChildre
 
   useEffect(() => {
     if (!rootNavigationState?.key || isAuthLoading || !pendingRoute) return;
+    // Check-in is unavailable during intro/startup and before sign-in. Keep a
+    // cold-start tap until the root guards actually register this destination.
+    if (pendingRoute === '/check-in' &&
+        (!session || !rootNavigationState.routeNames?.includes('check-in'))) return;
     router.push(pendingRoute);
     setPendingRoute(null);
-  }, [isAuthLoading, pendingRoute, rootNavigationState?.key, router]);
+  }, [isAuthLoading, pendingRoute, rootNavigationState, router, session]);
 
   useEffect(() => {
     let isActive = true;

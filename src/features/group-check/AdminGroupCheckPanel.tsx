@@ -9,6 +9,7 @@ import { Spacing } from '@/constants/theme';
 import type { AdminGroupCheckResult } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
+import { dispatchGroupCheckPush } from '@/features/group-check/group-check-push';
 import {
   parseAdminGroupCheckResults,
   summarizeGroupCheckResults,
@@ -40,6 +41,7 @@ export function AdminGroupCheckPanel() {
   const [question, setQuestion] = useState('');
   const [hasQuestionError, setHasQuestionError] = useState(false);
   const [resultsCheckId, setResultsCheckId] = useState<number | null>(null);
+  const [pushFailedCheckId, setPushFailedCheckId] = useState<number | null>(null);
   const resultsRequestSequence = useRef(0);
 
   const checkId = activeCheck?.id ?? null;
@@ -149,14 +151,27 @@ export function AdminGroupCheckPanel() {
     setIsWorking(true);
 
     try {
-      const { error } = await startCheck(normalizedQuestion);
+      const { checkId: startedCheckId, error, pushFailed } = await startCheck(normalizedQuestion);
       setActionErrorMessage(error?.message ?? null);
 
       if (!error) {
         setQuestion('');
+        setPushFailedCheckId(pushFailed ? startedCheckId ?? null : null);
       }
     } catch (error) {
       setActionErrorMessage(getOriginalErrorMessage(error));
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const retryPush = async () => {
+    if (!activeCheck || isWorking) return;
+    const retryCheckId = activeCheck.id;
+    setIsWorking(true);
+    try {
+      const sent = await dispatchGroupCheckPush(retryCheckId);
+      setPushFailedCheckId(sent ? null : retryCheckId);
     } finally {
       setIsWorking(false);
     }
@@ -270,6 +285,20 @@ export function AdminGroupCheckPanel() {
             </>
           )}
 
+          {pushFailedCheckId === checkId ? (
+            <View style={styles.errorBlock} accessibilityLiveRegion="polite">
+              <ThemedText type="small" themeColor="warning">
+                {t('groupCheck.pushFailed')}
+              </ThemedText>
+              <Button
+                disabled={isWorking}
+                icon="refresh"
+                label={t('groupCheck.retryPush')}
+                onPress={() => void retryPush()}
+                variant="secondary"
+              />
+            </View>
+          ) : null}
           <Button
             disabled={isWorking}
             icon="close"

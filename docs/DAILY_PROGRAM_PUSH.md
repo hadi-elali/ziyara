@@ -30,7 +30,9 @@ Vor Auslieferung des aktualisierten Clients:
 3. Bestehenden Minuten-Cronjob und dessen `GENERAL_ALARM_CRON_SECRET` beibehalten. Bei Expo Push Security muss das serverseitige `EXPO_ACCESS_TOKEN` gültig sein.
 4. Aktualisierten Client ausliefern. Keine neue Function, kein neuer Cronjob, keine neuen Secrets und keine zusätzlichen nativen Abhängigkeiten erforderlich.
 
-In diesem Auftrag wurden keine Migrationen remote angewandt, keine Functions bereitgestellt und keine echten Pushs ausgelöst. Ein zusätzlicher Development Build ist aufgrund dieser Erweiterung nicht erforderlich.
+Am 4. November 2026 waren die ursprünglichen Migrationen auf dem verknüpften Projekt bereits als angewandt eingetragen. Zur Reparatur des gemeldeten Schema-Cache-Fehlers wurde zusätzlich `20261104000000_restore_daily_program_item_push_rpc.sql` erfolgreich remote angewandt: Sie stellt die RPC einschließlich `p_send_now` und der bisherigen Admin-/Ausführungsrechte wieder her und lädt den PostgREST-Schema-Cache neu. Vorheriger und anschließender Dry-Run bestätigen die Bereitstellung dieser Reparatur.
+
+Die anschließende Live-Diagnose zeigte die weitere Ursache des ausbleibenden Versands: Die heruntergeladene Remote-Version von `dispatch-general-alarm` enthielt noch keinen Tagesprogramm-Dispatcher. Scheduler und zwölf Geräteanmeldungen waren vorhanden; der fällige Auftrag hatte keine Versandversuche. Die aktuelle Function wurde einschließlich `_shared/daily-program-dispatch` und ihrer Abhängigkeiten bereitgestellt. Der reguläre Scheduler verarbeitete den bereits vom Nutzer geplanten Auftrag am 4. November um 20:23 UTC (21:23 Uhr Berlin). Alle zwölf Versuche wurden von Expo mit HTTP 200 und `accepted=true` angenommen, ohne Fehlercode. Keine zusätzliche Testnachricht oder Testsuite ausgeführt. Der vorhandene App-Build genügt. Die sichtbare Benachrichtigung auf dem Gerät bleibt zu bestätigen; Expo-Annahme ist keine Gerätebestätigung.
 
 ## Prüfstand
 

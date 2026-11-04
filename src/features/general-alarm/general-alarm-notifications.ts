@@ -347,6 +347,21 @@ export function subscribeToEmergencyDashboardNotificationResponses(
   });
 }
 
+export function subscribeToGroupCheckNotificationResponses(
+  listener: () => void,
+): NotificationResponseSubscription {
+  if (!Notifications) return { remove: () => undefined };
+  const matches = (response: NotificationResponse | null) =>
+    response?.notification.request.content.data?.route === '/check-in';
+  if (matches(Notifications.getLastNotificationResponse())) {
+    Notifications.clearLastNotificationResponse();
+    void Promise.resolve().then(listener);
+  }
+  return Notifications.addNotificationResponseReceivedListener((response) => {
+    if (matches(response)) listener();
+  });
+}
+
 export function subscribeToQuestionRoundNotificationResponses(
   listener: () => void,
 ): NotificationResponseSubscription {

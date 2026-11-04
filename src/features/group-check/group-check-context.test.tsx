@@ -56,6 +56,7 @@ jest.mock('@/features/auth/supabase', () => ({
   supabase: {
     channel: jest.fn(),
     from: jest.fn(),
+    functions: { invoke: jest.fn() },
     removeChannel: jest.fn(),
     rpc: jest.fn(),
   },
@@ -66,6 +67,7 @@ type Deferred<T> = { promise: Promise<T>; resolve: (value: T) => void };
 type MockFunction = Mock<(...args: never[]) => unknown>;
 type MockChannel = { on: MockFunction; subscribe: MockFunction };
 type MockSupabase = {
+  functions: { invoke: MockFunction };
   channel: MockFunction;
   from: MockFunction;
   removeChannel: MockFunction;
@@ -175,6 +177,9 @@ describe('GroupCheckProvider request versioning', () => {
     renderer = null;
     responseResponses = [];
     jest.clearAllMocks();
+    mockSupabase.functions.invoke.mockImplementation(() => Promise.resolve({
+      data: { code: 'processed', pushFailed: false }, error: null,
+    }));
     mockAuthState.hasProfileError = false;
     mockAuthState.isAdmin = false;
     mockAuthState.isLoading = false;
@@ -432,11 +437,57 @@ describe('GroupCheckProvider request versioning', () => {
     expect(mockSupabase.rpc).toHaveBeenCalledWith('start_group_check', {
       p_question: activeCheck.question,
     });
+    expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('dispatch-group-check', {
+      body: { checkId: activeCheck.id },
+    });
     expect(getContext()).toMatchObject({
       activeCheck,
       currentResponse: null,
       hasSyncError: false,
     });
+  });
+
+  it.each(['rejected', 'partial', 'network'])(
+    'behält die gestartete Abfrage bei Push-Fehlern (%s)', async (failure) => {
+      await renderProvider();
+      mockSupabase.functions.invoke.mockImplementation(() => {
+        if (failure === 'network') return Promise.reject(new Error('Network request failed'));
+        return Promise.resolve({
+          data: failure === 'partial' ? { code: 'processed', pushFailed: true } : null,
+          error: failure === 'rejected' ? { message: 'Function unavailable' } : null,
+        });
+      });
+      checkResponses.push(Promise.resolve({ data: activeCheck, error: null }));
+      responseResponses.push(Promise.resolve({ data: null, error: null }));
+      await act(async () => {
+        expect(await getContext().startCheck(activeCheck.question)).toEqual({
+          checkId: activeCheck.id, error: null, pushFailed: true,
+        });
+      });
+      expect(getContext().activeCheck).toEqual(activeCheck);
+      expect(getContext().hasSyncError).toBe(false);
+    },
+  );
+
+  it('sendet nach einem fehlgeschlagenen Start keinen Push', async () => {
+    await renderProvider();
+    const error = new PostgrestError({ code: '42501', message: 'Admin access required.', details: '', hint: '' });
+    mockSupabase.rpc.mockImplementation(() => Promise.resolve({ data: null, error }));
+    await act(async () => { expect((await getContext().startCheck('Frage?')).error).toBe(error); });
+    expect(mockSupabase.functions.invoke).not.toHaveBeenCalled();
+  });
+
+  it('sendet nach einem Kontowechsel während des Starts keinen Push', async () => {
+    await renderProvider();
+    const start = createDeferred<QueryResult<GroupCheck | null>>();
+    mockSupabase.rpc.mockImplementation(() => start.promise);
+    let action: ReturnType<ReturnType<typeof useGroupCheck>['startCheck']> | undefined;
+    await act(async () => { action = getContext().startCheck('Frage?'); });
+    mockAuthState.session = null;
+    mockAuthState.profile = null;
+    await act(async () => { renderer?.update(<GroupCheckProvider><GroupCheckProbe /></GroupCheckProvider>); });
+    await act(async () => { start.resolve({ data: activeCheck, error: null }); await action; });
+    expect(mockSupabase.functions.invoke).not.toHaveBeenCalled();
   });
 
   it('bleibt ohne Sitzung offline-bereit und startet keine Supabase-Abfrage', async () => {

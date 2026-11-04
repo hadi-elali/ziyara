@@ -758,6 +758,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.showNames": "{status}: Namen anzeigen",
     "groupCheck.hideNames": "{status}: Namen ausblenden",
     "groupCheck.start": "Frage stellen",
+    "groupCheck.pushFailed": "Die Abfrage ist aktiv. Der Push-Versand konnte nicht für alle Geräte bestätigt werden.",
+    "groupCheck.retryPush": "Push-Versand fortsetzen",
     "groupCheck.submitError":
       "Deine Antwort konnte nicht gespeichert werden. Versuche es erneut.",
     "groupCheck.syncErrorBody":
@@ -2259,6 +2261,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.showNames": "{status}: Show names",
     "groupCheck.hideNames": "{status}: Hide names",
     "groupCheck.start": "Ask question",
+    "groupCheck.pushFailed": "The check is active. Push sending could not be confirmed for all devices.",
+    "groupCheck.retryPush": "Resume push sending",
     "groupCheck.submitError": "Your answer could not be saved. Try again.",
     "groupCheck.syncErrorBody":
       "The check status cannot be loaded safely right now. The app remains locked as a precaution.",
@@ -3722,6 +3726,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.showNames": "{status}: عرض الأسماء",
     "groupCheck.hideNames": "{status}: إخفاء الأسماء",
     "groupCheck.start": "طرح السؤال",
+    "groupCheck.pushFailed": "الاستطلاع نشط. تعذّر تأكيد إرسال الإشعار إلى جميع الأجهزة.",
+    "groupCheck.retryPush": "متابعة إرسال الإشعارات",
     "groupCheck.submitError": "تعذر حفظ إجابتك. حاول مرة أخرى.",
     "groupCheck.syncErrorBody":
       "يتعذر تحميل حالة الاستطلاع بأمان الآن. سيبقى التطبيق مقفلاً كإجراء احترازي.",

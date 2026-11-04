@@ -55,6 +55,12 @@ export function subscribeToGroupLocationNotificationResponses(
 
 export async function openGeneralAlarmNotificationSettings() {}
 
+export function subscribeToGroupCheckNotificationResponses(
+  _listener: () => void,
+): NotificationResponseSubscription {
+  return { remove: () => undefined };
+}
+
 export function subscribeToQuestionRoundNotificationResponses(
   _listener: () => void,
 ): NotificationResponseSubscription {

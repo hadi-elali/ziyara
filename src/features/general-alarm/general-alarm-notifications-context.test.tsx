@@ -8,6 +8,7 @@ import {
   subscribeToDailyProgramNotificationResponses,
   subscribeToEmergencyDashboardNotificationResponses,
   subscribeToGroupLocationNotificationResponses,
+  subscribeToGroupCheckNotificationResponses,
 } from '@/features/general-alarm/general-alarm-notifications';
 import {
   GeneralAlarmNotificationsProvider,
@@ -15,7 +16,7 @@ import {
 } from '@/features/general-alarm/general-alarm-notifications-context';
 
 const mockRouter = { push: jest.fn() };
-let mockRootState: { key: string } | undefined;
+let mockRootState: { key: string; routeNames?: string[] } | undefined;
 const mockAuthState = { isAdmin: false, isLoading: false, session: { user: { id: 'user-1' } } };
 const mockI18n = { language: 'de', t: (key: string) => key };
 const mockGroupSubscription = { remove: jest.fn() };
@@ -41,6 +42,7 @@ jest.mock('@/features/general-alarm/general-alarm-notifications', () => ({
   subscribeToEmergencyNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToGeneralAlarmNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToGroupLocationNotificationResponses: jest.fn(() => mockGroupSubscription),
+  subscribeToGroupCheckNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToDailyProgramNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToQuestionRoundNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
   subscribeToWakeUpCallNotificationResponses: jest.fn(() => ({ remove: jest.fn() })),
@@ -111,6 +113,26 @@ describe('GeneralAlarmNotificationsProvider', () => {
     await act(async () => { renderer?.update(tree()); });
     expect(mockRouter.push).toHaveBeenCalledTimes(1);
     expect(mockRouter.push).toHaveBeenCalledWith('/emergency-dashboard');
+  });
+
+  it('wartet mit Status-Pushs bis nach Auth, Intro und Gruppencheck-Startprüfung', async () => {
+    mockRootState = undefined;
+    mockAuthState.isLoading = true;
+    await act(async () => { renderer = create(tree()); });
+    const onResponse = jest.mocked(subscribeToGroupCheckNotificationResponses).mock.calls[0][0];
+    await act(async () => { onResponse(); });
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    mockAuthState.isLoading = false;
+    mockRootState = { key: 'root', routeNames: ['onboarding', 'login'] };
+    await act(async () => { renderer?.update(tree()); });
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    mockRootState = { key: 'root', routeNames: ['startup', 'login'] };
+    await act(async () => { renderer?.update(tree()); });
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    mockRootState = { key: 'root', routeNames: ['(tabs)', 'check-in', 'login'] };
+    await act(async () => { renderer?.update(tree()); });
+    expect(mockRouter.push).toHaveBeenCalledTimes(1);
+    expect(mockRouter.push).toHaveBeenCalledWith('/check-in');
   });
 
   it('öffnet nach einem Tagesprogramm-Push die Programmübersicht', async () => {
