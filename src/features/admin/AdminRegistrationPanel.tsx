@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 export function AdminRegistrationPanel() {
   const { t, isRTL } = useI18n();
   const theme = useTheme();
-  const { enabled, hasError, refresh } = useRegistrationAvailability();
+  const { enabled, hasError, refresh } = useRegistrationAvailability({ realtime: true });
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const saving = useRef(false);

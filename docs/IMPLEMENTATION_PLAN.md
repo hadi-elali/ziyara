@@ -4,6 +4,25 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 11 November 2026: Empty-battery status
+
+- Extend Admin → Users → Details with a reversible “Battery empty” marker and a fifth status-check result category. Keep it exclusive with sickness, retain saved answers and account/person totals, and reuse mutation locking, feedback and stale-read protection. Provide DE/EN/AR text.
+- Add `20261111000000_add_user_battery_empty_status.sql`: protected profile field and constraint, admin-only setter, atomic replacement through both status RPCs, expanded admin lists/results and exclusion from unclaimed response pushes. Load the field on profile refresh/restart, exempt all affected account roles and suppress response prompts.
+- Validate with 84 focused App tests and 92 transactional pgTAP assertions, TypeScript and diff checks. Lint retains four existing warnings; online Doctor reports nine existing patch mismatches (20/21). Preserve the user's existing preference to skip web tests/exports. Migration and synthetic accounts are fully rolled back; apply the migration before distributing the updated client. Remote rollout and native device validation remain pending. Dependencies/native configuration unchanged.
+
+## 11 November 2026: Synchronize registration controls across admins
+
+- Enable an individual Postgres Changes subscription for each open admin registration panel. Refetch the confirmed Boolean on changes and successful subscription/reconnection; retain stale-response protection, foreground polling and resume reconciliation. Remove subscriptions and ignore late events on unmount. Public auth screens retain getter-only reads without a Realtime subscription.
+- Add `20261111010000_sync_registration_settings.sql` to publish the singleton and grant SELECT under an admin-only RLS policy. Preserve RPC-only writes, signup enforcement and anonymous access through the Boolean getter. Deploy this migration before distributing the updated client; no remote deployment or native/dependency changes.
+- Extend the existing hook/panel suite with two simultaneous panels, closing/reopening, reconnection, fallback polling, stale reads and cleanup. Extend the existing database suite with publication/RLS checks and a second administrator. Run local SQL transactionally with full rollback; preserve the user's existing preference to skip browser tests and web exports. Real multiple-device validation remains pending.
+
+## 11 November 2026: Show status checks directly to admins
+
+- Include admins in mandatory status checks, startup/login waiting and administrative route guards. Return to the safe destination after a saved answer; preserve sickness exemptions and both emergency routes.
+- Refresh check-in on focus before redirecting from an empty cached state so a notification tap arriving before Realtime still shows the current check. Retain cold-start notification deferral until authentication, intro and startup checks are ready. Update DE/EN/AR admin copy.
+- Keep push failures and dispatch retries scoped to account/check in the provider so the initiating admin can still resume sending after completing check-in and reopening the administration panel. Clear the warning after successful retry; full app restarts still discard local warnings.
+- Client-only change; distribute the updated JavaScript client. No backend, dependency or native configuration changes. Do not run web tests or exports, as explicitly requested by the user. Focused app validation is recorded in `LLM_CONTEXT.md`.
+
 ## 10 November 2026: Remove active emergencies when deleting a person
 
 - Add `20261110030000_remove_deleted_users_active_emergencies.sql`: a private before-delete trigger on profiles removes the sender's open emergencies for admin, self-service Auth and direct profile deletions. Existing cascades remove receipts and private push attempts. Retain completed history and unrelated senders' emergencies.

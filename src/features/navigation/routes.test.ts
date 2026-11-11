@@ -69,12 +69,12 @@ describe('protected navigation', () => {
     expect(onboardingRoute()).toBe('/onboarding');
   });
 
-  it('hält den nativen Login-Übergang stabil, bis Auth und Pflichtabfrage geklärt sind', () => {
+  it.each([false, true])('hält den Login bis zur geklärten Pflichtabfrage stabil (Admin: %s)', (isAdmin) => {
     expect(
       getLoginScreenDecision({
         hasProfileError: false,
         hasSession: true,
-        isAdmin: false,
+        isAdmin,
         isAuthLoading: true,
         isGroupCheckBlocking: false,
         isGroupCheckLoading: true,
@@ -93,7 +93,7 @@ describe('protected navigation', () => {
       getLoginScreenDecision({
         hasProfileError: false,
         hasSession: true,
-        isAdmin: false,
+        isAdmin,
         isAuthLoading: false,
         isGroupCheckBlocking: true,
         isGroupCheckLoading: true,
@@ -112,7 +112,7 @@ describe('protected navigation', () => {
       getLoginScreenDecision({
         hasProfileError: false,
         hasSession: true,
-        isAdmin: false,
+        isAdmin,
         isAuthLoading: false,
         isGroupCheckBlocking: false,
         isGroupCheckLoading: false,

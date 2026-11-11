@@ -71,6 +71,7 @@ describe('GeneralAlarmNotificationsProvider', () => {
     jest.clearAllMocks();
     renderer = null;
     mockRootState = { key: 'root' };
+    mockAuthState.isAdmin = false;
     mockAuthState.isLoading = false;
     jest.mocked(inspectGeneralAlarmNotificationState).mockResolvedValue({
       availability: 'checking', permissionGranted: true,
@@ -115,7 +116,8 @@ describe('GeneralAlarmNotificationsProvider', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/emergency-dashboard');
   });
 
-  it('wartet mit Status-Pushs bis nach Auth, Intro und Gruppencheck-Startprüfung', async () => {
+  it.each([false, true])('wartet mit Status-Pushs auf Auth, Intro und Startprüfung (Admin: %s)', async (isAdmin) => {
+    mockAuthState.isAdmin = isAdmin;
     mockRootState = undefined;
     mockAuthState.isLoading = true;
     await act(async () => { renderer = create(tree()); });

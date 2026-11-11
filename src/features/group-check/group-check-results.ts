@@ -7,6 +7,7 @@ export type GroupCheckResultGroup = {
 };
 
 export type GroupCheckResultSummary = {
+  batteryEmpty: GroupCheckResultGroup;
   no: GroupCheckResultGroup;
   open: GroupCheckResultGroup;
   sick: GroupCheckResultGroup;
@@ -33,6 +34,7 @@ export function parseAdminGroupCheckResults(value: unknown): AdminGroupCheckResu
       typeof result === 'object' &&
       result !== null &&
       (!('is_sick' in result) || typeof result.is_sick === 'boolean') &&
+      (!('is_battery_empty' in result) || typeof result.is_battery_empty === 'boolean') &&
       'answer' in result &&
       (result.answer === null || typeof result.answer === 'boolean') &&
       'display_name' in result &&
@@ -49,12 +51,15 @@ export function parseAdminGroupCheckResults(value: unknown): AdminGroupCheckResu
 export function summarizeGroupCheckResults(
   results: AdminGroupCheckResult[],
 ): GroupCheckResultSummary {
-  const yes = results.filter((result) => !result.is_sick && result.answer === true);
-  const no = results.filter((result) => !result.is_sick && result.answer === false);
-  const open = results.filter((result) => !result.is_sick && result.answer === null);
+  const available = results.filter((result) => !result.is_sick && !result.is_battery_empty);
+  const yes = available.filter((result) => result.answer === true);
+  const no = available.filter((result) => result.answer === false);
+  const open = available.filter((result) => result.answer === null);
   const sick = results.filter((result) => result.is_sick === true);
+  const batteryEmpty = results.filter((result) => !result.is_sick && result.is_battery_empty === true);
 
   return {
+    batteryEmpty: createResultGroup(batteryEmpty),
     no: createResultGroup(no),
     open: createResultGroup(open),
     sick: createResultGroup(sick),

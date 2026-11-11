@@ -1,5 +1,5 @@
-import { Redirect, type Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Redirect, type Href, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -34,7 +34,6 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
   const {
     signOut,
     hasProfileError,
-    isAdmin,
     profile,
     profileRefreshError,
     refreshProfile,
@@ -52,6 +51,22 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(true);
+
+  useFocusEffect(useCallback(() => {
+    if (hasProfileError) {
+      setIsRefreshing(false);
+      return;
+    }
+    let isActive = true;
+    setIsRefreshing(true);
+    // A push tap can arrive before Realtime has delivered the new check.
+    // Refresh before treating a cached empty state as a closed check.
+    void refresh().finally(() => {
+      if (isActive) setIsRefreshing(false);
+    });
+    return () => { isActive = false; };
+  }, [hasProfileError, refresh]));
 
   const handleSignOut = async () => {
     if (isSigningOut) {
@@ -89,7 +104,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
       const { error } = await respond(activeCheck.id, answer);
       setSubmitError(error?.message ?? null);
 
-      if (!error && !isAdmin) {
+      if (!error) {
         router.replace(returnTo as Href);
       }
     } catch (error) {
@@ -99,8 +114,8 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     }
   };
 
-  if (hasProfileError || !activeCheck) {
-    if (!hasProfileError && !isLoading && !hasSyncError) {
+  if (hasProfileError || !activeCheck || isRefreshing) {
+    if (!hasProfileError && !activeCheck && !isLoading && !isRefreshing && !hasSyncError) {
       return <Redirect href={returnTo as Href} />;
     }
 
@@ -152,13 +167,13 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     );
   }
 
-  if (profile?.is_sick) {
+  if (profile?.is_sick || profile?.is_battery_empty) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <View style={styles.centeredContent}>
           <Card style={styles.statusCard}>
-            <ThemedText type="heading">{t('groupCheck.resultSick')}</ThemedText>
-            <ThemedText>{t('groupCheck.sickBody')}</ThemedText>
+            <ThemedText type="heading">{t(profile.is_sick ? 'groupCheck.resultSick' : 'groupCheck.resultBatteryEmpty')}</ThemedText>
+            <ThemedText>{t(profile.is_sick ? 'groupCheck.sickBody' : 'groupCheck.batteryEmptyBody')}</ThemedText>
             <Button
               icon="home"
               label={t('groupCheck.returnToApp')}
@@ -220,9 +235,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
           {t(
             currentResponse !== null
               ? 'groupCheck.answeredBody'
-              : isAdmin
-                ? 'groupCheck.adminParticipantBody'
-                : 'groupCheck.lockedBody',
+              : 'groupCheck.lockedBody',
           )}
         </ThemedText>
 

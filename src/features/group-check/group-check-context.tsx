@@ -34,6 +34,8 @@ type GroupCheckContextValue = {
   activeCheck: GroupCheck | null;
   closeCheck: (checkId: number) => Promise<GroupCheckActionResult>;
   currentResponse: boolean | null;
+  dispatchPush: (checkId: number) => Promise<boolean>;
+  hasPushFailure: boolean;
   hasSyncError: boolean;
   isBlocking: boolean;
   isLoading: boolean;
@@ -51,13 +53,13 @@ const fallbackRefreshJitterMs = 30_000;
 export function GroupCheckProvider({ children }: PropsWithChildren) {
   const {
     hasProfileError,
-    isAdmin,
     isLoading: isAuthLoading,
     profile,
     session,
   } = useAuth();
   const [activeCheck, setActiveCheck] = useState<GroupCheck | null>(null);
   const [currentResponse, setCurrentResponse] = useState<boolean | null>(null);
+  const [failedPushChecks, setFailedPushChecks] = useState<ReadonlySet<string>>(() => new Set());
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('loading');
   const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
@@ -195,6 +197,20 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
     };
   }, [hasProfileError, isAuthLoading, refresh, userId]);
 
+  const dispatchPush = useCallback(async (checkId: number) => {
+    const sent = await dispatchGroupCheckPush(checkId);
+    if (userId !== null && userIdRef.current === userId) {
+      setFailedPushChecks((current) => {
+        const next = new Set(current);
+        const key = `${userId}:${checkId}`;
+        if (sent) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+    }
+    return sent;
+  }, [userId]);
+
   const startCheck = useCallback(
     async (question: string) => {
       const mutationVersion = ++stateVersion.current;
@@ -213,13 +229,13 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
         }
 
         // A delivery failure must not turn a saved check into a failed start.
-        const [pushAccepted] = await Promise.all([dispatchGroupCheckPush(data.id), refresh()]);
+        const [pushAccepted] = await Promise.all([dispatchPush(data.id), refresh()]);
         return { checkId: data.id, error: null, pushFailed: !pushAccepted };
       }
 
       return { error };
     },
-    [refresh, userId],
+    [dispatchPush, refresh, userId],
   );
 
   const closeCheck = useCallback(
@@ -275,12 +291,15 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
   );
 
   const hasSyncError = syncState === 'error';
+  const hasPushFailure = Boolean(
+    activeCheck && userId && failedPushChecks.has(`${userId}:${activeCheck.id}`),
+  );
   const isLoading = isAuthLoading || syncedUserId !== userId || syncState === 'loading';
   const needsResponse =
     currentResponse === null && Boolean(activeCheck || isLoading || hasSyncError);
   const isBlocking = Boolean(
-    session && !isAuthLoading && !isAdmin &&
-    !(profile?.user_id === userId && profile.is_sick === true) && needsResponse,
+    session && !isAuthLoading &&
+    !(profile?.user_id === userId && (profile.is_sick === true || profile.is_battery_empty === true)) && needsResponse,
   );
 
   const value = useMemo<GroupCheckContextValue>(
@@ -288,6 +307,8 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
       activeCheck,
       closeCheck,
       currentResponse,
+      dispatchPush,
+      hasPushFailure,
       hasSyncError,
       isBlocking,
       isLoading,
@@ -301,6 +322,8 @@ export function GroupCheckProvider({ children }: PropsWithChildren) {
       activeCheck,
       closeCheck,
       currentResponse,
+      dispatchPush,
+      hasPushFailure,
       hasSyncError,
       isBlocking,
       isLoading,

@@ -65,6 +65,7 @@ export type UserProfile = {
   id: number;
   /** Admin-managed; absent in older profile snapshots. */
   is_sick?: boolean;
+  is_battery_empty?: boolean;
   luggage_count: number;
   member_type: MemberType | null;
   party_size: number;
@@ -78,6 +79,7 @@ export type AdminUserSummary = {
   /** Current completed years; absent until the admin-age migration is deployed. */
   age?: number | null;
   is_sick?: boolean;
+  is_battery_empty?: boolean;
   display_name: string;
   emergency_on_duty: boolean;
   family_id: number | null;
@@ -126,6 +128,7 @@ export type GroupCheckResponse = {
 export type AdminGroupCheckResult = {
   answer: boolean | null;
   is_sick?: boolean;
+  is_battery_empty?: boolean;
   display_name: string;
   party_size: number;
 };
@@ -1424,6 +1427,10 @@ export type Database = {
       admin_set_user_role: {
         Args: { p_role: AppRole; p_user_id: string };
         Returns: UserProfile;
+      };
+      admin_set_user_battery_empty: {
+        Args: { p_is_battery_empty: boolean; p_user_id: string };
+        Returns: boolean;
       };
       admin_set_user_sick: {
         Args: { p_is_sick: boolean; p_user_id: string };

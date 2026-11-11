@@ -4,8 +4,11 @@ select no_plan();
 
 insert into auth.users (id, email, raw_user_meta_data) values
   ('89000000-0000-0000-0000-000000000001', 'registration-admin@example.invalid', '{"display_name":"Registration Admin","name":"Registration","surname":"Admin","age":30}'),
+  ('89000000-0000-0000-0000-000000000006', 'registration-admin-2@example.invalid', '{"display_name":"Second Admin","name":"Second","surname":"Admin","age":30}'),
   ('89000000-0000-0000-0000-000000000002', 'registration-user@example.invalid', '{"display_name":"Registration User","name":"Registration","surname":"User","age":30}');
-update public.profiles set role = 'admin' where user_id = '89000000-0000-0000-0000-000000000001';
+update public.profiles set role = 'admin' where user_id in (
+  '89000000-0000-0000-0000-000000000001', '89000000-0000-0000-0000-000000000006'
+);
 
 select ok(public.get_registration_enabled(), 'registration starts enabled');
 select ok(not has_table_privilege('anon', 'public.registration_settings', 'select'), 'anonymous clients only read the public getter');
@@ -14,12 +17,18 @@ select ok(not has_table_privilege('authenticated', 'public.registration_settings
 select ok(not has_table_privilege('authenticated', 'public.registration_settings', 'delete'), 'clients cannot delete the singleton');
 select ok(not has_function_privilege('anon', 'public.admin_set_registration_enabled(boolean)', 'execute'), 'anonymous callers cannot toggle registration');
 select ok(not has_function_privilege('authenticated', 'public.enforce_registration_enabled()', 'execute'), 'guard cannot be called directly');
+select ok(exists (
+  select 1 from pg_publication_tables where pubname = 'supabase_realtime'
+    and schemaname = 'public' and tablename = 'registration_settings'
+), 'registration changes are published to realtime');
+select ok((select relrowsecurity from pg_class where oid = 'public.registration_settings'::regclass), 'registration setting has RLS enabled');
 
 set local role anon;
 select ok(public.get_registration_enabled(), 'anonymous clients can read availability before login');
 reset role;
 select set_config('request.jwt.claim.sub', '89000000-0000-0000-0000-000000000002', true);
 set local role authenticated;
+select is((select count(*) from public.registration_settings), 0::bigint, 'ordinary users cannot read realtime rows');
 select throws_ok($$select public.admin_set_registration_enabled(false)$$, '42501', null, 'ordinary users cannot close registration');
 reset role;
 select set_config('request.jwt.claim.sub', '', true);
@@ -29,6 +38,13 @@ set local role authenticated;
 select throws_ok($$select public.admin_set_registration_enabled(null)$$, '23514', null, 'null setting rejected');
 select is(public.admin_set_registration_enabled(false), false, 'admin can close registration');
 select is(public.get_registration_enabled(), false, 'closed setting persisted');
+select is((select enabled from public.registration_settings where id = 1), false, 'initiating admin can read the closed realtime row');
+select set_config('request.jwt.claim.sub', '89000000-0000-0000-0000-000000000006', true);
+select is((select enabled from public.registration_settings where id = 1), false, 'second admin sees the same closed row');
+select is(public.admin_set_registration_enabled(true), true, 'second admin can reopen registration');
+select set_config('request.jwt.claim.sub', '89000000-0000-0000-0000-000000000001', true);
+select is((select enabled from public.registration_settings where id = 1), true, 'first admin sees reopening by second admin');
+select is(public.admin_set_registration_enabled(false), false, 'first admin closes registration again');
 reset role;
 
 select throws_ok($$insert into auth.users(id, email, raw_user_meta_data) values

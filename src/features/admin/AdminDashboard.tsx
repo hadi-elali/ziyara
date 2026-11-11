@@ -144,9 +144,10 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
   const [expandedRoleUserId, setExpandedRoleUserId] = useState<string | null>(null);
   const [roleFeedback, setRoleFeedback] = useState<RoleFeedback | null>(null);
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
-  const [updatingSickUserId, setUpdatingSickUserId] = useState<string | null>(null);
-  const [sickFeedback, setSickFeedback] = useState<RoleFeedback | null>(null);
-  const sicknessChangeInProgress = useRef(false);
+  const [updatingStatusUserId, setUpdatingStatusUserId] = useState<string | null>(null);
+  const [updatingStatusKind, setUpdatingStatusKind] = useState<'sick' | 'batteryEmpty' | null>(null);
+  const [statusFeedback, setStatusFeedback] = useState<RoleFeedback | null>(null);
+  const statusChangeInProgress = useRef(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminUserSummary | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
@@ -224,7 +225,7 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
 
   const assignRole = useCallback(
     async (userId: string, role: AppRole) => {
-      if (deletionInProgress.current || sicknessChangeInProgress.current) return;
+      if (deletionInProgress.current || statusChangeInProgress.current) return;
       setRoleFeedback(null);
       setUpdatingRoleUserId(userId);
 
@@ -264,19 +265,19 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
     [profile, refreshProfile],
   );
 
-  const setUserSick = async (user: AdminUserSummary) => {
-    if (sicknessChangeInProgress.current || deletionInProgress.current || updatingRoleUserId !== null) return;
-    const isSick = user.is_sick !== true;
-    sicknessChangeInProgress.current = true;
-    setUpdatingSickUserId(user.user_id);
-    setSickFeedback(null);
+  const toggleUserStatus = async (user: AdminUserSummary, kind: 'sick' | 'batteryEmpty') => {
+    if (statusChangeInProgress.current || deletionInProgress.current || updatingRoleUserId !== null) return;
+    const enabled = (kind === 'sick' ? user.is_sick : user.is_battery_empty) !== true;
+    statusChangeInProgress.current = true;
+    setUpdatingStatusUserId(user.user_id);
+    setUpdatingStatusKind(kind);
+    setStatusFeedback(null);
     try {
-      const { data, error } = await supabase.rpc('admin_set_user_sick', {
-        p_user_id: user.user_id,
-        p_is_sick: isSick,
-      });
-      if (error || data !== isSick) {
-        setSickFeedback({ type: 'error', userId: user.user_id, message: t('admin.sickness.error') });
+      const { data, error } = kind === 'sick'
+        ? await supabase.rpc('admin_set_user_sick', { p_user_id: user.user_id, p_is_sick: enabled })
+        : await supabase.rpc('admin_set_user_battery_empty', { p_user_id: user.user_id, p_is_battery_empty: enabled });
+      if (error || data !== enabled) {
+        setStatusFeedback({ type: 'error', userId: user.user_id, message: t('admin.sickness.error') });
         return;
       }
       // Earlier list reads must not undo a confirmed status change.
@@ -285,19 +286,22 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
       setIsLoading(false);
       setIsRefreshing(false);
       setUsers((current) => current.map((entry) => entry.user_id === user.user_id
-        ? { ...entry, is_sick: data } : entry));
-      setSickFeedback({ type: 'success', userId: user.user_id });
+        ? { ...entry, ...(kind === 'sick'
+          ? { is_sick: data, ...(data ? { is_battery_empty: false } : {}) }
+          : { is_battery_empty: data, ...(data ? { is_sick: false } : {}) }) } : entry));
+      setStatusFeedback({ type: 'success', userId: user.user_id });
       if (profile?.user_id === user.user_id) await refreshProfile();
     } catch {
-      setSickFeedback({ type: 'error', userId: user.user_id, message: t('admin.sickness.error') });
+      setStatusFeedback({ type: 'error', userId: user.user_id, message: t('admin.sickness.error') });
     } finally {
-      sicknessChangeInProgress.current = false;
-      setUpdatingSickUserId(null);
+      statusChangeInProgress.current = false;
+      setUpdatingStatusUserId(null);
+      setUpdatingStatusKind(null);
     }
   };
 
   const deleteUser = async () => {
-    if (!deleteTarget || deletionInProgress.current || sicknessChangeInProgress.current || updatingRoleUserId !== null) return;
+    if (!deleteTarget || deletionInProgress.current || statusChangeInProgress.current || updatingRoleUserId !== null) return;
     if (deleteTarget.user_id === profile?.user_id) {
       setDeleteErrorMessage(t('admin.deleteUser.ownAccount'));
       return;
@@ -361,7 +365,7 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
 
   const toggleUserDetails = (userId: string) => {
     setRoleFeedback(null);
-    setSickFeedback(null);
+    setStatusFeedback(null);
     setExpandedRoleUserId(null);
     setExpandedUserId((current) => (current === userId ? null : userId));
   };
@@ -383,8 +387,9 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
           roleFeedback,
           updatingRoleUserId,
           deletingUserId,
-          updatingSickUserId,
-          sickFeedback,
+          updatingStatusUserId,
+          updatingStatusKind,
+          statusFeedback,
         }}
         keyboardShouldPersistTaps="handled"
         keyExtractor={(item) => item.key}
@@ -834,11 +839,13 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
                 setDeleteErrorMessage(null);
                 setDeletedUserName(null);
               }}
-              deletionDisabled={updatingRoleUserId !== null || deletingUserId !== null || updatingSickUserId !== null}
-              onToggleSick={() => void setUserSick(user)}
-              sickDisabled={updatingRoleUserId !== null || deletingUserId !== null || updatingSickUserId !== null}
-              sickFeedback={sickFeedback?.userId === user.user_id ? sickFeedback : null}
-              updatingSick={updatingSickUserId === user.user_id}
+              deletionDisabled={updatingRoleUserId !== null || deletingUserId !== null || updatingStatusUserId !== null}
+              onToggleSick={() => void toggleUserStatus(user, 'sick')}
+              onToggleBatteryEmpty={() => void toggleUserStatus(user, 'batteryEmpty')}
+              statusDisabled={updatingRoleUserId !== null || deletingUserId !== null || updatingStatusUserId !== null}
+              statusFeedback={statusFeedback?.userId === user.user_id ? statusFeedback : null}
+              updatingSick={updatingStatusUserId === user.user_id && updatingStatusKind === 'sick'}
+              updatingBatteryEmpty={updatingStatusUserId === user.user_id && updatingStatusKind === 'batteryEmpty'}
               ownAccount={profile?.user_id === user.user_id}
               onToggleDetails={() => toggleUserDetails(user.user_id)}
               onToggleRoleAssignment={() => {
@@ -852,7 +859,7 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
                 roleFeedback?.userId === user.user_id ? roleFeedback : null
               }
               roleChoicesDisabled={
-                updatingRoleUserId !== null || deletingUserId !== null || updatingSickUserId !== null
+                updatingRoleUserId !== null || deletingUserId !== null || updatingStatusUserId !== null
               }
               updatingRole={updatingRoleUserId === user.user_id}
               user={user}
@@ -905,8 +912,10 @@ function AdminUserDisclosure({
   onToggleDetails,
   onToggleRoleAssignment,
   onToggleSick,
-  sickDisabled,
-  sickFeedback,
+  onToggleBatteryEmpty,
+  updatingBatteryEmpty,
+  statusDisabled,
+  statusFeedback,
   updatingSick,
   roleAssignmentExpanded,
   roleChoicesDisabled,
@@ -922,8 +931,10 @@ function AdminUserDisclosure({
   onToggleDetails: () => void;
   onToggleRoleAssignment: () => void;
   onToggleSick: () => void;
-  sickDisabled: boolean;
-  sickFeedback: RoleFeedback | null;
+  onToggleBatteryEmpty: () => void;
+  updatingBatteryEmpty: boolean;
+  statusDisabled: boolean;
+  statusFeedback: RoleFeedback | null;
   updatingSick: boolean;
   roleAssignmentExpanded: boolean;
   roleChoicesDisabled: boolean;
@@ -976,7 +987,8 @@ function AdminUserDisclosure({
           expanded ? 'admin.details.hide' : 'admin.details.show',
           { name: user.display_name },
         ), hasSpecialRole ? `${t('admin.roleLabel')}: ${roleLabel}` : null,
-        user.is_sick ? t('admin.sickness.label') : null]
+        user.is_sick ? t('admin.sickness.label') : null,
+        user.is_battery_empty ? t('admin.batteryEmpty.label') : null]
           .filter(Boolean)
           .join(', ')}
         accessibilityRole="button"
@@ -996,6 +1008,11 @@ function AdminUserDisclosure({
             {user.display_name}
           </ThemedText>
           {hasSpecialRole ? roleBadge : null}
+          {user.is_battery_empty ? (
+            <ThemedText type="smallBold" themeColor="warning">
+              {t('admin.batteryEmpty.label')}
+            </ThemedText>
+          ) : null}
           {user.is_sick ? (
             <ThemedText type="smallBold" themeColor="warning">
               {t('admin.sickness.label')}
@@ -1041,7 +1058,7 @@ function AdminUserDisclosure({
           </ThemedText>
 
           <Button
-            disabled={sickDisabled}
+            disabled={statusDisabled}
             icon={user.is_sick ? 'confirm' : 'warning'}
             label={t(updatingSick
               ? 'admin.sickness.saving'
@@ -1052,12 +1069,24 @@ function AdminUserDisclosure({
           <ThemedText type="small" themeColor="textSecondary">
             {t('admin.sickness.body')}
           </ThemedText>
-          {sickFeedback ? (
+          <Button
+            disabled={statusDisabled}
+            icon={user.is_battery_empty ? 'confirm' : 'warning'}
+            label={t(updatingBatteryEmpty
+              ? 'admin.sickness.saving'
+              : user.is_battery_empty ? 'admin.batteryEmpty.clear' : 'admin.batteryEmpty.mark')}
+            onPress={onToggleBatteryEmpty}
+            variant="secondary"
+          />
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('admin.batteryEmpty.body')}
+          </ThemedText>
+          {statusFeedback ? (
             <ThemedText
               accessibilityLiveRegion="polite"
               type="small"
-              themeColor={sickFeedback.type === 'success' ? 'success' : 'danger'}>
-              {sickFeedback.type === 'success' ? t('admin.sickness.saved') : sickFeedback.message}
+              themeColor={statusFeedback.type === 'success' ? 'success' : 'danger'}>
+              {statusFeedback.type === 'success' ? t('admin.sickness.saved') : statusFeedback.message}
             </ThemedText>
           ) : null}
 

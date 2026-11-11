@@ -9,7 +9,6 @@ import { Spacing } from '@/constants/theme';
 import type { AdminGroupCheckResult } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
-import { dispatchGroupCheckPush } from '@/features/group-check/group-check-push';
 import {
   parseAdminGroupCheckResults,
   summarizeGroupCheckResults,
@@ -28,6 +27,8 @@ export function AdminGroupCheckPanel() {
   const {
     activeCheck,
     closeCheck,
+    dispatchPush,
+    hasPushFailure,
     hasSyncError,
     refresh,
     startCheck,
@@ -41,7 +42,6 @@ export function AdminGroupCheckPanel() {
   const [question, setQuestion] = useState('');
   const [hasQuestionError, setHasQuestionError] = useState(false);
   const [resultsCheckId, setResultsCheckId] = useState<number | null>(null);
-  const [pushFailedCheckId, setPushFailedCheckId] = useState<number | null>(null);
   const resultsRequestSequence = useRef(0);
 
   const checkId = activeCheck?.id ?? null;
@@ -159,12 +159,11 @@ export function AdminGroupCheckPanel() {
     setIsWorking(true);
 
     try {
-      const { checkId: startedCheckId, error, pushFailed } = await startCheck(normalizedQuestion);
+      const { error } = await startCheck(normalizedQuestion);
       setActionErrorMessage(error?.message ?? null);
 
       if (!error) {
         setQuestion('');
-        setPushFailedCheckId(pushFailed ? startedCheckId ?? null : null);
       }
     } catch (error) {
       setActionErrorMessage(getOriginalErrorMessage(error));
@@ -178,8 +177,7 @@ export function AdminGroupCheckPanel() {
     const retryCheckId = activeCheck.id;
     setIsWorking(true);
     try {
-      const sent = await dispatchGroupCheckPush(retryCheckId);
-      setPushFailedCheckId(sent ? null : retryCheckId);
+      await dispatchPush(retryCheckId);
     } finally {
       setIsWorking(false);
     }
@@ -289,6 +287,13 @@ export function AdminGroupCheckPanel() {
                   title={t('groupCheck.resultSick')}
                 />
                 <ResultColumn
+                  key={`batteryEmpty:${checkId}`}
+                  color={theme.textSecondary}
+                  emptyLabel={t('groupCheck.noBatteryEmpty')}
+                  group={resultSummary.batteryEmpty}
+                  title={t('groupCheck.resultBatteryEmpty')}
+                />
+                <ResultColumn
                   key={`open:${checkId}`}
                   color={theme.warning}
                   emptyLabel={t('groupCheck.noOpen')}
@@ -300,7 +305,7 @@ export function AdminGroupCheckPanel() {
             </>
           )}
 
-          {pushFailedCheckId === checkId ? (
+          {hasPushFailure ? (
             <View style={styles.errorBlock} accessibilityLiveRegion="polite">
               <ThemedText type="small" themeColor="warning">
                 {t('groupCheck.pushFailed')}

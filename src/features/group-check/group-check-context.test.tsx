@@ -167,8 +167,12 @@ async function renderProvider() {
 }
 
 describe('GroupCheckProvider request versioning', () => {
-  it('befreit als krank markierte Konten und verlangt nach Aufhebung wieder eine fehlende Antwort', async () => {
-    mockAuthState.profile = { ...mockProfile, is_sick: true };
+  it.each([
+    [false, 'is_sick'], [true, 'is_sick'],
+    [false, 'is_battery_empty'], [true, 'is_battery_empty'],
+  ] satisfies [boolean, 'is_sick' | 'is_battery_empty'][])('befreit markierte Konten und verlangt nach Aufhebung wieder eine Antwort (Admin: %s, Status: %s)', async (isAdmin, status) => {
+    mockAuthState.isAdmin = isAdmin;
+    mockAuthState.profile = { ...mockProfile, role: isAdmin ? 'admin' : 'user', [status]: true };
     checkResponses.push(Promise.resolve({ data: activeCheck, error: null }));
     responseResponses.push(Promise.resolve({ data: null, error: null }));
     await act(async () => { renderer = create(<GroupCheckProvider><GroupCheckProbe /></GroupCheckProvider>); });
@@ -177,7 +181,7 @@ describe('GroupCheckProvider request versioning', () => {
     expect(getContext().currentResponse).toBeNull();
     expect(getContext().isBlocking).toBe(false);
 
-    mockAuthState.profile = { ...mockProfile, is_sick: false };
+    mockAuthState.profile = { ...mockAuthState.profile, [status]: false };
     await act(async () => { renderer!.update(<GroupCheckProvider><GroupCheckProbe /></GroupCheckProvider>); });
     expect(getContext().isBlocking).toBe(true);
   });
@@ -274,6 +278,31 @@ describe('GroupCheckProvider request versioning', () => {
     expect(getContext().isLoading).toBe(true);
     expect(getContext().isBlocking).toBe(false);
     expect(mockSupabase.from).not.toHaveBeenCalled();
+  });
+
+  it('verlangt auch vom Admin eine Antwort und fragt bei der nächsten Abfrage erneut', async () => {
+    mockAuthState.isAdmin = true;
+    mockAuthState.profile = { ...mockProfile, role: 'admin' };
+    checkResponses.push(Promise.resolve({ data: activeCheck, error: null }));
+    responseResponses.push(Promise.resolve({ data: null, error: null }));
+    await act(async () => {
+      renderer = create(<GroupCheckProvider><GroupCheckProbe /></GroupCheckProvider>);
+    });
+    await waitForCondition(() => !getContext().isLoading);
+    expect(getContext().isBlocking).toBe(true);
+
+    checkResponses.push(Promise.resolve({ data: activeCheck, error: null }));
+    responseResponses.push(Promise.resolve({ data: { answer: true }, error: null }));
+    await act(async () => { await getContext().respond(activeCheck.id, true); });
+    expect(getContext().currentResponse).toBe(true);
+    expect(getContext().isBlocking).toBe(false);
+
+    const nextCheck = { ...activeCheck, id: activeCheck.id + 1 };
+    checkResponses.push(Promise.resolve({ data: nextCheck, error: null }));
+    responseResponses.push(Promise.resolve({ data: null, error: null }));
+    await act(async () => { await getContext().refresh(); });
+    expect(getContext().activeCheck).toEqual(nextCheck);
+    expect(getContext().isBlocking).toBe(true);
   });
 
   it('startet bei einem initialen Profilfehler keine zweite Serverabfrage', async () => {
@@ -481,6 +510,19 @@ describe('GroupCheckProvider request versioning', () => {
       });
       expect(getContext().activeCheck).toEqual(activeCheck);
       expect(getContext().hasSyncError).toBe(false);
+      expect(getContext().hasPushFailure).toBe(true);
+
+      // The provider survives the mandatory check-in and reopening the panel.
+      checkResponses.push(Promise.resolve({ data: activeCheck, error: null }));
+      responseResponses.push(Promise.resolve({ data: { answer: true }, error: null }));
+      await act(async () => { await getContext().respond(activeCheck.id, true); });
+      expect(getContext().hasPushFailure).toBe(true);
+
+      mockSupabase.functions.invoke.mockImplementation(() => Promise.resolve({
+        data: { code: 'processed', pushFailed: false }, error: null,
+      }));
+      await act(async () => { expect(await getContext().dispatchPush(activeCheck.id)).toBe(true); });
+      expect(getContext().hasPushFailure).toBe(false);
     },
   );
 

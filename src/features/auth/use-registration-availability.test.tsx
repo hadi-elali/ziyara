@@ -12,7 +12,17 @@ const mockSave = jest.fn<() => Promise<Result>>();
 const mockRpc = jest.fn((name: string, _args?: unknown) => name === 'get_registration_enabled'
   ? { abortSignal: mockQuery }
   : mockSave());
-jest.mock('@/features/auth/supabase', () => ({ supabase: { rpc: (name: string, args?: unknown) => mockRpc(name, args) } }));
+const mockChannel = jest.fn((_name: string) => ({
+  on: jest.fn<(event: string, filter: unknown, callback: () => void) => unknown>().mockReturnThis(),
+  subscribe: jest.fn<(callback: (status: string) => void) => unknown>().mockReturnThis(),
+}));
+const mockRemoveChannel = jest.fn();
+const getChannels = () => mockChannel.mock.results.map(result => result.value as ReturnType<typeof mockChannel>);
+jest.mock('@/features/auth/supabase', () => ({ supabase: {
+  rpc: (name: string, args?: unknown) => mockRpc(name, args),
+  channel: (name: string) => mockChannel(name),
+  removeChannel: (channel: unknown) => mockRemoveChannel(channel),
+} }));
 jest.mock('@/features/i18n/i18n', () => ({ useI18n: () => ({ t: (key: string) => key, isRTL: false }) }));
 jest.mock('@/hooks/use-theme', () => ({ useTheme: () => ({ accent: '#267', border: '#888', background: '#fff' }) }));
 jest.mock('@/components/themed-text', () => ({ ThemedText: jest.requireActual<typeof import('react-native')>('react-native').Text }));
@@ -56,6 +66,7 @@ describe('registration availability and admin control', () => {
 
   it('fails closed on a failed read and recovers when the app returns to the foreground', async () => {
     await mount();
+    expect(mockChannel).not.toHaveBeenCalled();
     expect(value.enabled).toBe(true);
     mockQuery.mockResolvedValueOnce({ data: null, error: { message: 'offline' } });
     await act(async () => { await value.refresh(); });
@@ -110,5 +121,88 @@ describe('registration availability and admin control', () => {
     await act(async () => { resolve({ data: null, error: { message: 'Admin access required.' } }); });
     expect(renderer!.root.findByType(Switch).props.value).toBe(true);
     expect(JSON.stringify(renderer!.toJSON())).toContain('admin.registration.saveError');
+  });
+
+  it('updates another open admin panel immediately when registration is closed and reopened', async () => {
+    let serverEnabled = true;
+    mockQuery.mockImplementation(async () => ({ data: serverEnabled, error: null }));
+    mockSave.mockImplementation(async () => {
+      serverEnabled = !serverEnabled;
+      return { data: serverEnabled, error: null };
+    });
+    await act(async () => {
+      renderer = create(<><AdminRegistrationPanel /><AdminRegistrationPanel /></>);
+    });
+    const channels = getChannels();
+    expect(mockChannel.mock.calls[0][0]).not.toBe(mockChannel.mock.calls[1][0]);
+    for (const channel of channels) {
+      expect(channel.on).toHaveBeenCalledWith('postgres_changes', {
+        event: '*', schema: 'public', table: 'registration_settings',
+      }, expect.any(Function));
+    }
+    const switches = () => renderer!.root.findAllByType(Switch).map(control => control.props.value);
+    expect(switches()).toEqual([true, true]);
+    await act(async () => { renderer!.root.findAllByType(Switch)[0].props.onValueChange(false); });
+    await act(async () => { channels.forEach(channel => channel.on.mock.calls[0][2]()); });
+    expect(switches()).toEqual([false, false]);
+    await act(async () => { renderer!.root.findAllByType(Switch)[1].props.onValueChange(true); });
+    await act(async () => { channels.forEach(channel => channel.on.mock.calls[0][2]()); });
+    expect(switches()).toEqual([true, true]);
+    expect(mockSave).toHaveBeenCalledTimes(2);
+  });
+
+  it('reconciles on subscription and reconnect without waiting for a change event', async () => {
+    await mount(true);
+    const [channel] = getChannels();
+    mockQuery.mockResolvedValueOnce({ data: false, error: null });
+    await act(async () => { channel.subscribe.mock.calls[0][0]('SUBSCRIBED'); });
+    expect(renderer!.root.findByType(Switch).props.value).toBe(false);
+    mockQuery.mockResolvedValueOnce({ data: true, error: null });
+    await act(async () => { channel.subscribe.mock.calls[0][0]('SUBSCRIBED'); });
+    expect(renderer!.root.findByType(Switch).props.value).toBe(true);
+  });
+
+  it('keeps the foreground poll when realtime is unavailable and pauses it in the background', async () => {
+    const originalState = AppState.currentState;
+    try {
+      AppState.currentState = 'active';
+      await mount(true);
+      mockQuery.mockResolvedValueOnce({ data: false, error: null });
+      await act(async () => { await jest.advanceTimersByTimeAsync(30_000); });
+      expect(renderer!.root.findByType(Switch).props.value).toBe(false);
+      const reads = mockQuery.mock.calls.length;
+      AppState.currentState = 'background';
+      await act(async () => { await jest.advanceTimersByTimeAsync(30_000); });
+      expect(mockQuery).toHaveBeenCalledTimes(reads);
+    } finally {
+      AppState.currentState = originalState;
+    }
+  });
+
+  it('ignores an older enabled response when a realtime refresh confirms closure', async () => {
+    let resolve!: (result: Result) => void;
+    mockQuery.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    await mount(true);
+    const [channel] = getChannels();
+    mockQuery.mockResolvedValueOnce({ data: false, error: null });
+    await act(async () => { channel.on.mock.calls[0][2](); });
+    await act(async () => { resolve({ data: true, error: null }); });
+    expect(renderer!.root.findByType(Switch).props.value).toBe(false);
+  });
+
+  it('removes realtime listeners and ignores late callbacks after unmount', async () => {
+    await mount(true);
+    const [channel] = getChannels();
+    await act(async () => { renderer!.unmount(); });
+    renderer = null;
+    expect(mockRemoveChannel).toHaveBeenCalledWith(channel);
+    const reads = mockQuery.mock.calls.length;
+    await act(async () => {
+      channel.on.mock.calls[0][2]();
+      channel.subscribe.mock.calls[0][0]('SUBSCRIBED');
+      onAppState('active');
+      await jest.advanceTimersByTimeAsync(30_000);
+    });
+    expect(mockQuery).toHaveBeenCalledTimes(reads);
   });
 });

@@ -225,7 +225,7 @@ function RootNavigation() {
               options={{ ...emergencyBackOptions, title: t('emergencyDashboard.navTitle') }}
             />
           </Stack.Protected>
-          <Stack.Protected guard={hasVerifiedSession && hasCompletedOnboarding}>
+          <Stack.Protected guard={canAccessAppRoutes}>
             <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
             <Stack.Screen name="admin/[section]" options={{ title: t('nav.admin') }} />
           </Stack.Protected>

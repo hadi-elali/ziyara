@@ -143,7 +143,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session && activeCheck && !profile?.is_sick ? (
+      {session && activeCheck && !profile?.is_sick && !profile?.is_battery_empty ? (
         <View
           style={[
             styles.notice,

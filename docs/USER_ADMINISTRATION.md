@@ -1,8 +1,12 @@
 # Benutzerverwaltung und Anmeldung
 
-Stand: 10. November 2026.
+Stand: 11. November 2026.
 
 ## Bedienung
+
+Unter **Dashboard → Benutzer → Details → Als „Akku leer“ markieren** lässt sich zusätzlich ein leerer Akku hinterlegen. **„Akku leer“ aufheben** entfernt die Markierung. „Krank“ und „Akku leer“ ersetzen einander; das Aufheben stellt eine zuvor ersetzte Markierung nicht wieder her. Bei Statusabfragen erscheint das Konto ausschließlich in **Akku leer** und gilt nicht als ausstehende Antwort. Die Antwortpflicht entfällt für alle Rollen einschließlich Admins. Vorhandene Antworten bleiben erhalten und gelten nach Aufhebung wieder.
+
+Vor Auslieferung des aktualisierten Clients ist `20261111000000_add_user_battery_empty_status.sql` auf dem Zielprojekt anzuwenden. Die Migration erweitert Profil, Admin-RPCs, Listen und Push-Ausnahmen. Sie ist mit 33 neuen sowie 59 bestehenden SQL-Assertions in einer zurückgerollten lokalen Transaktion geprüft; noch nicht dauerhaft lokal oder remote angewandt. Die 84 gezielten App-Tests bestehen. Native Geräteprüfung steht aus.
 
 Unter **Dashboard → Benutzer → Details → Als krank markieren** wird ein Benutzerkonto bis zur manuellen Aufhebung als krank geführt. **Krankmarkierung aufheben** nimmt den Status zurück. Die Markierung erscheint neben dem Namen und wird dauerhaft gespeichert. Bei einem Speicherfehler bleibt die bisherige Anzeige erhalten; die Aktion lässt sich wiederholen.
 

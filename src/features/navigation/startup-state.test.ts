@@ -31,7 +31,7 @@ describe('startup navigation', () => {
     expect(isStartupNavigationPending({ ...restoredAccount, isGroupCheckLoading: true })).toBe(true);
     expect(isStartupNavigationPending(restoredAccount)).toBe(false);
     expect(isStartupNavigationPending({ ...restoredAccount, hasProfileError: true, isGroupCheckLoading: true })).toBe(false);
-    expect(isStartupNavigationPending({ ...restoredAccount, isAdmin: true, isGroupCheckLoading: true })).toBe(false);
+    expect(isStartupNavigationPending({ ...restoredAccount, isAdmin: true, isGroupCheckLoading: true })).toBe(true);
     expect(isStartupRouteReady({ ...restoredAccount, pathname: '/startup' })).toBe(false);
   });
 
@@ -46,8 +46,8 @@ describe('startup navigation', () => {
     expect(stages.map(isStartupRouteReady)).toEqual([false, false, false, false, true]);
   });
 
-  it('zeigt eine echte Pflichtabfrage erst auf ihrem Zielscreen', () => {
-    const blocking = { ...restoredAccount, hasActiveCheck: true, isGroupCheckBlocking: true };
+  it.each([false, true])('zeigt eine echte Pflichtabfrage erst auf ihrem Zielscreen (Admin: %s)', (isAdmin) => {
+    const blocking = { ...restoredAccount, isAdmin, hasActiveCheck: true, isGroupCheckBlocking: true };
     expect(isStartupRouteReady(blocking)).toBe(false);
     expect(isStartupRouteReady({ ...blocking, pathname: '/check-in' })).toBe(true);
   });
@@ -80,9 +80,9 @@ describe('startup navigation', () => {
     })).toBe(false);
   });
 
-  it('verbirgt den Guide für Gäste und öffnet Admin-Home ohne Gruppencheck-Abfrage', () => {
+  it('verbirgt den Guide für Gäste und wartet auch für Admins auf die Gruppencheck-Abfrage', () => {
     expect(isStartupRouteReady({ ...restoredAccount, hasSession: false, isGroupCheckLoading: true })).toBe(false);
-    expect(isStartupRouteReady({ ...restoredAccount, isAdmin: true, isGroupCheckLoading: true })).toBe(true);
+    expect(isStartupRouteReady({ ...restoredAccount, isAdmin: true, isGroupCheckLoading: true })).toBe(false);
   });
 
   it('verbirgt automatische Auth-Weiterleitungen und zeigt Gästen das Formular', () => {

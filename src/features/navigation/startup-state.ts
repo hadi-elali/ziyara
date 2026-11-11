@@ -15,7 +15,7 @@ export function isStartupNavigationPending(state: Pick<StartupState,
   'hasProfileError' | 'hasSession' | 'isAdmin' | 'isAuthLoading' | 'isGroupCheckLoading'
 >): boolean {
   return state.isAuthLoading || (
-    state.hasSession && !state.isAdmin && !state.hasProfileError && state.isGroupCheckLoading
+    state.hasSession && !state.hasProfileError && state.isGroupCheckLoading
   );
 }
 
@@ -58,7 +58,7 @@ export function isStartupRouteReady(state: StartupState): boolean {
 
   if (state.hasSession) {
     if (state.hasProfileError || state.isGroupCheckBlocking) return false;
-    return state.isAdmin || !state.isGroupCheckLoading;
+    return !state.isGroupCheckLoading;
   }
 
   return false;

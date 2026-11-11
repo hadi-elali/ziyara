@@ -6,6 +6,27 @@ import {
 } from '@/features/group-check/group-check-results';
 
 describe('group check result summary', () => {
+  it('führt leere Akkus separat, ohne offene oder gespeicherte Antworten doppelt zu zählen', () => {
+    const results = [
+      { answer: null, display_name: 'Akku A', party_size: 2, is_battery_empty: true },
+      { answer: true, display_name: 'Akku B', party_size: 1, is_battery_empty: true },
+      { answer: false, display_name: 'Akku C', party_size: 3, is_battery_empty: true },
+      { answer: null, display_name: 'Krank', party_size: 1, is_sick: true },
+      { answer: null, display_name: 'Offen', party_size: 2 },
+    ];
+    expect(summarizeGroupCheckResults(results)).toMatchObject({
+      batteryEmpty: { accountCount: 3, representedPeople: 6 },
+      sick: { accountCount: 1 }, open: { accountCount: 1 },
+      yes: { accountCount: 0 }, no: { accountCount: 0 },
+      totalAccounts: 5, totalRepresentedPeople: 9,
+    });
+    expect(summarizeGroupCheckResults(results.map(result => ({ ...result, is_battery_empty: false }))))
+      .toMatchObject({ batteryEmpty: { accountCount: 0 }, open: { accountCount: 2 }, yes: { accountCount: 1 }, no: { accountCount: 1 } });
+    expect(parseAdminGroupCheckResults(results)).toEqual(results);
+    expect(parseAdminGroupCheckResults([{ ...results[0], is_battery_empty: 'true' }])).toBeNull();
+    expect(parseAdminGroupCheckResults([{ ...results[0], is_battery_empty: null }])).toBeNull();
+  });
+
   it('zählt kranke Konten ausschließlich in ihrer eigenen Kategorie und erhält die Antworten', () => {
     const results = [
       { answer: null, display_name: 'Krank ohne Antwort', party_size: 3, is_sick: true },

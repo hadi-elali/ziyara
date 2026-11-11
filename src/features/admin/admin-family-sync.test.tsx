@@ -29,6 +29,7 @@ const mockReadFamilies = jest.fn<() => Promise<Result<AccountFamily[]>>>();
 const mockSave = jest.fn<(args: unknown) => Promise<Result<AccountFamily>>>();
 const mockDelete = jest.fn<(args: unknown) => Promise<Result<AccountFamily>>>();
 const mockSetSick = jest.fn<(args: unknown) => Promise<Result<boolean>>>();
+const mockSetBatteryEmpty = jest.fn<(args: unknown) => Promise<Result<boolean>>>();
 const mockDeleteUser = jest.fn<(args: unknown) => Promise<{
   data: string | null;
   error: { code: string; message: string } | null;
@@ -41,6 +42,7 @@ jest.mock('@/features/auth/supabase', () => ({ supabase: {
     if (name === 'admin_delete_account_family') return mockDelete(args);
     if (name === 'admin_delete_user') return mockDeleteUser(args);
     if (name === 'admin_set_user_sick') return mockSetSick(args);
+    if (name === 'admin_set_user_battery_empty') return mockSetBatteryEmpty(args);
     if (name === 'admin_list_account_families') return { abortSignal: () => mockReadFamilies() };
     if (name === 'admin_list_users') return { range: () => ({ abortSignal: () => mockReadUsers() }) };
     throw new Error(`Unexpected RPC: ${name}`);
@@ -185,6 +187,7 @@ describe('admin family and user synchronization', () => {
     mockSave.mockReset().mockResolvedValue({ data: family, error: null });
     mockDelete.mockReset().mockResolvedValue({ data: family, error: null });
     mockSetSick.mockReset().mockResolvedValue({ data: true, error: null });
+    mockSetBatteryEmpty.mockReset().mockResolvedValue({ data: true, error: null });
     mockDeleteUser.mockReset().mockResolvedValue({ data: users[0].user_id, error: null });
     mockCurrentUserId = 'current-admin';
   });
@@ -194,6 +197,41 @@ describe('admin family and user synchronization', () => {
     jest.useRealTimers();
   });
   afterAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = previousAct; });
+
+  it('saves and clears battery-empty status, replaces sickness and locks concurrent status writes', async () => {
+    mockReadUsers.mockResolvedValue({ data: users.map((user, index) => ({ ...user, is_sick: index === 0 })), error: null });
+    const saving = deferred<Result<boolean>>();
+    mockSetBatteryEmpty.mockReturnValueOnce(saving.promise);
+    await render('users'); await expandUser(users[0].user_id);
+    const mark = root().findAllByType(Button).find(node => node.props.label === 'admin.batteryEmpty.mark')!;
+    const sick = root().findAllByType(Button).find(node => node.props.label === 'admin.sickness.clear')!;
+    await act(async () => { mark.props.onPress(); mark.props.onPress(); sick.props.onPress(); });
+    expect(mockSetBatteryEmpty).toHaveBeenCalledTimes(1);
+    expect(mockSetSick).not.toHaveBeenCalled();
+    expect(mockSetBatteryEmpty).toHaveBeenCalledWith({ p_user_id: users[0].user_id, p_is_battery_empty: true });
+    expect(adminButton('action').props.disabled).toBe(true);
+    await act(async () => { saving.resolve({ data: true, error: null }); });
+    expect(listedUsers()[0]).toMatchObject({ is_sick: false, is_battery_empty: true });
+    expect(hasText('admin.batteryEmpty.label')).toBe(true);
+    mockSetBatteryEmpty.mockResolvedValueOnce({ data: false, error: null });
+    await act(async () => { root().findAllByType(Button).find(node => node.props.label === 'admin.batteryEmpty.clear')!.props.onPress(); });
+    expect(listedUsers()[0]).toMatchObject({ is_sick: false, is_battery_empty: false });
+    await act(async () => { root().findAllByType(Button).find(node => node.props.label === 'admin.batteryEmpty.mark')!.props.onPress(); });
+    await act(async () => { root().findAllByType(Button).find(node => node.props.label === 'admin.sickness.mark')!.props.onPress(); });
+    expect(listedUsers()[0]).toMatchObject({ is_sick: true, is_battery_empty: false });
+    expect(hasText('admin.batteryEmpty.label')).toBe(false);
+  });
+
+  it('keeps sickness after a failed battery-empty update and permits retry', async () => {
+    mockReadUsers.mockResolvedValue({ data: users.map(user => ({ ...user, is_sick: true })), error: null });
+    mockSetBatteryEmpty.mockResolvedValueOnce({ data: null, error: { message: 'Denied' } });
+    await render('users'); await expandUser(users[0].user_id);
+    await act(async () => { root().findAllByType(Button).find(node => node.props.label === 'admin.batteryEmpty.mark')!.props.onPress(); });
+    expect(listedUsers()[0].is_sick).toBe(true);
+    expect(listedUsers()[0].is_battery_empty).toBeUndefined();
+    expect(hasText('admin.sickness.error')).toBe(true);
+    expect(root().findAllByType(Button).find(node => node.props.label === 'admin.batteryEmpty.mark')!.props.disabled).toBe(false);
+  });
 
   it('saves and clears a sick marker, locking duplicate submissions and other account mutations', async () => {
     const saving = deferred<Result<boolean>>();

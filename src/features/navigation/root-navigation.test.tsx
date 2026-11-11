@@ -4,8 +4,10 @@ import { ActivityIndicator, BackHandler, Modal, Platform, View } from 'react-nat
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
 import RootLayout from '@/app/_layout';
+import CheckInScreen from '@/app/check-in';
 import RegisterScreen from '@/app/register';
 import { Button } from '@/components/ui/button';
+import type { GroupCheck } from '@/domain/database';
 import { AuthFormScreen } from '@/features/auth/AuthFormScreen';
 
 const mockRouter = { back: jest.fn(), canGoBack: jest.fn(() => false), replace: jest.fn() };
@@ -19,7 +21,15 @@ const mockAuth = {
   profileRefreshError: null,
   session: null as { user: { id: string } } | null,
 };
-const mockCheck = { activeCheck: null, hasSyncError: false, isBlocking: false, isLoading: true };
+const mockCheck = {
+  activeCheck: null as GroupCheck | null,
+  currentResponse: null as boolean | null,
+  hasSyncError: false,
+  isBlocking: false,
+  isLoading: true,
+  refresh: jest.fn<() => Promise<void>>(async () => undefined),
+  respond: jest.fn(async (_checkId: number, _answer: boolean) => ({ error: null })),
+};
 let mockHomeLocked = false;
 let mockHasCompletedOnboarding = true;
 
@@ -51,6 +61,9 @@ jest.mock('expo-router', () => {
     ),
     ThemeProvider: ({ children }: PropsWithChildren) => children,
     useLocalSearchParams: () => ({ returnTo: mockReturnTo }),
+    useFocusEffect: (effect: () => void | (() => void)) => {
+      jest.requireActual<typeof import('react')>('react').useEffect(effect, [effect]);
+    },
     usePathname: () => mockPathname,
     useRouter: () => mockRouter,
   };
@@ -109,6 +122,7 @@ jest.mock('@/features/wake-up-call/wake-up-call-context', () => ({
 }));
 jest.mock('@/components/themed-text', () => ({ ThemedText: () => null }));
 jest.mock('@/components/ui/button', () => ({ Button: () => null }));
+jest.mock('@/components/ui/symbol-icon', () => ({ SymbolIcon: () => null }));
 jest.mock('@/features/auth/AuthFormScreen', () => ({ AuthFormScreen: () => null }));
 jest.mock('@/hooks/use-theme', () => ({
   useTheme: () => ({ accent: '#000000', background: '#ffffff' }),
@@ -149,7 +163,9 @@ describe('root startup route guards', () => {
     mockHomeLocked = false;
     mockHasCompletedOnboarding = true;
     Object.assign(mockAuth, { hasProfileError: false, isAdmin: false, isLoading: true, session: { user: { id: 'restored-user' } } });
-    Object.assign(mockCheck, { hasSyncError: false, isBlocking: false, isLoading: false });
+    Object.assign(mockCheck, { activeCheck: null, currentResponse: null, hasSyncError: false, isBlocking: false, isLoading: false });
+    mockCheck.refresh.mockImplementation(async () => undefined);
+    mockCheck.respond.mockResolvedValue({ error: null });
   });
   afterEach(async () => {
     await act(async () => renderer?.unmount());
@@ -199,7 +215,8 @@ describe('root startup route guards', () => {
     expect(mockRouter.replace).toHaveBeenCalledWith('/onboarding');
   });
 
-  it('registriert während des Kaltstarts keine Statusabfrage und öffnet danach direkt Home', async () => {
+  it.each([false, true])('wartet beim Kaltstart auf die Abfrage und öffnet ohne Blockade Home (Admin: %s)', async (isAdmin) => {
+    mockAuth.isAdmin = isAdmin;
     mockCheck.isLoading = true;
     let routes = await renderNavigation();
     expect(routes[0]).toBe('startup');
@@ -219,15 +236,53 @@ describe('root startup route guards', () => {
     expect(routes).not.toContain('startup');
   });
 
-  it('wählt nach einer tatsächlichen Blockade die Statusabfrage als ersten verfügbaren Screen', async () => {
-    Object.assign(mockAuth, { isLoading: false, session: { user: { id: 'restored-user' } } });
+  it.each([false, true])('wählt bei einer Blockade direkt die Statusabfrage (Admin: %s)', async (isAdmin) => {
+    Object.assign(mockAuth, { isAdmin, isLoading: false, session: { user: { id: 'restored-user' } } });
     Object.assign(mockCheck, { isLoading: false, isBlocking: true });
-    expect((await renderNavigation())[0]).toBe('check-in');
+    const routes = await renderNavigation();
+    expect(routes[0]).toBe('check-in');
+    expect(routes).not.toContain('admin');
+    expect(routes).not.toContain('admin/[section]');
+    expect(routes).toContain('emergency');
+    expect(routes).toContain('emergency-dashboard');
   });
 
   it('lässt Profilfehler nicht endlos im Startzustand warten', async () => {
     Object.assign(mockAuth, { isLoading: false, hasProfileError: true, session: { user: { id: 'restored-user' } } });
     expect((await renderNavigation())[0]).toBe('check-in');
+  });
+
+  it('wartet beim Admin-Push-Einstieg mit leerem Cache auf die aktuelle Abfrage und kehrt nach der Antwort zurück', async () => {
+    Object.assign(mockAuth, { isAdmin: true, isLoading: false });
+    mockReturnTo = '/admin/status';
+    let finishRefresh!: () => void;
+    mockCheck.refresh.mockImplementation(() => new Promise<void>((resolve) => { finishRefresh = resolve; }));
+    await act(async () => { renderer = create(<CheckInScreen />); });
+    expect(mockCheck.refresh).toHaveBeenCalledTimes(1);
+    expect(renderer!.root.findAllByProps({ testID: 'redirect' })).toHaveLength(0);
+    expect(renderer!.root.findAllByType(ActivityIndicator)).toHaveLength(1);
+
+    mockCheck.activeCheck = {
+      id: 12, question: 'Sind alle da?', created_by_profile_id: 1,
+      created_at: '2026-11-11T10:00:00Z', closed_at: null,
+    };
+    await act(async () => {
+      finishRefresh();
+      renderer!.update(<CheckInScreen />);
+    });
+    const answers = renderer!.root.findAll((node) =>
+      node.props.label === 'groupCheck.yes' || node.props.label === 'groupCheck.no');
+    expect(answers).toHaveLength(2);
+    await act(async () => { answers[0].props.onPress(); });
+    expect(mockCheck.respond).toHaveBeenCalledWith(12, true);
+    expect(mockRouter.replace).toHaveBeenCalledWith('/admin/status');
+  });
+
+  it('kehrt nach einem Push für eine beendete Abfrage erst nach dem Abgleich zur App zurück', async () => {
+    Object.assign(mockAuth, { isAdmin: true, isLoading: false });
+    await act(async () => { renderer = create(<CheckInScreen />); });
+    expect(mockCheck.refresh).toHaveBeenCalledTimes(1);
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/'));
   });
 
   it.each(['/', '/map', '/onboarding', '/city/najaf', '/reader/example', '/disclaimer', '/admin', '/emergency', '/emergency-dashboard', '/_sitemap', '/unknown-link'])(

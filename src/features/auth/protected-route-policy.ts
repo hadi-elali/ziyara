@@ -29,7 +29,6 @@ export function getLoginScreenDecision({
   bypassGroupCheck = false,
   hasProfileError,
   hasSession,
-  isAdmin,
   isAuthLoading,
   isGroupCheckBlocking,
   isGroupCheckLoading,
@@ -56,7 +55,7 @@ export function getLoginScreenDecision({
 
   if (bypassGroupCheck) return 'return';
 
-  if (!isAdmin && isGroupCheckLoading) {
+  if (isGroupCheckLoading) {
     return 'loading';
   }
 
