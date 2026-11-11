@@ -143,7 +143,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session && activeCheck ? (
+      {session && activeCheck && !profile?.is_sick ? (
         <View
           style={[
             styles.notice,
@@ -166,7 +166,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {session && activeBusTrip ? (
+      {session && activeBusTrip?.bus_selection_started_at ? (
         <View
           style={[
             styles.notice,

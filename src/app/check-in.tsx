@@ -35,6 +35,7 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
     signOut,
     hasProfileError,
     isAdmin,
+    profile,
     profileRefreshError,
     refreshProfile,
   } = useAuth();
@@ -146,6 +147,24 @@ function CheckInContent({ returnTo }: { returnTo: ReturnType<typeof getProtected
           ) : (
             <ActivityIndicator color={theme.accent} size="large" />
           )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (profile?.is_sick) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+        <View style={styles.centeredContent}>
+          <Card style={styles.statusCard}>
+            <ThemedText type="heading">{t('groupCheck.resultSick')}</ThemedText>
+            <ThemedText>{t('groupCheck.sickBody')}</ThemedText>
+            <Button
+              icon="home"
+              label={t('groupCheck.returnToApp')}
+              onPress={() => router.replace(returnTo as Href)}
+            />
+          </Card>
         </View>
       </SafeAreaView>
     );

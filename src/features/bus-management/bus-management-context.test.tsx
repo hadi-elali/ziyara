@@ -61,6 +61,7 @@ type MockSupabase = {
 
 const activeTrip: Trip = {
   archived_at: null,
+  bus_selection_started_at: '2026-08-27T08:01:00Z',
   bus_setup_deleted_at: null,
   created_at: '2026-08-27T08:00:00Z',
   created_by_profile_id: 1,

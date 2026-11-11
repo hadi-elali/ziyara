@@ -187,13 +187,13 @@ export function AdminBusManagementPanel({
         error || data?.code !== 'processed' || data?.pushFailed ? tripId : null,
       );
     } catch {
-      // A dispatch failure must not turn successful trip/bus creation into an error.
+      // A dispatch failure must not turn successful activation into an error.
       setPushFailedTripId(tripId);
     }
   };
 
   const retryBusSelectionPush = async () => {
-    if (!activeTrip || isWorking) return;
+    if (!activeTrip?.bus_selection_started_at || isWorking || hasSyncError) return;
     setIsWorking(true);
     try {
       await dispatchBusSelectionPush(activeTrip.id);
@@ -204,6 +204,7 @@ export function AdminBusManagementPanel({
 
   const actionErrorText = (error: unknown) => {
     const message = getOriginalErrorMessage(error);
+    if (message === 'Create at least one bus before starting selection.') return t('bus.admin.selectionNeedsBus');
     if (message === 'A group member leads another bus.') return t('bus.admin.groupLeaderConflict');
     if (message === 'The group would split an existing family bus assignment.') return t('bus.admin.groupFamilyConflict');
     if (message === 'The selected group has no accounts.') return t('bus.admin.groupEmpty');
@@ -248,13 +249,10 @@ export function AdminBusManagementPanel({
               p_source_trip_id: templateTripId,
             });
 
-    void runAction(action, async (result) => {
+    void runAction(action, () => {
       setTripName('');
       setTemplateTripId(null);
       setTripExpanded(true);
-      if (result.data && templateTripId !== null) {
-        await dispatchBusSelectionPush(result.data.id);
-      }
     });
   };
 
@@ -270,12 +268,20 @@ export function AdminBusManagementPanel({
           p_name: busName.trim(),
           p_trip_id: activeTrip.id,
         }),
-      async () => {
+      () => {
         setBusName('');
         setLeaderSearch('');
         setSelectedLeaderUserId(null);
-        await dispatchBusSelectionPush(activeTrip.id);
       },
+    );
+  };
+
+  const startBusSelection = () => {
+    if (!activeTrip || activeTrip.bus_selection_started_at || isWorking || hasSyncError ||
+      buses.length === 0 || busName.trim()) return;
+    void runAction(
+      () => supabase.rpc('admin_start_trip_bus_selection', { p_trip_id: activeTrip.id }),
+      () => dispatchBusSelectionPush(activeTrip.id),
     );
   };
 
@@ -287,6 +293,18 @@ export function AdminBusManagementPanel({
           p_bus_id: busId,
           p_leader_user_id: replacementLeaderUserId,
         }),
+      () => {
+        setEditingLeaderBusId(null);
+        setReplacementLeaderSearch('');
+        setReplacementLeaderUserId(null);
+      },
+    );
+  };
+
+  const removeBusLeader = (busId: number) => {
+    if (isWorking || hasSyncError) return;
+    void runAction(
+      () => supabase.rpc('admin_remove_trip_bus_leader', { p_bus_id: busId }),
       () => {
         setEditingLeaderBusId(null);
         setReplacementLeaderSearch('');
@@ -323,7 +341,7 @@ export function AdminBusManagementPanel({
               p_trip_id: activeTrip.id,
             });
 
-    void runAction(action, () => {
+    void runAction(async () => action(), () => {
       setAssignmentSaved(true);
       setAssignmentSearch('');
       setAssignmentChoice(null);
@@ -581,6 +599,20 @@ export function AdminBusManagementPanel({
                       variant="secondary"
                     />
                   </View>
+                  {bus.leader_participant_id !== null ? (
+                    <View style={styles.field}>
+                      <Button
+                        disabled={isWorking || hasSyncError}
+                        icon="minus"
+                        label={t('bus.admin.removeBusLeader')}
+                        onPress={() => removeBusLeader(bus.id)}
+                        variant="secondary"
+                      />
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {t('bus.admin.removeBusLeaderBody')}
+                      </ThemedText>
+                    </View>
+                  ) : null}
                   {editingLeader ? (
                     <View style={styles.leaderEditor}>
                       <AccountSearch
@@ -609,6 +641,18 @@ export function AdminBusManagementPanel({
                 </View>
               );
             })}
+
+            <ThemedText accessibilityLiveRegion="polite" type="small" themeColor="textSecondary">
+              {t(activeTrip.bus_selection_started_at ? 'bus.admin.selectionStarted' : 'bus.admin.selectionDraft')}
+            </ThemedText>
+            {!activeTrip.bus_selection_started_at ? (
+              <Button
+                disabled={isWorking || hasSyncError || buses.length === 0 || busName.trim().length > 0}
+                icon="confirm"
+                label={t('bus.admin.startSelection')}
+                onPress={startBusSelection}
+              />
+            ) : null}
           </Card>
 
           <Card style={styles.formCard}>

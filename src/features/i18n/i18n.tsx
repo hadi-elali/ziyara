@@ -134,6 +134,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "adminPush.sendError":
       "Der Versandstatus ist unklar. Versuche es mit unveränderter Nachricht und Empfängerauswahl erneut.",
     "adminPush.processed": "Versandlauf abgeschlossen.",
+    "adminPush.history": "Letzte 10 Push-Nachrichten",
+    "adminPush.historyRefresh": "Verlauf aktualisieren",
+    "adminPush.historyLoading": "Nachrichtenverlauf wird geladen …",
+    "adminPush.historyEmpty": "Noch keine Push-Nachrichten gespeichert.",
+    "adminPush.historyError.offline": "Der Verlauf konnte ohne Verbindung nicht aktualisiert werden. Prüfe deine Internetverbindung und versuche es erneut.",
+    "adminPush.historyError.timeout": "Das Laden des Verlaufs dauert zu lange. Versuche es erneut.",
+    "adminPush.historyError.server": "Der Nachrichtenverlauf konnte nicht geladen werden. Versuche es erneut.",
+    "adminPush.historySaved": "Gespeichert · Versand noch nicht gestartet",
+    "adminPush.historyNoDevices": "Keine registrierten Geräte im Empfängerkreis",
+    "adminPush.historyPending": "Versand noch nicht vollständig bestätigt",
+    "adminPush.historyCounts": "Geräte: {total} · Vom Push-Dienst angenommen: {accepted} · Fehlgeschlagen: {failed} · Unbestätigt: {pending}",
+    "adminPush.historyDeliveryHint": "Die Annahme durch den Push-Dienst bestätigt keine Zustellung oder Anzeige auf dem Gerät.",
     "bus.admin.deleteTemplate": "Anordnung löschen",
     "bus.admin.deleteTemplateTitle": "Anordnung „{name}“ löschen?",
     "bus.admin.deleteTemplateBody":
@@ -488,6 +500,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.actionError":
       "Die Busaktion konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
     "bus.admin.addBus": "Bus anlegen",
+    "bus.admin.startSelection": "Busauswahl starten",
+    "bus.admin.selectionDraft": "Trage zuerst alle Busse ein. Starte danach die Busauswahl, damit alle ihren Bus wählen können und die Push-Nachricht verschickt wird.",
+    "bus.admin.selectionStarted": "Die Busauswahl ist freigegeben.",
+    "bus.admin.selectionNeedsBus": "Lege mindestens einen Bus an, bevor du die Busauswahl startest.",
+    "bus.selection.waitingTitle": "Busauswahl wird vorbereitet",
+    "bus.selection.waitingBody": "Die Reiseleitung trägt noch alle Busse ein. Sobald die Busauswahl freigegeben ist, kannst du deinen Bus wählen.",
     "bus.admin.archive": "Fahrt beenden",
     "bus.admin.archiveBody":
       "Die Fahrt wird beendet. Busse, Führer und Zuordnungen bleiben erhalten und können in die nächste Fahrt übernommen werden. Das Tagesprogramm bleibt unverändert.",
@@ -536,6 +554,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.busesTitle": "Busse",
     "bus.admin.cancel": "Abbrechen",
     "bus.admin.changeBusLeader": "Führer ändern",
+    "bus.admin.removeBusLeader": "Führer entfernen",
+    "bus.admin.removeBusLeaderBody": "Die Person bleibt diesem Bus zugeordnet.",
     "bus.admin.closeBoarding": "Boarding schließen",
     "bus.admin.createTrip": "Fahrt anlegen",
     "bus.admin.createTripBody":
@@ -717,9 +737,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Die Aktion konnte nicht ausgeführt werden. Prüfe die Verbindung und versuche es erneut.",
     "groupCheck.activeLabel": "Verpflichtende Abfrage läuft",
     "groupCheck.adminActiveBody":
-      "Konten ohne Adminrolle sehen diese Abfrage bis zu ihrer ersten Antwort exklusiv. Die Namen werden live aktualisiert.",
+      "Konten ohne Adminrolle sehen diese Abfrage bis zu ihrer ersten Antwort exklusiv. Als krank markierte Konten sind ausgenommen und werden separat gezählt. Die Namen werden live aktualisiert.",
     "groupCheck.adminBody":
-      "Starte eine Frage. Konten ohne Adminrolle bleiben bis zu ihrer ersten Antwort gesperrt und können ihre Antwort danach bis zum Ende ändern.",
+      "Starte eine Frage. Konten ohne Adminrolle bleiben bis zu ihrer ersten Antwort gesperrt und können sie danach bis zum Ende ändern. Als krank markierte Konten sind von der Antwortpflicht befreit.",
     "groupCheck.adminParticipantBody":
       "Als Admin bleibt die App zugänglich. Nach deiner Antwort kannst du direkt in die App zurückkehren.",
     "groupCheck.adminTitle": "Gruppenabfrage",
@@ -741,7 +761,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.no": "Ablehnen",
     "groupCheck.noConfirmed": "Noch keine Bestätigung",
     "groupCheck.noDeclined": "Noch keine Ablehnung",
-    "groupCheck.noOpen": "Alle Accounts haben geantwortet",
+    "groupCheck.noOpen": "Keine ausstehenden Antworten",
     "groupCheck.openForm": "Statusabfrage beantworten",
     "groupCheck.questionLabel": "Frage",
     "groupCheck.questionPlaceholder":
@@ -753,6 +773,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.returnToApp": "Zurück zur App",
     "groupCheck.representedPeopleCount": "Repräsentierte Personen: {count}",
     "groupCheck.resultNo": "Nein",
+    "admin.sickness.label": "Krank",
+    "admin.sickness.mark": "Als krank markieren",
+    "admin.sickness.clear": "Krankmarkierung aufheben",
+    "admin.sickness.saving": "Status wird gespeichert …",
+    "admin.sickness.saved": "Der Status wurde gespeichert.",
+    "admin.sickness.error": "Der Status konnte nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
+    "admin.sickness.body": "Gilt für dieses Benutzerkonto bis zur Aufhebung: eigene Kategorie „Krank“ bei Statusabfragen, keine Antwortpflicht.",
+    "groupCheck.resultSick": "Krank",
+    "groupCheck.noSick": "Keine Accounts als krank markiert",
+    "groupCheck.sickBody": "Du bist als krank markiert und musst diese Statusabfrage nicht beantworten.",
     "groupCheck.resultOpen": "Noch offen",
     "groupCheck.resultYes": "Ja",
     "groupCheck.showNames": "{status}: Namen anzeigen",
@@ -946,7 +976,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.pushFailed":
       "Die Standortanfrage ist gespeichert. Die Push-Benachrichtigung konnte nicht bestätigt werden. Du kannst den Standort bei Bedarf erneut anfragen.",
     "admin.description":
-      "Verwalte Gruppen, Fahrten und Busse, Tagesprogramm, Reiseziele, Statusabfragen, anonyme Fragen und Benutzer in eigenen Bereichen.",
+      "Wähle einen Bereich, um deine Reise zu verwalten.",
+    "admin.overview": "Zur Übersicht",
+    "admin.manage": "Verwalten",
+    "admin.tile.organization": "Gruppen",
+    "admin.tile.navigation": "Reiseziele",
+    "admin.tile.push": "Push-Nachrichten",
     "admin.section.organization.description":
       "Gruppen bilden, Leiter bestimmen und deren Standort mit Zustimmung anfragen.",
     "admin.section.organization.error": "Fehler",
@@ -1654,6 +1689,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "Delivery status is uncertain. Retry with the message and recipients unchanged.",
     "adminPush.processed":
       "Dispatch run completed. This does not confirm delivery to the device.",
+    "adminPush.history": "Last 10 push messages",
+    "adminPush.historyRefresh": "Refresh history",
+    "adminPush.historyLoading": "Loading message history …",
+    "adminPush.historyEmpty": "No push messages saved yet.",
+    "adminPush.historyError.offline": "History could not be refreshed without a connection. Check your internet connection and try again.",
+    "adminPush.historyError.timeout": "Loading history took too long. Try again.",
+    "adminPush.historyError.server": "Message history could not be loaded. Try again.",
+    "adminPush.historySaved": "Saved · Sending has not started",
+    "adminPush.historyNoDevices": "No registered devices in the recipient group",
+    "adminPush.historyPending": "Sending has not been fully confirmed",
+    "adminPush.historyCounts": "Devices: {total} · Accepted by push service: {accepted} · Failed: {failed} · Unconfirmed: {pending}",
+    "adminPush.historyDeliveryHint": "Acceptance by the push service does not confirm delivery or display on the device.",
     "bus.admin.deleteTemplate": "Delete arrangement",
     "bus.admin.deleteTemplateTitle": "Delete arrangement “{name}”?",
     "bus.admin.deleteTemplateBody":
@@ -1996,6 +2043,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.actionError":
       "The bus action could not be saved. Check your connection and try again.",
     "bus.admin.addBus": "Create bus",
+    "bus.admin.startSelection": "Start bus selection",
+    "bus.admin.selectionDraft": "Enter all buses first. Then start bus selection so everyone can choose their bus and the push notification is sent.",
+    "bus.admin.selectionStarted": "Bus selection is available.",
+    "bus.admin.selectionNeedsBus": "Create at least one bus before starting bus selection.",
+    "bus.selection.waitingTitle": "Bus selection is being prepared",
+    "bus.selection.waitingBody": "The trip organizers are still entering all buses. You can choose your bus once bus selection opens.",
     "bus.admin.archive": "End trip",
     "bus.admin.archiveBody":
       "The trip will end. Buses, leaders, and assignments remain available to copy into the next one. The daily program is unchanged.",
@@ -2044,6 +2097,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.busesTitle": "Buses",
     "bus.admin.cancel": "Cancel",
     "bus.admin.changeBusLeader": "Change leader",
+    "bus.admin.removeBusLeader": "Remove leader",
+    "bus.admin.removeBusLeaderBody": "The person remains assigned to this bus.",
     "bus.admin.closeBoarding": "Close boarding",
     "bus.admin.createTrip": "Create trip",
     "bus.admin.createTripBody":
@@ -2220,9 +2275,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "The action could not be completed. Check your connection and try again.",
     "groupCheck.activeLabel": "Required check in progress",
     "groupCheck.adminActiveBody":
-      "Accounts without the administrator role see only this check until their first response. Names update live.",
+      "Accounts without the administrator role see only this check until their first response. Accounts marked as sick are exempt and counted separately. Names update live.",
     "groupCheck.adminBody":
-      "Start a question. Accounts without the administrator role remain locked until their first response and can change it until the check ends.",
+      "Start a question. Accounts without the administrator role remain locked until their first response and can change it until the check ends. Accounts marked as sick are exempt.",
     "groupCheck.adminParticipantBody":
       "As an administrator, the app remains accessible. After answering, you can return directly to the app.",
     "groupCheck.adminTitle": "Group check",
@@ -2244,7 +2299,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.no": "Decline",
     "groupCheck.noConfirmed": "No confirmations yet",
     "groupCheck.noDeclined": "No declines yet",
-    "groupCheck.noOpen": "All accounts have responded",
+    "groupCheck.noOpen": "No outstanding responses",
     "groupCheck.openForm": "Answer status check",
     "groupCheck.questionLabel": "Question",
     "groupCheck.questionPlaceholder":
@@ -2256,6 +2311,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.returnToApp": "Return to app",
     "groupCheck.representedPeopleCount": "Represented people: {count}",
     "groupCheck.resultNo": "No",
+    "admin.sickness.label": "Sick",
+    "admin.sickness.mark": "Mark as sick",
+    "admin.sickness.clear": "Clear sick status",
+    "admin.sickness.saving": "Saving status …",
+    "admin.sickness.saved": "The status has been saved.",
+    "admin.sickness.error": "The status could not be saved. Check your connection and try again.",
+    "admin.sickness.body": "Applies to this account until cleared: a separate “Sick” category in status checks, with no response required.",
+    "groupCheck.resultSick": "Sick",
+    "groupCheck.noSick": "No accounts marked as sick",
+    "groupCheck.sickBody": "You are marked as sick and do not need to respond to this status check.",
     "groupCheck.resultOpen": "Still open",
     "groupCheck.resultYes": "Yes",
     "groupCheck.showNames": "{status}: Show names",
@@ -2442,7 +2507,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.pushFailed":
       "The location request is saved. The push notification could not be confirmed. You can request the location again if needed.",
     "admin.description":
-      "Manage groups, trips and buses, the daily program, destinations, status checks, anonymous questions and users in separate sections.",
+      "Choose a section to manage your trip.",
+    "admin.overview": "Back to overview",
+    "admin.manage": "Manage",
+    "admin.tile.organization": "Groups",
+    "admin.tile.navigation": "Destinations",
+    "admin.tile.push": "Push messages",
     "admin.section.organization.description":
       "Create groups, choose leaders and request their location with consent.",
     "admin.section.organization.error": "Error",
@@ -3138,6 +3208,18 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "حالة الإرسال غير مؤكدة. أعد المحاولة دون تغيير الرسالة أو المستلمين.",
     "adminPush.processed":
       "اكتملت عملية الإرسال. هذا لا يؤكد وصول الإشعار إلى الجهاز.",
+    "adminPush.history": "آخر 10 إشعارات",
+    "adminPush.historyRefresh": "تحديث السجل",
+    "adminPush.historyLoading": "جارٍ تحميل سجل الرسائل …",
+    "adminPush.historyEmpty": "لا توجد إشعارات محفوظة بعد.",
+    "adminPush.historyError.offline": "تعذر تحديث السجل دون اتصال. تحقق من اتصال الإنترنت وحاول مجددًا.",
+    "adminPush.historyError.timeout": "استغرق تحميل السجل وقتًا طويلاً. حاول مجددًا.",
+    "adminPush.historyError.server": "تعذر تحميل سجل الرسائل. حاول مجددًا.",
+    "adminPush.historySaved": "محفوظة · لم يبدأ الإرسال بعد",
+    "adminPush.historyNoDevices": "لا توجد أجهزة مسجلة ضمن فئة المستلمين",
+    "adminPush.historyPending": "لم يتم تأكيد الإرسال بالكامل",
+    "adminPush.historyCounts": "الأجهزة: {total} · قبلتها خدمة الإشعارات: {accepted} · فشل: {failed} · غير مؤكد: {pending}",
+    "adminPush.historyDeliveryHint": "قبول خدمة الإشعارات للرسالة لا يؤكد وصولها أو عرضها على الجهاز.",
     "bus.admin.deleteTemplate": "حذف الترتيب",
     "bus.admin.deleteTemplateTitle": "حذف الترتيب «{name}»؟",
     "bus.admin.deleteTemplateBody":
@@ -3471,6 +3553,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.actionError":
       "تعذر حفظ إجراء الحافلة. تحقق من الاتصال وحاول مرة أخرى.",
     "bus.admin.addBus": "إنشاء حافلة",
+    "bus.admin.startSelection": "بدء اختيار الحافلات",
+    "bus.admin.selectionDraft": "أدخل جميع الحافلات أولًا، ثم ابدأ اختيار الحافلات ليتمكن الجميع من اختيار حافلتهم ويُرسَل الإشعار.",
+    "bus.admin.selectionStarted": "اختيار الحافلات متاح الآن.",
+    "bus.admin.selectionNeedsBus": "أنشئ حافلة واحدة على الأقل قبل بدء اختيار الحافلات.",
+    "bus.selection.waitingTitle": "جارٍ إعداد اختيار الحافلات",
+    "bus.selection.waitingBody": "لا تزال إدارة الرحلة تُدخل جميع الحافلات. يمكنك اختيار حافلتك عند فتح الاختيار.",
     "bus.admin.archive": "إنهاء التنقل",
     "bus.admin.archiveBody":
       "سينتهي التنقل. تبقى الحافلات والقادة والتعيينات محفوظة للنسخ إلى التنقل التالي، ولا يتغير البرنامج اليومي.",
@@ -3518,6 +3606,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "bus.admin.busesTitle": "الحافلات",
     "bus.admin.cancel": "إلغاء",
     "bus.admin.changeBusLeader": "تغيير القائد",
+    "bus.admin.removeBusLeader": "إزالة القائد",
+    "bus.admin.removeBusLeaderBody": "يبقى الشخص مسجلاً في هذه الحافلة.",
     "bus.admin.closeBoarding": "إنهاء الصعود",
     "bus.admin.createTrip": "إنشاء تنقل",
     "bus.admin.createTripBody":
@@ -3687,9 +3777,9 @@ const dictionaries: Record<Language, Record<string, string>> = {
       "تعذر تنفيذ الإجراء. تحقق من الاتصال وحاول مرة أخرى.",
     "groupCheck.activeLabel": "استطلاع إلزامي جارٍ",
     "groupCheck.adminActiveBody":
-      "ترى الحسابات التي لا تحمل دور المشرف هذا الاستطلاع فقط حتى تقدم إجابتها الأولى، وتُحدَّث الأسماء مباشرة.",
+      "ترى الحسابات التي لا تحمل دور المشرف هذا الاستطلاع فقط حتى تقدم إجابتها الأولى. تُستثنى الحسابات بعلامة مريض وتُحسب بشكل منفصل. تُحدَّث الأسماء مباشرة.",
     "groupCheck.adminBody":
-      "ابدأ سؤالاً. تبقى الحسابات التي لا تحمل دور المشرف مقفلة حتى تقدم إجابتها الأولى، ويمكنها تغيير الإجابة حتى نهاية الاستطلاع.",
+      "ابدأ سؤالاً. تبقى الحسابات التي لا تحمل دور المشرف مقفلة حتى تقدم إجابتها الأولى، ويمكنها تغييرها حتى نهاية الاستطلاع. تُعفى الحسابات بعلامة مريض من الإجابة.",
     "groupCheck.adminParticipantBody":
       "يبقى التطبيق متاحاً لك بصفتك مشرفاً. بعد الإجابة يمكنك العودة مباشرة إلى التطبيق.",
     "groupCheck.adminTitle": "استطلاع المجموعة",
@@ -3710,7 +3800,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.no": "رفض",
     "groupCheck.noConfirmed": "لا توجد تأكيدات بعد",
     "groupCheck.noDeclined": "لا توجد حالات رفض بعد",
-    "groupCheck.noOpen": "أجابت جميع الحسابات",
+    "groupCheck.noOpen": "لا توجد إجابات معلقة",
     "groupCheck.openForm": "الإجابة عن استطلاع الحالة",
     "groupCheck.questionLabel": "السؤال",
     "groupCheck.questionPlaceholder": "مثلاً: هل أصبح الجميع في الحافلة؟",
@@ -3721,6 +3811,16 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "groupCheck.returnToApp": "العودة إلى التطبيق",
     "groupCheck.representedPeopleCount": "الأشخاص المُمثَّلون: {count}",
     "groupCheck.resultNo": "لا",
+    "admin.sickness.label": "مريض",
+    "admin.sickness.mark": "وضع علامة مريض",
+    "admin.sickness.clear": "إزالة علامة مريض",
+    "admin.sickness.saving": "جارٍ حفظ الحالة …",
+    "admin.sickness.saved": "تم حفظ الحالة.",
+    "admin.sickness.error": "تعذر حفظ الحالة. تحقق من الاتصال وحاول مرة أخرى.",
+    "admin.sickness.body": "يسري على هذا الحساب حتى إزالة العلامة: فئة مستقلة للمرضى في استطلاعات الحالة دون إلزام بالإجابة.",
+    "groupCheck.resultSick": "المرضى",
+    "groupCheck.noSick": "لا توجد حسابات بعلامة مريض",
+    "groupCheck.sickBody": "تم وضع علامة مريض على حسابك، ولا تحتاج إلى الإجابة عن استطلاع الحالة هذا.",
     "groupCheck.resultOpen": "لم يُجب بعد",
     "groupCheck.resultYes": "نعم",
     "groupCheck.showNames": "{status}: عرض الأسماء",
@@ -3894,7 +3994,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "tripGroups.admin.pushFailed":
       "تم حفظ طلب الموقع، لكن تعذر تأكيد الإشعار. يمكنك طلب الموقع مرة أخرى عند الحاجة.",
     "admin.description":
-      "أدر المجموعات والتنقلات والحافلات والبرنامج اليومي والوجهات واستعلامات الحالة والأسئلة المجهولة والمستخدمين في أقسام مستقلة.",
+      "اختر قسمًا لإدارة رحلتك.",
+    "admin.overview": "العودة إلى النظرة العامة",
+    "admin.manage": "إدارة",
+    "admin.tile.organization": "المجموعات",
+    "admin.tile.navigation": "الوجهات",
+    "admin.tile.push": "الإشعارات",
     "admin.section.organization.description":
       "أنشئ مجموعات وعيّن قادتها واطلب موقعهم بموافقتهم.",
     "admin.section.organization.error": "خطأ",

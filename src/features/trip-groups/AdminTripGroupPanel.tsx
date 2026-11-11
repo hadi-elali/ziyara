@@ -213,7 +213,6 @@ export function AdminTripGroupPanel(
       }
       return next;
     });
-    setFamilySearch('');
   };
   const matchingFamilies = familySearch.trim()
     ? families.filter((family) =>
@@ -597,10 +596,7 @@ export function AdminTripGroupPanel(
                   : leaderIds.has(participant.id)
                   ? t('tripGroups.admin.leaderIsMember')
                   : undefined}
-                onPress={() => {
-                  toggleMember(participant.id);
-                  setMemberSearch('');
-                }}
+                onPress={() => toggleMember(participant.id)}
                 selected={selectedParticipantIds.has(participant.id)}
                 type='checkbox'
               />

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spacing } from '@/constants/theme';
 import type { AdminPushAudience, AdminPushMessage } from '@/domain/database';
+import { AdminPushHistory } from '@/features/admin/AdminPushHistory';
 import { adminPushSendErrorMessage } from '@/features/admin/admin-push-error';
 import { useAuth } from '@/features/auth/auth-context';
 import { supabase } from '@/features/auth/supabase';
@@ -29,6 +30,7 @@ function PushComposer() {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [historyRevision, setHistoryRevision] = useState(0);
   const busy = useRef(false);
   const mounted = useRef(true);
 
@@ -80,7 +82,10 @@ function PushComposer() {
       if (mounted.current) setError(message);
     } finally {
       busy.current = false;
-      if (mounted.current) setWorking(false);
+      if (mounted.current) {
+        setWorking(false);
+        setHistoryRevision((value) => value + 1);
+      }
     }
   };
 
@@ -125,6 +130,7 @@ function PushComposer() {
         {error ? <ThemedText accessibilityRole="alert" themeColor="danger">{error}</ThemedText> : null}
         {feedback ? <ThemedText accessibilityLiveRegion="polite" themeColor="success">{feedback}</ThemedText> : null}
       </Card>
+      <AdminPushHistory revision={historyRevision} />
     </View>
   );
 }

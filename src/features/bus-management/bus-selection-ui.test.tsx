@@ -12,7 +12,9 @@ const buses: TripBus[] = [1, 2].map((id) => ({
   id, name: `Bus ${id}`, trip_id: 10, sort_order: id, leader_participant_id: null, created_at: '',
 }));
 const mockState = {
-  activeTrip: { id: 10 } as { id: number } | null,
+  activeTrip: { id: 10, bus_selection_started_at: '2026-11-10T12:00:00Z' } as {
+    id: number; bus_selection_started_at: string | null;
+  } | null,
   buses,
   participants: [] as { profile_id: number; bus_id: number; is_on_bus?: boolean | null }[],
   selectBus: mockSelectBus,
@@ -48,7 +50,7 @@ function visibleText() { return JSON.stringify(renderer?.toJSON()); }
 describe('self-service bus selection and admin roster', () => {
   beforeAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = true; });
   beforeEach(() => {
-    mockState.activeTrip = { id: 10 };
+    mockState.activeTrip = { id: 10, bus_selection_started_at: '2026-11-10T12:00:00Z' };
     mockState.buses = buses;
     mockState.participants = [];
     mockSelectBus.mockReset().mockResolvedValue(undefined);
@@ -63,6 +65,18 @@ describe('self-service bus selection and admin roster', () => {
     await act(async () => { button('bus.selection.choose Bus 2').props.onPress(); });
     expect(mockSelectBus).toHaveBeenCalledWith(2);
     expect(visibleText()).toContain('bus.selection.saved');
+  });
+
+  it('waits for admin release even when buses and an imported assignment already exist', async () => {
+    mockState.activeTrip!.bus_selection_started_at = null;
+    mockState.participants = [{ profile_id: 7, bus_id: 1 }];
+    await act(async () => { renderer = create(<BusSelectionPanel />); });
+    expect(visibleText()).toContain('bus.selection.waitingTitle');
+    expect(root().findAllByType(Button)).toHaveLength(0);
+    mockState.activeTrip!.bus_selection_started_at = '2026-11-10T12:00:00Z';
+    await act(async () => { renderer?.update(<BusSelectionPanel />); });
+    expect(button('bus.selection.change Bus 2')).toBeDefined();
+    expect(button('bus.presence.onBus')).toBeDefined();
   });
 
   it('shows only the current account assignment and supports changing it', async () => {
@@ -119,7 +133,7 @@ describe('self-service bus selection and admin roster', () => {
     mockState.activeTrip = null;
     await act(async () => { renderer = create(<BusSelectionPanel />); });
     expect(visibleText()).toContain('bus.selection.noTripTitle');
-    mockState.activeTrip = { id: 10 };
+    mockState.activeTrip = { id: 10, bus_selection_started_at: '2026-11-10T12:00:00Z' };
     mockState.buses = [];
     await act(async () => { renderer?.update(<BusSelectionPanel />); });
     expect(visibleText()).toContain('bus.selection.noBuses');

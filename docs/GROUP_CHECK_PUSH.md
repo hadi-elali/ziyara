@@ -4,7 +4,7 @@ Nach erfolgreichem Start einer Statusabfrage ruft der aktualisierte Client `disp
 
 Die neue Migration `20261104010000_notify_group_checks.sql` speichert über einen privaten Insert-Trigger atomar die zu diesem Zeitpunkt registrierten Geräte aller Kontorollen, einschließlich Admins. Es ist keine aktive Fahrt nötig. Bestehende Statusabfragen und später registrierte Geräte erhalten keinen nachträglichen Push.
 
-Der Dispatcher prüft die Anmeldung und aktuelle Adminrolle. Die ausschließlich für `service_role` freigegebene Claim-RPC prüft die Rolle erneut pro Batch, sperrt die Abfrage gegen paralleles Schließen und beansprucht höchstens 100 Geräte. Geschlossene Abfragen, bereits beantwortende Konten sowie entfernte oder neu zugeordnete Geräte werden übersprungen. Bereits beanspruchte Versuche werden auch nach einem Timeout nicht erneut versendet; dadurch führen parallele Aufrufe und Wiederholen nicht zu doppelten Nachrichten. Eine Schließung nach dem Beanspruchen kann einen bereits laufenden Versand nicht zurückrufen.
+Der Dispatcher prüft die Anmeldung und aktuelle Adminrolle. Die ausschließlich für `service_role` freigegebene Claim-RPC prüft die Rolle erneut pro Batch, sperrt die Abfrage gegen paralleles Schließen und beansprucht höchstens 100 Geräte. Geschlossene Abfragen, bereits beantwortende Konten sowie entfernte oder neu zugeordnete Geräte werden übersprungen. Mit `20261110010000_add_user_sickness_status.sql` werden zusätzlich als krank markierte Konten vor dem Beanspruchen übersprungen (`recipient_sick`), auch wenn die Markierung erst nach Aktivierung gesetzt wurde. Nach Aufhebung wird ein bereits ausgeschlossener Versuch nicht erneut versendet; das Konto erscheint ohne Antwort wieder als offen. Bereits beanspruchte Versuche werden auch nach einem Timeout nicht erneut versendet; dadurch führen parallele Aufrufe und Wiederholen nicht zu doppelten Nachrichten. Eine Schließung oder Krankmarkierung nach dem Beanspruchen kann einen bereits laufenden Versand nicht zurückrufen.
 
 Der bestehende Expo-Dispatcher verarbeitet Tickets und protokolliert ausschließlich strukturierte Fehler und Ticket-IDs. Tokens und Empfänger bleiben im privaten Backend. Eine Expo-Annahme bestätigt keine tatsächliche Anzeige oder Zustellung auf dem Gerät; Receipt-Abfragen sind nicht ergänzt.
 
@@ -17,7 +17,9 @@ Ein fehlgeschlagener Versand macht den erfolgreichen Start nicht rückgängig. D
 3. Den aktualisierten Client ausliefern. Für diese Änderung werden keine neuen nativen Pakete, Konfigurationen oder Development Builds benötigt; ein installierter Release-/Preview-Client muss den neuen JavaScript-Stand erhalten.
 4. Auf den Empfängergeräten Mitteilungen aktivieren und die App für die Tokenregistrierung einmal öffnen. Der bestehende serverseitige `EXPO_ACCESS_TOKEN` muss bei aktivierter Expo Push Security gültig sein.
 
-In diesem Auftrag wurde kein Remote-Deployment und kein echter Push ausgelöst. Native Geräteanzeige bleibt zu prüfen.
+Am 4. November 2026 wurde live bestätigt, dass die Migration `20261104010000` auf dem verknüpften Projekt bereits eingetragen war, die Function `dispatch-group-check` jedoch fehlte. Diese Function wurde anschließend einschließlich ihrer beiden Handler-Abhängigkeiten erfolgreich bereitgestellt. Der Live-Endpunkt antwortet auf GET mit HTTP 405 und auf einen POST ohne Anmeldung mit HTTP 401. Das bestehende `EXPO_ACCESS_TOKEN` ist als Secret hinterlegt; sein Wert wurde nicht abgerufen oder verändert. Keine weitere Datenbankmigration, keine zusätzliche Nachricht und keine breite Testsuite waren dafür nötig.
+
+Bereits zuvor gestartete Abfragen werden durch die Bereitstellung nicht automatisch nachgesendet. Im noch geöffneten Adminpanel kann „Push-Versand fortsetzen“ bislang unbeanspruchte Empfänger bearbeiten. Andernfalls in der aktualisierten App eine neue Statusabfrage starten. Die tatsächliche Push-Annahme und native Geräteanzeige dieser Funktion bleiben zu bestätigen.
 
 ## Gezielte Prüfung
 

@@ -467,7 +467,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const { data, error } = await withSupabaseReadTimeout((signal) =>
         supabase
           .from('profiles')
-          .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, created_at, updated_at')
+          .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, is_sick, created_at, updated_at')
           .eq('user_id', userId)
           .abortSignal(signal)
           .maybeSingle(),
@@ -790,7 +790,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         .from('profiles')
         .update({ party_size: partySize })
         .eq('user_id', userId)
-        .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, created_at, updated_at')
+        .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, is_sick, created_at, updated_at')
         .single();
 
       if (!error && sessionUserIdRef.current === userId) {
@@ -819,7 +819,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         .from('profiles')
         .update({ luggage_count: luggageCount })
         .eq('user_id', userId)
-        .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, created_at, updated_at')
+        .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, is_sick, created_at, updated_at')
         .single();
 
       if (!error && sessionUserIdRef.current === userId) {
@@ -848,7 +848,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         .from('profiles')
         .update({ sim_card_count: simCardCount })
         .eq('user_id', userId)
-        .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, created_at, updated_at')
+        .select('id, user_id, display_name, member_type, party_size, luggage_count, sim_card_count, family_id, role, is_sick, created_at, updated_at')
         .single();
 
       if (!error && sessionUserIdRef.current === userId) {

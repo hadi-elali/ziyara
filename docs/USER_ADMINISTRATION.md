@@ -1,12 +1,20 @@
 # Benutzerverwaltung und Anmeldung
 
-Stand: 2. November 2026.
+Stand: 10. November 2026.
 
 ## Bedienung
+
+Unter **Dashboard → Benutzer → Details → Als krank markieren** wird ein Benutzerkonto bis zur manuellen Aufhebung als krank geführt. **Krankmarkierung aufheben** nimmt den Status zurück. Die Markierung erscheint neben dem Namen und wird dauerhaft gespeichert. Bei einem Speicherfehler bleibt die bisherige Anzeige erhalten; die Aktion lässt sich wiederholen.
+
+Statusabfragen führen diese Konten ausschließlich in der eigenen Kategorie **Krank**, mit getrennten Summen für Konten und repräsentierte Personen. Sie gelten nicht als ausstehende Antworten und sind von der Antwortpflicht befreit. Vorhandene Ja-/Nein-Antworten bleiben gespeichert und gelten nach dem Aufheben wieder. Gibt es keine Antwort, wird das Konto danach wieder offen. Der Status betrifft das ganze Konto und seine Personenzahl. Kontofamilien können mehrere eigenständige Konten mit unterschiedlichen Markierungen enthalten.
+
+Die additive Migration `20261110010000_add_user_sickness_status.sql` muss vor dem aktualisierten Client auf dem Zielprojekt angewandt werden. Sie ergänzt die geschützte Admin-RPC, das Profilfeld sowie Listen und Statusabfrage-Auswertung. Die bestehende Push-RPC überspringt krankmarkierte Konten vor dem Beanspruchen eines Statusabfrage-Pushs. Eine neue Function-Bereitstellung ist nicht erforderlich. Lokal angewandt und mit 30 SQL-Assertions geprüft; noch keine Remote-Bereitstellung oder native Geräteprüfung.
 
 Admins öffnen **Dashboard → Benutzer**, suchen die Person und öffnen ihre Details. **Benutzer löschen** zeigt den Namen und eine ausdrückliche Bestätigung. Erst **Ja, Benutzer endgültig löschen** entfernt das Konto dauerhaft. Die Personenübersicht, Summen und Auswahlmöglichkeiten für Familien, Gruppen und Busse übernehmen die bestätigte Löschung. Eine vorhandene Kontofamilie bleibt als verwaltbarer Datensatz bestehen.
 
 Das eigene Konto lässt sich auf diesem Adminweg nicht löschen. Die bisherige Eigenlöschung unter Konto bleibt verfügbar; der letzte Admin bleibt serverseitig geschützt. Fehlende aktuelle Adminrechte, unbekannte Konten und technische Fehler werden angezeigt, ohne die lokale Liste als erfolgreich gelöscht zu markieren.
+
+Mit `20261110030000_remove_deleted_users_active_emergencies.sql` verschwinden bei der Kontolöschung auch alle offenen Notfallmeldungen der Person, einschließlich Empfängerzuordnungen und privater Push-Protokolle. Das gilt ebenfalls für die Eigenlöschung. Abgeschlossene Fälle bleiben in der Historie ohne Profilbezug erhalten. Bereits verwaiste offene Meldungen werden beim Anwenden der Migration bereinigt. Postfach, Dashboard und Home-Hinweis aktualisieren sich über den bestehenden Realtime-/Refreshabgleich. Die Migration ist vor produktiver Nutzung auf dem Zielprojekt anzuwenden; ein Clientupdate oder Function-Deployment ist allein hierfür nicht nötig. Noch nicht remote bereitgestellt.
 
 ## Bereitstellung
 

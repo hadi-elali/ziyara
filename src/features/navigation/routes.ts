@@ -1,9 +1,12 @@
 import type { Href } from 'expo-router';
 
+import { adminSections, type AdminSection } from '@/features/admin/admin-sections';
+
 export const protectedRoutePaths = [
   '/account',
   '/alarm',
   '/admin',
+  ...adminSections.map((section) => `/admin/${section}` as const),
   '/bus',
   '/emergency',
   '/emergency-dashboard',
@@ -26,6 +29,10 @@ function routeSegment(value: string) {
 
 export function singleRouteParam(value?: string | string[]) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+export function adminSectionRoute(section: AdminSection): Href & ProtectedRoutePath {
+  return `/admin/${section}` as Href & ProtectedRoutePath;
 }
 
 export function cityRoute(city: string): Href {

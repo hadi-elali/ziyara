@@ -227,6 +227,7 @@ function RootNavigation() {
           </Stack.Protected>
           <Stack.Protected guard={hasVerifiedSession && hasCompletedOnboarding}>
             <Stack.Screen name="admin" options={{ title: t('nav.admin') }} />
+            <Stack.Screen name="admin/[section]" options={{ title: t('nav.admin') }} />
           </Stack.Protected>
         </Stack>
       </NavigationThemeProvider>

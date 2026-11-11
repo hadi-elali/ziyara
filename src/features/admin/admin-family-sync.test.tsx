@@ -2,21 +2,33 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest 
 import { Alert, FlatList, Text, TextInput } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
-import AdminScreen from '@/app/admin';
+import { AdminDashboard } from '@/features/admin/AdminDashboard';
+import type { AdminSection } from '@/features/admin/admin-sections';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import type { AccountFamily, AdminUserSummary } from '@/domain/database';
 import { AdminAccountFamilyPanel } from '@/features/account-families/AdminAccountFamilyPanel';
-import { AdminSectionHeader } from '@/features/admin/AdminSectionHeader';
 import { AdminDeleteUserDialog } from '@/features/admin/AdminDeleteUserDialog';
 import { AdminTravelOrganizationPanel } from '@/features/admin/AdminTravelOrganizationPanel';
-import type { AdminUserListItem } from '@/features/admin/admin-user-list';
+import { buildAdminUserListItems, type AdminUserListItem } from '@/features/admin/admin-user-list';
 import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
+
+const mockRouter = { push: jest.fn() };
+let mockFocusCallback: (() => void | (() => void)) | undefined;
+jest.mock('expo-router', () => ({
+  useRouter: () => mockRouter,
+  useFocusEffect: (callback: () => void | (() => void)) => {
+    mockFocusCallback = callback;
+    const { useEffect } = jest.requireActual<typeof import('react')>('react');
+    useEffect(callback, [callback]);
+  },
+}));
 
 type Result<T> = { data: T | null; error: { message: string } | null };
 const mockReadUsers = jest.fn<() => Promise<Result<AdminUserSummary[]>>>();
 const mockReadFamilies = jest.fn<() => Promise<Result<AccountFamily[]>>>();
 const mockSave = jest.fn<(args: unknown) => Promise<Result<AccountFamily>>>();
 const mockDelete = jest.fn<(args: unknown) => Promise<Result<AccountFamily>>>();
+const mockSetSick = jest.fn<(args: unknown) => Promise<Result<boolean>>>();
 const mockDeleteUser = jest.fn<(args: unknown) => Promise<{
   data: string | null;
   error: { code: string; message: string } | null;
@@ -28,6 +40,7 @@ jest.mock('@/features/auth/supabase', () => ({ supabase: {
     if (name === 'admin_upsert_account_family') return mockSave(args);
     if (name === 'admin_delete_account_family') return mockDelete(args);
     if (name === 'admin_delete_user') return mockDeleteUser(args);
+    if (name === 'admin_set_user_sick') return mockSetSick(args);
     if (name === 'admin_list_account_families') return { abortSignal: () => mockReadFamilies() };
     if (name === 'admin_list_users') return { range: () => ({ abortSignal: () => mockReadUsers() }) };
     throw new Error(`Unexpected RPC: ${name}`);
@@ -100,7 +113,16 @@ function root() {
   return renderer.root;
 }
 function panel() { return root().findByType(AdminAccountFamilyPanel); }
-function listItems(): AdminUserListItem[] { return root().findByType(FlatList).props.data; }
+function listItems(): AdminUserListItem[] {
+  if (root().findByType(AdminDashboard).props.section === 'users') {
+    return root().findByType(FlatList).props.data;
+  }
+  return buildAdminUserListItems(panel().props.users, '', 'de');
+}
+function listedUsers() {
+  return listItems().flatMap(item => item.type === 'user' ? [item.user] : item.members)
+    .sort((left, right) => left.user_id.localeCompare(right.user_id));
+}
 function button(label: string) {
   return root().findAllByType(Button).find(node => node.props.label === `accountFamilies.${label}`)!;
 }
@@ -110,16 +132,12 @@ function deferred<T>() {
   const promise = new Promise<T>(done => { resolve = done; });
   return { promise, resolve };
 }
-async function toggleSection(title: string) {
-  await act(async () => {
-    root().findAllByType(AdminSectionHeader).find(node => node.props.title === title)!.props.onToggle();
-  });
+async function showSection(section: AdminSection) {
+  await act(async () => { renderer!.update(<AdminDashboard section={section} />); });
 }
-async function render() {
-  await act(async () => { renderer = create(<AdminScreen />); });
+async function render(section: AdminSection = 'families') {
+  await act(async () => { renderer = create(<AdminDashboard section={section} />); });
   await act(async () => { jest.advanceTimersByTime(0); });
-  await toggleSection('admin.section.families.title');
-  await toggleSection('admin.section.users.title');
 }
 async function nameFamily(name: string) {
   await act(async () => {
@@ -166,6 +184,7 @@ describe('admin family and user synchronization', () => {
     mockReadFamilies.mockReset().mockResolvedValue({ data: [], error: null });
     mockSave.mockReset().mockResolvedValue({ data: family, error: null });
     mockDelete.mockReset().mockResolvedValue({ data: family, error: null });
+    mockSetSick.mockReset().mockResolvedValue({ data: true, error: null });
     mockDeleteUser.mockReset().mockResolvedValue({ data: users[0].user_id, error: null });
     mockCurrentUserId = 'current-admin';
   });
@@ -176,12 +195,54 @@ describe('admin family and user synchronization', () => {
   });
   afterAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = previousAct; });
 
-  it('groups confirmed members immediately and updates group/bus choices without another read', async () => {
+  it('saves and clears a sick marker, locking duplicate submissions and other account mutations', async () => {
+    const saving = deferred<Result<boolean>>();
+    mockSetSick.mockReturnValueOnce(saving.promise);
+    await render('users'); await expandUser(users[0].user_id);
+    const mark = root().findAllByType(Button).find(node => node.props.label === 'admin.sickness.mark')!;
+    await act(async () => { mark.props.onPress(); mark.props.onPress(); });
+    expect(mockSetSick).toHaveBeenCalledTimes(1);
+    expect(mockSetSick).toHaveBeenCalledWith({ p_user_id: users[0].user_id, p_is_sick: true });
+    expect(adminButton('action').props.disabled).toBe(true);
+    expect(listedUsers()[0].is_sick).toBeUndefined();
+    await act(async () => { saving.resolve({ data: true, error: null }); });
+    expect(listedUsers()[0].is_sick).toBe(true);
+    expect(hasText('admin.sickness.label')).toBe(true);
+    mockSetSick.mockResolvedValueOnce({ data: false, error: null });
+    await act(async () => { root().findAllByType(Button).find(node => node.props.label === 'admin.sickness.clear')!.props.onPress(); });
+    expect(mockSetSick).toHaveBeenLastCalledWith({ p_user_id: users[0].user_id, p_is_sick: false });
+    expect(listedUsers()[0].is_sick).toBe(false);
+    expect(hasText('admin.sickness.label')).toBe(false);
+  });
+
+  it.each([
+    { data: null, error: { message: 'Denied' } },
+    { data: null, error: null },
+    { data: false, error: null },
+  ])('keeps the prior sick status and permits retry after an unsuccessful update: %j', async result => {
+    mockSetSick.mockResolvedValueOnce(result);
+    await render('users'); await expandUser(users[0].user_id);
+    await act(async () => { root().findAllByType(Button).find(node => node.props.label === 'admin.sickness.mark')!.props.onPress(); });
+    expect(listedUsers()).toEqual(users);
+    expect(hasText('admin.sickness.error')).toBe(true);
+    expect(root().findAllByType(Button).find(node => node.props.label === 'admin.sickness.mark')!.props.disabled).toBe(false);
+  });
+
+  it('ignores a refresh started before a confirmed sickness update', async () => {
+    const reading = deferred<Result<AdminUserSummary[]>>();
+    await render('users'); await expandUser(users[0].user_id);
+    mockReadUsers.mockReturnValueOnce(reading.promise);
+    await act(async () => { root().findByType(FlatList).props.refreshControl.props.onRefresh(); });
+    await act(async () => { root().findAllByType(Button).find(node => node.props.label === 'admin.sickness.mark')!.props.onPress(); });
+    await act(async () => { reading.resolve({ data: users, error: null }); });
+    expect(listedUsers()[0].is_sick).toBe(true);
+    expect(root().findByType(FlatList).props.refreshControl.props.refreshing).toBe(false);
+  });
+
+  it('groups confirmed members and supplies the updated choices to each admin section', async () => {
     const saving = deferred<Result<AccountFamily>>();
     mockSave.mockReturnValueOnce(saving.promise);
     await render();
-    await toggleSection('admin.section.organization.title');
-    await toggleSection('admin.transport.title');
     await nameFamily('  Familie Beispiel  ');
     await toggleMember(0); await toggleMember(1);
     await press('create');
@@ -195,7 +256,8 @@ describe('admin family and user synchronization', () => {
     expect(panel().props.families).toEqual([family]);
     expect(hasText('accountFamilies.feedback.saved')).toBe(true);
     expect(panel().findByType(TextInput).props.value).toBe('');
-    for (const consumer of [AdminTravelOrganizationPanel, AdminBusManagementPanel]) {
+    for (const [section, consumer] of [['organization', AdminTravelOrganizationPanel], ['transport', AdminBusManagementPanel]] as const) {
+      await showSection(section);
       const props = root().findByType(consumer).props;
       expect(props.families).toEqual([family]);
       expect(props.users.slice(0, 2).map((user: AdminUserSummary) => user.family_id)).toEqual([family.id, family.id]);
@@ -289,20 +351,42 @@ describe('admin family and user synchronization', () => {
     expect(listItems().every(item => item.type === 'user')).toBe(true);
   });
 
+  it('keeps the pull-to-refresh indicator hidden during an automatic focus refresh', async () => {
+    await render('users');
+    const backgroundRead = deferred<Result<AdminUserSummary[]>>();
+    mockReadUsers.mockReturnValueOnce(backgroundRead.promise);
+
+    await act(async () => {
+      mockFocusCallback!();
+      jest.advanceTimersByTime(0);
+    });
+    expect(mockReadUsers).toHaveBeenCalledTimes(2);
+    expect(root().findByType(FlatList).props.refreshControl.props.refreshing).toBe(false);
+    expect(listedUsers()).toEqual(users);
+    await act(async () => { backgroundRead.resolve({ data: users, error: null }); });
+
+    const manualRead = deferred<Result<AdminUserSummary[]>>();
+    mockReadUsers.mockReturnValueOnce(manualRead.promise);
+    await act(async () => { root().findByType(FlatList).props.refreshControl.props.onRefresh(); });
+    expect(root().findByType(FlatList).props.refreshControl.props.refreshing).toBe(true);
+    await act(async () => { manualRead.resolve({ data: users, error: null }); });
+    expect(root().findByType(FlatList).props.refreshControl.props.refreshing).toBe(false);
+  });
+
   it('identifies the account in a confirmation and leaves it untouched when cancelled', async () => {
-    await render(); await requestUserDeletion();
+    await render('users'); await requestUserDeletion();
     expect(root().findByType(AdminDeleteUserDialog).props.user).toEqual(users[0]);
     expect(hasText(`admin.deleteUser.body: ${users[0].display_name}`)).toBe(true);
     expect(mockDeleteUser).not.toHaveBeenCalled();
     await act(async () => { adminButton('cancel').props.onPress(); });
     expect(root().findAllByType(AdminDeleteUserDialog)).toHaveLength(0);
-    expect(panel().props.users).toEqual(users);
+    expect(listedUsers()).toEqual(users);
     expect(mockDeleteUser).not.toHaveBeenCalled();
   });
 
   it('prevents deleting the current admin from the user list', async () => {
     mockCurrentUserId = users[0].user_id;
-    await render(); await expandUser(mockCurrentUserId);
+    await render('users'); await expandUser(mockCurrentUserId);
     expect(adminButton('action').props.disabled).toBe(true);
     expect(hasText('admin.deleteUser.ownAccount')).toBe(true);
     expect(mockDeleteUser).not.toHaveBeenCalled();
@@ -313,9 +397,7 @@ describe('admin family and user synchronization', () => {
     mockReadFamilies.mockResolvedValue({ data: [family, otherFamily], error: null });
     const deleting = deferred<Awaited<ReturnType<typeof mockDeleteUser>>>();
     mockDeleteUser.mockReturnValueOnce(deleting.promise);
-    await render();
-    await toggleSection('admin.section.organization.title');
-    await toggleSection('admin.transport.title');
+    await render('users');
     await requestUserDeletion();
     const confirm = root().findByType(AdminDeleteUserDialog).props.onConfirm;
     await act(async () => { confirm(); confirm(); });
@@ -323,21 +405,23 @@ describe('admin family and user synchronization', () => {
     expect(mockDeleteUser).toHaveBeenCalledWith({ p_user_id: users[0].user_id });
     expect(adminButton('deleting').props.disabled).toBe(true);
     expect(adminButton('cancel').props.disabled).toBe(true);
-    expect(panel().props.users).toHaveLength(4);
+    expect(listedUsers()).toHaveLength(4);
     expect(hasText('admin.personCount: 10')).toBe(true);
     await act(async () => { deleting.resolve({ data: users[0].user_id, error: null }); });
 
     expect(root().findAllByType(AdminDeleteUserDialog)).toHaveLength(0);
-    expect(panel().props.users).toEqual(assignedUsers.slice(1));
-    expect(panel().props.families).toEqual([family, otherFamily]);
+    expect(listedUsers()).toEqual(assignedUsers.slice(1));
+    expect(hasText('admin.familyCount: 2')).toBe(true);
     expect(listItems().filter(item => item.type === 'family').flatMap(item => item.members.map(member => member.user_id)))
       .toEqual(['user-2', 'user-3', 'user-1']);
     expect(hasText('admin.personCount: 9')).toBe(true);
     expect(hasText('admin.userCount: 3')).toBe(true);
     expect(hasText('admin.familyCount: 2')).toBe(true);
-    for (const consumer of [AdminTravelOrganizationPanel, AdminBusManagementPanel]) {
+    for (const [section, consumer] of [['organization', AdminTravelOrganizationPanel], ['transport', AdminBusManagementPanel]] as const) {
+      await showSection(section);
       expect(root().findByType(consumer).props.users).toEqual(assignedUsers.slice(1));
     }
+    await showSection('users');
     expect(hasText(`admin.deleteUser.deleted: ${users[0].display_name}`)).toBe(true);
     expect(mockReadUsers).toHaveBeenCalledTimes(1);
   });
@@ -347,33 +431,33 @@ describe('admin family and user synchronization', () => {
     ['P0001', 'lastAdmin'], ['OTHER', 'error'],
   ])('keeps the account and allows retry after server rejection %s', async (code, message) => {
     mockDeleteUser.mockResolvedValueOnce({ data: null, error: { code, message: 'Server rejection' } });
-    await render(); await requestUserDeletion(); await confirmUserDeletion();
-    expect(panel().props.users).toEqual(users);
+    await render('users'); await requestUserDeletion(); await confirmUserDeletion();
+    expect(listedUsers()).toEqual(users);
     expect(hasText(`admin.deleteUser.${message}`)).toBe(true);
     expect(adminButton('confirm').props.disabled).toBe(false);
     expect(root().findByType(AdminDeleteUserDialog).props.user).toEqual(users[0]);
     await confirmUserDeletion();
-    expect(panel().props.users).toEqual(users.slice(1));
+    expect(listedUsers()).toEqual(users.slice(1));
   });
 
   it.each([null, 'wrong-account'])('does not treat an unconfirmed response as a deletion (%s)', async data => {
     mockDeleteUser.mockResolvedValueOnce({ data, error: null });
-    await render(); await requestUserDeletion(); await confirmUserDeletion();
-    expect(panel().props.users).toEqual(users);
+    await render('users'); await requestUserDeletion(); await confirmUserDeletion();
+    expect(listedUsers()).toEqual(users);
     expect(hasText('admin.deleteUser.error')).toBe(true);
     expect(hasText(`admin.deleteUser.deleted: ${users[0].display_name}`)).toBe(false);
   });
 
   it.each([false, true])('does not resurrect a deleted user after an earlier refresh settles (error: %s)', async fails => {
     const reading = deferred<Result<AdminUserSummary[]>>();
-    await render();
+    await render('users');
     mockReadUsers.mockReturnValueOnce(reading.promise);
     await act(async () => { root().findByType(FlatList).props.refreshControl.props.onRefresh(); });
     await requestUserDeletion(); await confirmUserDeletion();
     await act(async () => {
       reading.resolve(fails ? { data: null, error: { message: 'Old read failed' } } : { data: users, error: null });
     });
-    expect(panel().props.users).toEqual(users.slice(1));
+    expect(listedUsers()).toEqual(users.slice(1));
     expect(hasText('Old read failed')).toBe(false);
     expect(root().findByType(FlatList).props.refreshControl.props.refreshing).toBe(false);
   });

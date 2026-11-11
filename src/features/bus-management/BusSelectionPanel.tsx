@@ -32,7 +32,9 @@ export function BusSelectionPanel() {
       setFeedback({ key: successKey, error: false });
     } catch (error) {
       const message = getOriginalErrorMessage(error) ?? '';
-      const key = /Active trip not found|Bus does not belong|bus assignment has changed|Choose a bus before/.test(message)
+      const key = /Bus selection has not started/.test(message)
+        ? 'bus.selection.waitingBody'
+        : /Active trip not found|Bus does not belong|bus assignment has changed|Choose a bus before/.test(message)
         ? 'bus.selection.changed'
         : /Authentication required|User profile is required|JWT|session/i.test(message)
           ? 'bus.submitError.auth'
@@ -60,6 +62,13 @@ export function BusSelectionPanel() {
     <Card style={styles.card}>
       <ThemedText type="heading">{t('bus.selection.noTripTitle')}</ThemedText>
       <ThemedText themeColor="textSecondary">{t('bus.selection.noTripBody')}</ThemedText>
+    </Card>
+  );
+
+  if (!activeTrip.bus_selection_started_at) return (
+    <Card style={styles.card}>
+      <ThemedText type="heading">{t('bus.selection.waitingTitle')}</ThemedText>
+      <ThemedText themeColor="textSecondary">{t('bus.selection.waitingBody')}</ThemedText>
     </Card>
   );
 

@@ -247,6 +247,10 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
     }
 
     await openHome(member.page);
+    await expect(member.page.getByRole('button', { name: 'Buszuordnung öffnen', exact: true })).toHaveCount(0);
+    await admin.page.getByRole('button', { name: 'Busauswahl starten', exact: true }).click();
+
+    await openHome(member.page);
     await member.page.getByRole('button', { name: 'Buszuordnung öffnen', exact: true }).click();
     await expect(member.page.getByText('E2E Ziyara Reise')).toBeVisible();
     await member.page.getByRole('button', { name: 'Bus 1 auswählen', exact: true }).click();
@@ -341,7 +345,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
   test('Rollenänderung über die Admin-Oberfläche', async ({ page }) => {
     await login(page, adminEmail, adminPassword);
     await openAdmin(page);
-    await page.getByRole('button', { name: /Benutzer Familienpakete/u }).click();
+    await page.getByRole('button', { name: /^Benutzer,/u }).click();
     await page.getByLabel('Personen oder Familien nach Namen suchen').fill(memberName);
     await expect(page.getByText(memberName)).toBeVisible();
     await page
@@ -374,7 +378,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
 
     try {
       await openAdmin(admin.page);
-      await admin.page.getByRole('button', { name: /Benutzer Familienpakete/u }).click();
+      await admin.page.getByRole('button', { name: /^Benutzer,/u }).click();
       await admin.page.getByLabel('Personen oder Familien nach Namen suchen').fill(memberName);
       await admin.page.getByRole('button', { name: new RegExp(`^Details von ${memberName}`, 'u') }).click();
       await admin.page.getByRole('button', { name: 'Benutzer löschen', exact: true }).click();

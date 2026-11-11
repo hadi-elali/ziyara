@@ -108,6 +108,14 @@ export function AdminGroupCheckPanel() {
       .channel(`admin-group-check-results:${checkId}`)
       .on(
         'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles' },
+        () => {
+          if (realtimeRefreshTimeout) clearTimeout(realtimeRefreshTimeout);
+          realtimeRefreshTimeout = setTimeout(() => void loadResults(), 250);
+        },
+      )
+      .on(
+        'postgres_changes',
         {
           event: '*',
           filter: `check_id=eq.${checkId}`,
@@ -272,6 +280,13 @@ export function AdminGroupCheckPanel() {
                   emptyLabel={t('groupCheck.noDeclined')}
                   group={resultSummary.no}
                   title={t('groupCheck.resultNo')}
+                />
+                <ResultColumn
+                  key={`sick:${checkId}`}
+                  color={theme.textSecondary}
+                  emptyLabel={t('groupCheck.noSick')}
+                  group={resultSummary.sick}
+                  title={t('groupCheck.resultSick')}
                 />
                 <ResultColumn
                   key={`open:${checkId}`}

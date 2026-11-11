@@ -167,6 +167,21 @@ async function renderProvider() {
 }
 
 describe('GroupCheckProvider request versioning', () => {
+  it('befreit als krank markierte Konten und verlangt nach Aufhebung wieder eine fehlende Antwort', async () => {
+    mockAuthState.profile = { ...mockProfile, is_sick: true };
+    checkResponses.push(Promise.resolve({ data: activeCheck, error: null }));
+    responseResponses.push(Promise.resolve({ data: null, error: null }));
+    await act(async () => { renderer = create(<GroupCheckProvider><GroupCheckProbe /></GroupCheckProvider>); });
+    await waitForCondition(() => !getContext().isLoading);
+    expect(getContext().activeCheck).toEqual(activeCheck);
+    expect(getContext().currentResponse).toBeNull();
+    expect(getContext().isBlocking).toBe(false);
+
+    mockAuthState.profile = { ...mockProfile, is_sick: false };
+    await act(async () => { renderer!.update(<GroupCheckProvider><GroupCheckProbe /></GroupCheckProvider>); });
+    expect(getContext().isBlocking).toBe(true);
+  });
+
   beforeAll(() => {
     actEnvironmentGlobal.IS_REACT_ACT_ENVIRONMENT = true;
   });

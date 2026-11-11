@@ -119,7 +119,7 @@ export function BusManagementProvider({ children }: PropsWithChildren) {
       const { data: trips, error: tripError } = await withSupabaseReadTimeout((signal) =>
         supabase
           .from('trips')
-          .select('id, name, created_by_profile_id, created_at, archived_at, bus_setup_deleted_at')
+          .select('id, name, created_by_profile_id, created_at, archived_at, bus_setup_deleted_at, bus_selection_started_at')
           .order('created_at', { ascending: false })
           .abortSignal(signal)
       );

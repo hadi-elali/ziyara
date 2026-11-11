@@ -1,22 +1,24 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { TextInput, Text } from 'react-native';
+import { ActivityIndicator, AppState, TextInput, Text } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
 import { Button, type ButtonProps } from '@/components/ui/button';
-import type { AppRole } from '@/domain/database';
+import type { AdminPushMessageSummary, AppRole } from '@/domain/database';
+import { SupabaseReadTimeoutError } from '@/features/network/supabase-read';
 import { AdminPushPanel } from './AdminPushPanel';
 
 const mockAuth = { profile: { role: 'admin' as AppRole }, session: { user: { id: 'admin-1' } } };
 const mockPrepare = jest.fn<(args: unknown) => Promise<{ data: number | null; error: { message: string } | null }>>();
-const mockList = jest.fn();
+type HistoryResult = { data: AdminPushMessageSummary[] | null; error: { message: string } | null };
+const mockList = jest.fn<(name: string, signal: AbortSignal) => Promise<HistoryResult>>();
 const mockInvoke = jest.fn<(...args: unknown[]) => Promise<{ data: { code: string } | null; error: { message: string } | null }>>();
 const mockT = (key: string) => key;
 jest.mock('@/constants/theme', () => ({ Spacing: { two: 8, three: 12 } }));
 jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => mockAuth }));
 jest.mock('@/features/auth/supabase', () => ({ supabase: {
   rpc: (name: string, args: unknown) => name === 'admin_prepare_push_message'
-    ? mockPrepare(args) : { abortSignal: () => mockList() },
+    ? mockPrepare(args) : { abortSignal: (signal: AbortSignal) => mockList(name, signal) },
   functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
 } }));
 jest.mock('@/features/i18n/i18n', () => ({ useI18n: () => ({ t: mockT, language: 'de', isRTL: false }) }));
@@ -36,6 +38,10 @@ jest.mock('@/components/ui/button', () => {
 
 const draft = {
   id: 42, title: 'Treffpunkt', body: 'Bitte zur Rezeption kommen.',
+};
+const savedMessage: AdminPushMessageSummary = {
+  ...draft, created_at: '2026-11-10T12:30:00Z', started_at: '2026-11-10T12:31:00Z',
+  total: 4, accepted: 3, failed: 1, pending: 0,
 };
 let renderer: ReactTestRenderer | null;
 const actGlobal = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
@@ -62,18 +68,20 @@ async function compose() {
 describe('AdminPushPanel', () => {
   beforeAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = true; });
   beforeEach(() => {
-    jest.clearAllMocks(); mockPrepare.mockReset(); mockInvoke.mockReset(); renderer = null;
+    jest.clearAllMocks(); mockPrepare.mockReset(); mockInvoke.mockReset(); mockList.mockReset(); renderer = null;
     mockAuth.profile.role = 'admin'; mockAuth.session.user.id = 'admin-1';
     mockPrepare.mockResolvedValue({ data: 42, error: null });
     mockInvoke.mockResolvedValue({ data: { code: 'processed' }, error: null });
+    mockList.mockResolvedValue({ data: [], error: null });
   });
   afterEach(async () => { await act(async () => renderer?.unmount()); });
   afterAll(() => { actGlobal.IS_REACT_ACT_ENVIRONMENT = previousAct; });
 
-  it('omits the history and its reads and requires nonblank input', async () => {
+  it('loads the saved history and requires nonblank input', async () => {
     await render();
-    expect(hasText('adminPush.history')).toBe(false);
-    expect(mockList).not.toHaveBeenCalled();
+    expect(hasText('adminPush.history')).toBe(true);
+    expect(hasText('adminPush.historyEmpty')).toBe(true);
+    expect(mockList).toHaveBeenCalledWith('admin_list_push_messages', expect.any(AbortSignal));
     expect(button('send').props.disabled).toBe(true);
     await act(async () => { await button('send').props.onPress(); });
     expect(mockPrepare).not.toHaveBeenCalled();
@@ -84,13 +92,116 @@ describe('AdminPushPanel', () => {
     await render(); await compose();
     expect(mockInvoke).not.toHaveBeenCalled();
     expect(hasText('adminPush.preview')).toBe(false);
-    expect(renderer!.root.findAllByType(Button)).toHaveLength(1);
+    expect(renderer!.root.findAllByType(Button)).toHaveLength(2);
     await act(async () => { await button('send').props.onPress(); });
     expect(mockPrepare).toHaveBeenCalledWith({ p_title: draft.title, p_body: draft.body, p_audience: 'all' });
     expect(mockInvoke).toHaveBeenCalledWith('dispatch-admin-push', { body: { messageId: 42 } });
     expect(hasText('adminPush.processed')).toBe(true);
     expect(button('send').props.disabled).toBe(true);
-    expect(mockList).not.toHaveBeenCalled();
+    expect(mockList).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows persisted titles and complete text again after reopening the panel', async () => {
+    mockList.mockResolvedValue({ data: [savedMessage], error: null });
+    await render();
+    expect(hasText(savedMessage.title)).toBe(true);
+    expect(hasText(savedMessage.body)).toBe(true);
+    expect(hasText('adminPush.processed')).toBe(true);
+    expect(hasText('adminPush.historyCounts')).toBe(true);
+    expect(hasText('adminPush.historyDeliveryHint')).toBe(true);
+    await act(async () => { renderer!.unmount(); });
+    await render();
+    expect(hasText(savedMessage.body)).toBe(true);
+    expect(mockList).toHaveBeenCalledTimes(2);
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ started_at: null, total: 0, accepted: 0, failed: 0, pending: 0 }, 'historySaved'],
+    [{ total: 0, accepted: 0, failed: 0, pending: 0 }, 'historyNoDevices'],
+    [{ accepted: 2, pending: 1 }, 'historyPending'],
+  ])('distinguishes saved, empty-recipient and unconfirmed sends: %s', async (changes, status) => {
+    mockList.mockResolvedValue({ data: [{ ...savedMessage, ...changes }], error: null });
+    await render();
+    expect(hasText(`adminPush.${status}`)).toBe(true);
+  });
+
+  it('shows loading until the history arrives', async () => {
+    let resolve: ((result: HistoryResult) => void) | undefined;
+    mockList.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    await render();
+    expect(renderer!.root.findAllByType(ActivityIndicator)).toHaveLength(1);
+    expect(button('historyRefresh').props.disabled).toBe(true);
+    expect(hasText('adminPush.historyEmpty')).toBe(false);
+    await act(async () => { resolve?.({ data: [savedMessage], error: null }); });
+    expect(hasText(savedMessage.body)).toBe(true);
+    expect(button('historyRefresh').props.disabled).toBe(false);
+  });
+
+  it.each([
+    [{ message: 'Network request failed' }, 'offline'],
+    [new SupabaseReadTimeoutError(10_000), 'timeout'],
+    [{ message: 'Server error' }, 'server'],
+  ])('recovers from history failures without blocking the composer: %s', async (error, kind) => {
+    mockList.mockResolvedValueOnce({ data: null, error });
+    await render();
+    expect(hasText(`adminPush.historyError.${kind}`)).toBe(true);
+    expect(hasText('adminPush.historyEmpty')).toBe(false);
+    mockList.mockResolvedValueOnce({ data: [savedMessage], error: null });
+    await act(async () => { button('historyRefresh').props.onPress(); });
+    expect(hasText(savedMessage.body)).toBe(true);
+    expect(hasText(`adminPush.historyError.${kind}`)).toBe(false);
+    await compose();
+    await act(async () => { button('send').props.onPress(); });
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps loaded messages when refreshing the history fails', async () => {
+    mockList.mockResolvedValueOnce({ data: [savedMessage], error: null });
+    await render();
+    mockList.mockResolvedValueOnce({ data: null, error: { message: 'Network request failed' } });
+    await act(async () => { button('historyRefresh').props.onPress(); });
+    expect(hasText(savedMessage.body)).toBe(true);
+    expect(hasText('adminPush.historyError.offline')).toBe(true);
+  });
+
+  it('refreshes saved messages even after an uncertain dispatch', async () => {
+    mockInvoke.mockResolvedValueOnce({ data: null, error: { message: 'Network request failed' } });
+    await render(); await compose();
+    mockList.mockResolvedValueOnce({ data: [{ ...savedMessage, started_at: null }], error: null });
+    await act(async () => { button('send').props.onPress(); });
+    expect(hasText(savedMessage.body)).toBe(true);
+    expect(hasText('adminPush.historySaved')).toBe(true);
+    expect(hasText('adminPush.sendError Network request failed')).toBe(true);
+  });
+
+  it('ignores an older history response that arrives after sending', async () => {
+    let resolve: ((result: HistoryResult) => void) | undefined;
+    mockList.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    await render(); await compose();
+    mockList.mockResolvedValueOnce({ data: [savedMessage], error: null });
+    await act(async () => { button('send').props.onPress(); });
+    await act(async () => { resolve?.({ data: [], error: null }); });
+    expect(hasText(savedMessage.body)).toBe(true);
+  });
+
+  it('refreshes history when the app returns to the foreground', async () => {
+    await render();
+    mockList.mockResolvedValueOnce({ data: [savedMessage], error: null });
+    await act(async () => { jest.mocked(AppState.addEventListener).mock.calls.at(-1)![1]('active'); });
+    expect(hasText(savedMessage.body)).toBe(true);
+    expect(mockList).toHaveBeenCalledTimes(2);
+  });
+
+  it('clears history on account change and ignores the previous account response', async () => {
+    let resolve: ((result: HistoryResult) => void) | undefined;
+    mockList.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    await render();
+    mockAuth.session.user.id = 'admin-2';
+    await act(async () => { renderer!.update(<AdminPushPanel />); });
+    await act(async () => { resolve?.({ data: [savedMessage], error: null }); });
+    expect(hasText(savedMessage.body)).toBe(false);
+    expect(hasText('adminPush.historyEmpty')).toBe(true);
   });
 
   it.each(['all', 'brother', 'sister'] as const)('sends directly to the selected %s audience', async audience => {

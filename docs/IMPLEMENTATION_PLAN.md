@@ -4,13 +4,57 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 10 November 2026: Remove active emergencies when deleting a person
+
+- Add `20261110030000_remove_deleted_users_active_emergencies.sql`: a private before-delete trigger on profiles removes the sender's open emergencies for admin, self-service Auth and direct profile deletions. Existing cascades remove receipts and private push attempts. Retain completed history and unrelated senders' emergencies.
+- Clean up existing open requests whose requester profile is already null. Keep client permissions and RPC signatures unchanged; existing Realtime/refresh flows update inboxes, dashboards and Home alerts. Apply the migration remotely before use; no client or Function deployment, dependency or native configuration change is required.
+- Validation: 127 local Supabase pgTAP assertions pass, including 23 new lifecycle/permission checks, 95 existing account-deletion/emergency checks and nine migration-backfill checks. All database changes were rolled back; no persistent local or remote application. TypeScript, web export and diff checks pass; lint retains four warnings. Offline SDK alignment passes; online Doctor retains nine existing patch mismatches (20/21). Package files unchanged; no multiple-device/concurrency test.
+
+## 10 November 2026: Sick accounts in status checks
+
+- Add persistent, reversible account sickness management under Admin → Users → Details, with a visible summary marker, DE/EN/AR feedback and protection against duplicate writes and stale list reads.
+- Add the admin-only `admin_set_user_sick` RPC and `profiles.is_sick` through `20261110010000_add_user_sickness_status.sql`. Include the field in admin lists/results and authenticated profile selects; retain column-level write restrictions and serialize with role changes/deletion.
+- Count sick accounts exclusively in a fourth status-check category, preserving existing responses and represented-person totals. Exempt them from mandatory responses and response prompts; refresh results through profile Realtime events. Skip sick accounts in unclaimed status-check notifications.
+- Apply the migration before distributing the updated client. Local schema is updated and test data cleaned; remote rollout and native device validation remain pending. No dependency or native configuration changes.
+- Validation: 77 focused Jest tests and 59 transactional SQL assertions across the sickness/push suites pass. TypeScript and web export pass; lint retains four existing warnings. Local Expo alignment passes with its offline caveat; online Doctor passes 20/21 checks with nine existing patch mismatches. Dependencies unchanged.
+
+## 10 November 2026: Release bus selection after entering all buses
+
+- Separate preparing buses from releasing selection with an explicit “Start bus selection” action. New and copied trips wait for admin release; `/bus` shows a waiting state and Home offers selection only after release. Disable start without buses, with an unsaved bus name, during mutations or on sync failure. Provide DE/EN/AR text.
+- Add `20261110020000_start_bus_selection_explicitly.sql` with persistent `trips.bus_selection_started_at` and an admin-only start RPC using existing bus/trip locks. Enforce release in own selection/presence and push claims. Capture the one-time private device audience atomically at release, preserve idempotence and existing selectable trips without historical notification backfills. Remove dispatch from bus creation and trip copying; keep the existing dispatcher and explicit failure/resume behavior.
+- Apply the new migration before releasing the client; no remote deployment, dependency/native changes or additional development build. See `docs/BUS_SELECTION_PUSH.md`.
+- Validation: 35 focused tests in three existing bus suites, TypeScript and web export pass. Lint retains four existing warnings. All 66 pgTAP assertions pass against local Supabase PostgreSQL, plus migration checks with legacy bus/empty-trip fixtures; all database changes were rolled back. Existing E2E smoke updated but not run. Local Expo alignment passes with the offline caveat; online Doctor passes 20/21 with nine existing patch mismatches. Manifest/lockfile unchanged. No real push, concurrency or device run.
+
+## 10 November 2026: Remove an assigned bus leader
+
+- Add “Remove leader” directly to buses with assigned leadership, with DE/EN/AR copy explaining that the person keeps their bus assignment. Reuse mutation locking, error/retry feedback and refresh; close the replacement editor after success and disable removal while saving or when bus synchronization has failed.
+- Add the admin-only `admin_remove_trip_bus_leader(bigint)` RPC in `20261110000000_remove_trip_bus_leader.sql` and its domain type. Clear only the leadership pointer; retain all participant data, family markers and presence responses. Share the bus advisory lock and lock both trip and bus to serialize with assignment and archival; reject unknown/ended buses and open legacy boarding. Keep repeat removal harmless and permit subsequent leader assignment.
+- Apply the migration remotely before delivering the updated client. No deployment, native config/dependency change or additional development build for this feature; device validation remains pending.
+- Validation: twelve existing bus-admin suite tests including three focused removal additions, TypeScript and web export pass; lint retains four existing warnings. Resolve the existing assignment RPC union return-type conflict in the touched panel. Extend the existing SQL bus-selection suite from 33 to 44 assertions; these have not run because local Docker/Supabase is unavailable. Local Expo alignment passes with its offline caveat; online Doctor passes 20/21 checks with nine existing Expo patch mismatches. Package manifest and lockfile remain unchanged.
+
+## 10 November 2026: Admin push message history
+
+- Restore a read-only history below the composer at `/admin/push`, showing the latest ten persisted messages with complete title/body, local creation time and aggregated dispatch status. Include saved messages whose dispatch has not started.
+- Reuse the deployed admin-only `admin_list_push_messages` RPC. No schema, Function, navigation, dependency or native changes are needed. The existing RPC does not return audience information.
+- Refresh on opening, after sending, on app foreground and manually. Keep loaded messages during refresh failures, distinguish loading/empty/offline/timeout/server states, and ignore stale responses after refreshes and account changes. Provide DE/EN/AR text.
+- Preserve direct sending and idempotent retries. History does not send or retry messages; Expo acceptance does not establish device delivery.
+- Validation: all 37 tests in the existing admin-push suite, TypeScript, lint (four existing warnings), web export and diff checks pass. Local Expo alignment passes with its offline caveat; after a sandbox DNS failure and approved network access, online Doctor passes 20/21 with nine existing SDK-57 patch mismatches. Dependencies remain unchanged. No full coverage, E2E, device run or real push; deliver the updated client.
+
+## 10 November 2026: Square admin dashboard tiles
+
+- Replace the long admin accordion rows with a shared grid of eleven square tiles, including registration. Adapt one to four columns to measured content width and system font scale, with two adjacent tiles on common phone widths. Preserve theme tokens, German/English/Arabic text, RTL ordering, status labels and full accessible names/descriptions.
+- Each tile pushes its own `/admin/[section]` Stack page; the dashboard contains only the overview. Validate the eleven section names, translate page titles, keep admin guards and allowlisted login returns, and provide Back with an `/admin` fallback. Reuse `AdminDashboard` from the admin feature directory and reload account/family data on focus. Keep the user list virtualized. This supersedes the initial inline expansion.
+- Fix the iOS top gap on return by separating focus loading from the native pull-to-refresh state. Enable that indicator only for a user pull, and reset it on completion, blur and confirmed account/family mutations. Keep cached content visible during the automatic focus read. Five targeted refresh/race checks and lint of the two changed source files pass; no broad tests, exports or dependency rechecks. Actual iOS device validation remains pending.
+- Prioritize iOS/Android per the user; skip further browser verification. No dependency, native configuration, backend or deployment changes; release the updated client. Real device and screenreader validation remain pending.
+- Validation after the page-navigation adjustment: 32 existing focused admin/navigation tests and targeted lint pass. Adapt existing admin tests to individual sections and update the two E2E user-tile selectors; no new suite or E2E run. TypeScript keeps only the known bus-management error at line 326. Per user request, skip broad tests and additional browser/export/Doctor runs. Earlier native exports and dependency checks predate this navigation adjustment; dependencies remain unchanged.
+
 ## 4 November 2026: Push when starting status checks
 
 - After a successful start, invoke `dispatch-group-check` using the existing Expo batching/ticket handling. Snapshot all registered devices, including admins, atomically through an insert trigger in `20261104010000_notify_group_checks.sql`. No trip prerequisite, no old-check or later-device backfill.
 - Verify the session and current admin role, independently recheck it per service-only claim, serialize with closure, skip answered accounts and removed/reassigned devices, and claim at most 100 devices once. Never resend uncertain attempts.
 - Use DE/EN/AR device-language copy, standard sound and the existing Android channel. Keep the custom question inside the app. Tapping opens protected `/check-in` after sign-in, intro and startup guards release it, including cold starts.
 - Preserve a saved check when dispatch fails and show translated failure/resume controls in its admin panel. Resume only unclaimed attempts; local warnings do not survive panel remounts. No scheduler or automatic recovery after an interrupted start.
-- Deploy the additive migration and new Function before delivering the updated client. No dependency/native config change or additional development build solely for this feature. No remote deployment or real push in this task; validation and limits in `docs/GROUP_CHECK_PUSH.md`.
+- Live follow-up on 4 November confirms migration `20261104010000` was already applied but `dispatch-group-check` was missing. Deploy that Function with its existing handler dependencies; GET now returns 405 and unauthenticated POST 401. Confirm the existing Expo secret is present without reading/changing its value. No further database mutation or real push was triggered. Earlier checks do not resend automatically: resume from the still-open panel or start a new check with the updated client. No dependency/native config change or additional development build solely for this feature; validation and limits in `docs/GROUP_CHECK_PUSH.md`.
 
 ## 2 November 2026: Admin user deletion and required sign-in
 
@@ -101,7 +145,7 @@ Religious-content rule: do not write unverified duas, ziyarat, Arabic text, tran
 - Extend the existing root-navigation suite with the actual registration route and root guards through the session/profile/group-check lifecycle, including iOS, profile failure, mandatory checks and emergency return targets. Three of the four added cases fail before the fix because the target is excluded or the profile-error destination is wrong. Physical-device reproduction/verification remains pending. Updated client required; no backend, dependency or native configuration change and no additional development build for this fix.
 - Validation: all 63 targeted tests in the four existing form/navigation suites, TypeScript, web export and diff checks pass. Lint has four existing warnings. Manifest/lockfile match and remain unchanged; local Expo alignment passes with its offline caveat, and online Doctor retains the seven known SDK-57 patch mismatches (20/21 checks). No full E2E or device run.
 
-## 24 October 2026: Admin push messages and recipient selection
+## 24 October 2026: Admin push messages and recipient selection (historical; history restored 10 November)
 
 - Add accessible All/Brothers/Sisters radios, defaulting to All on opening, with DE/EN/AR copy, RTL order and a send label matching the selection. Preserve direct one-tap sending. Freeze the choice while saving/dispatching; keep the last selection after success. The retry identity includes title, body and audience, so changing recipients creates a new message.
 - `20261024010000_target_admin_push_audience.sql` adds a validated stored audience and a guarded three-argument prepare RPC. Preserve All for existing rows and the old two-argument API. Filter snapshots through `profiles.member_type` for every role; null assignments belong only to All. Before later batches, exclude accounts whose assignment changed. Reject null/invalid audiences, retain empty targets without fallback and preserve device privacy, admin checks, batching and idempotence. The existing dispatcher API needs no Function deployment.
@@ -683,6 +727,7 @@ Files to create or modify:
 Acceptance criteria:
 
 - Admin `Groups & group leaders` creates, edits and deletes independent account groups without requiring an intermediate trip or bus. Admins add individuals or whole account families; family expansion and conflict detection are atomic. One account belongs to at most one group.
+- Keep person/family search text and matching choices visible after selection so admins can select several results in succession. Preserve selections across search changes and save them together through the existing group RPC.
 - Group names can be a single character, including a digit or Arabic letter. A name is still required, trimmed and limited to 80 characters. Migration `20261015000000_allow_short_organization_group_names.sql` updates both the table constraint and admin RPC without changing existing rows or authorization. Verify create/rename, boundaries and permission checks locally before remote rollout.
 - Every group has one or more registered leaders who are also members. Group leadership does not grant global admin access.
 - Any app role, including an admin, can be a member or leader directly through its registered account. Admins see only their own assignments on Home and `/group`, while `/admin` retains the complete overview.

@@ -63,6 +63,8 @@ export type UserProfile = {
   display_name: string;
   family_id: number | null;
   id: number;
+  /** Admin-managed; absent in older profile snapshots. */
+  is_sick?: boolean;
   luggage_count: number;
   member_type: MemberType | null;
   party_size: number;
@@ -75,6 +77,7 @@ export type UserProfile = {
 export type AdminUserSummary = {
   /** Current completed years; absent until the admin-age migration is deployed. */
   age?: number | null;
+  is_sick?: boolean;
   display_name: string;
   emergency_on_duty: boolean;
   family_id: number | null;
@@ -122,6 +125,7 @@ export type GroupCheckResponse = {
 
 export type AdminGroupCheckResult = {
   answer: boolean | null;
+  is_sick?: boolean;
   display_name: string;
   party_size: number;
 };
@@ -191,6 +195,7 @@ export type RoleAssignmentAudit = {
 
 export type Trip = {
   archived_at: string | null;
+  bus_selection_started_at: string | null;
   bus_setup_deleted_at: string | null;
   created_at: string;
   created_by_profile_id: number | null;
@@ -1155,6 +1160,7 @@ export type Database = {
       trips: {
         Insert: {
           archived_at?: string | null;
+          bus_selection_started_at?: string | null;
           bus_setup_deleted_at?: string | null;
           created_at?: string;
           created_by_profile_id?: number | null;
@@ -1165,6 +1171,7 @@ export type Database = {
         Row: Trip;
         Update: {
           archived_at?: string | null;
+          bus_selection_started_at?: string | null;
           bus_setup_deleted_at?: string | null;
           name?: string;
         };
@@ -1291,6 +1298,10 @@ export type Database = {
         Args: { p_name: string };
         Returns: Trip;
       };
+      admin_start_trip_bus_selection: {
+        Args: { p_trip_id: number };
+        Returns: Trip;
+      };
       admin_create_trip_bus: {
         Args: { p_name: string; p_trip_id: number };
         Returns: TripBus;
@@ -1414,6 +1425,10 @@ export type Database = {
         Args: { p_role: AppRole; p_user_id: string };
         Returns: UserProfile;
       };
+      admin_set_user_sick: {
+        Args: { p_is_sick: boolean; p_user_id: string };
+        Returns: boolean;
+      };
       admin_set_bus_boarding_status: {
         Args: {
           p_boarding_id: number;
@@ -1424,6 +1439,10 @@ export type Database = {
       };
       admin_set_trip_bus_leader: {
         Args: { p_bus_id: number; p_leader_user_id: string };
+        Returns: TripBus;
+      };
+      admin_remove_trip_bus_leader: {
+        Args: { p_bus_id: number };
         Returns: TripBus;
       };
       admin_start_bus_boarding: {

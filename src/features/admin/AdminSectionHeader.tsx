@@ -7,9 +7,9 @@ import { useTheme } from '@/hooks/use-theme';
 
 type AdminSectionHeaderProps = {
   description: string;
-  expanded: boolean;
   icon: SymbolIconName;
-  onToggle: () => void;
+  label?: string;
+  onPress: () => void;
   status: string;
   statusColor?: ThemeColor;
   title: string;
@@ -17,9 +17,9 @@ type AdminSectionHeaderProps = {
 
 export function AdminSectionHeader({
   description,
-  expanded,
   icon,
-  onToggle,
+  label,
+  onPress,
   status,
   statusColor = 'textSecondary',
   title,
@@ -29,34 +29,32 @@ export function AdminSectionHeader({
 
   return (
     <Pressable
+      accessibilityHint={description}
+      accessibilityLabel={`${title}, ${status}`}
       accessibilityRole="button"
-      accessibilityState={{ expanded }}
-      onPress={onToggle}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.header,
-        { backgroundColor: theme.surface, borderColor: theme.border },
+        {
+          backgroundColor: theme.surface,
+          borderColor: theme.border,
+        },
         pressed && styles.pressed,
       ]}>
-      <View style={[styles.icon, { backgroundColor: theme.background }]}>
-        <SymbolIcon color={theme.textSecondary} name={icon} size={21} />
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={[styles.icon, { backgroundColor: theme.accentSoft }]}>
+        <SymbolIcon color={theme.accent} name={icon} size={28} />
       </View>
 
-      <View style={styles.text}>
-        <ThemedText style={styles.title}>{title}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {description}
+      <ThemedText numberOfLines={2} style={styles.title}>{label ?? title}</ThemedText>
+
+      <View style={styles.status}>
+        <View style={[styles.statusDot, { backgroundColor: color }]} />
+        <ThemedText numberOfLines={1} type="tinyBold" style={[styles.statusText, { color }]}>
+          {status}
         </ThemedText>
-      </View>
-
-      <View style={styles.trailing}>
-        <View style={[styles.status, { backgroundColor: `${color}1A`, borderColor: color }]}>
-          <ThemedText type="tinyBold" style={{ color }}>
-            {status}
-          </ThemedText>
-        </View>
-        <View style={[styles.chevron, expanded && styles.chevronExpanded]}>
-          <SymbolIcon color={theme.textSecondary} name="chevron" size={20} />
-        </View>
       </View>
     </Pressable>
   );
@@ -65,46 +63,41 @@ export function AdminSectionHeader({
 const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
+    aspectRatio: 1,
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: Spacing.three,
-    minHeight: 84,
-    padding: Spacing.three,
+    gap: Spacing.two,
+    justifyContent: 'center',
+    padding: 12,
+    width: '100%',
   },
   icon: {
     alignItems: 'center',
     borderRadius: 8,
-    height: 44,
+    height: 40,
     justifyContent: 'center',
-    width: 44,
-  },
-  text: {
-    flex: 1,
-    gap: Spacing.one,
-    minWidth: 0,
+    width: 40,
   },
   title: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 600,
-    lineHeight: 24,
-  },
-  trailing: {
-    alignItems: 'flex-end',
-    gap: Spacing.two,
+    lineHeight: 18,
+    textAlign: 'center',
   },
   status: {
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    maxWidth: 150,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.one,
+    maxWidth: '100%',
   },
-  chevron: {
-    transform: [{ rotate: '0deg' }],
+  statusDot: {
+    borderRadius: 3,
+    height: 6,
+    width: 6,
   },
-  chevronExpanded: {
-    transform: [{ rotate: '90deg' }],
+  statusText: {
+    flexShrink: 1,
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.72,

@@ -4,16 +4,24 @@ import { Alert, TextInput } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
-import type { AccountFamily, AdminUserSummary, Trip } from '@/domain/database';
+import type { AccountFamily, AdminUserSummary, Trip, TripBus, TripParticipant } from '@/domain/database';
 import { AdminBusManagementPanel } from '@/features/bus-management/AdminBusManagementPanel';
 import { buildTripGroupStates } from '@/features/trip-groups/trip-group-state';
 
-const mockRpc = jest.fn<(name: string, args: unknown) => Promise<{ error: { message: string } | null }>>();
+const mockRpc = jest.fn<(name: string, args: unknown) => Promise<{ data?: { id: number }; error: { message: string } | null }>>();
 const mockRefresh = jest.fn(async () => {});
 const mockRefreshGroups = jest.fn(async () => {});
+const mockInvoke = jest.fn<(name: string, args: unknown) => Promise<{
+  data: { code: string; pushFailed: boolean }; error: null;
+}>>().mockResolvedValue({ data: { code: 'processed', pushFailed: false }, error: null });
 let mockGroupError = false;
-let mockActiveTrip: { id: number; name: string } | null = { id: 20, name: 'Testfahrt' };
+let mockActiveTrip: { id: number; name: string; bus_selection_started_at: string | null } | null = {
+  id: 20, name: 'Testfahrt', bus_selection_started_at: null,
+};
 let mockTrips: Trip[] = [];
+let mockBuses: Pick<TripBus, 'id' | 'name' | 'leader_participant_id'>[] = [];
+let mockParticipants: Pick<TripParticipant, 'id' | 'display_name'>[] = [];
+let mockBusSyncError = false;
 const initialMockGroups = buildTripGroupStates(
   [{ id: 10, name: 'Gruppe A', created_at: '', updated_at: '' }],
   [
@@ -25,14 +33,17 @@ const initialMockGroups = buildTripGroupStates(
 let mockGroups = initialMockGroups;
 
 jest.mock('@/features/auth/supabase', () => ({
-  supabase: { rpc: (...args: Parameters<typeof mockRpc>) => mockRpc(...args) },
+  supabase: {
+    rpc: (...args: Parameters<typeof mockRpc>) => mockRpc(...args),
+    functions: { invoke: (...args: Parameters<typeof mockInvoke>) => mockInvoke(...args) },
+  },
 }));
 jest.mock('@/features/auth/auth-context', () => ({ useAuth: () => ({ session: { user: { id: 'admin' } } }) }));
 jest.mock('@/features/bus-management/bus-management-context', () => ({
   useBusManagement: () => ({
     activeTrip: mockActiveTrip,
-    buses: [{ id: 40, name: 'Bus 1', leader_participant_id: null }],
-    participants: [], trips: mockTrips, hasSyncError: false, isLoading: false, refresh: mockRefresh,
+    buses: mockBuses,
+    participants: mockParticipants, trips: mockTrips, hasSyncError: mockBusSyncError, isLoading: false, refresh: mockRefresh,
   }),
 }));
 jest.mock('@/features/trip-groups/trip-group-context', () => ({
@@ -85,9 +96,13 @@ describe('group bus assignment', () => {
     mockRpc.mockReset().mockResolvedValue({ error: null });
     mockRefresh.mockClear();
     mockRefreshGroups.mockClear();
+    mockInvoke.mockReset().mockResolvedValue({ data: { code: 'processed', pushFailed: false }, error: null });
     mockGroupError = false;
-    mockActiveTrip = { id: 20, name: 'Testfahrt' };
+    mockActiveTrip = { id: 20, name: 'Testfahrt', bus_selection_started_at: null };
     mockTrips = [];
+    mockBuses = [{ id: 40, name: 'Bus 1', leader_participant_id: null }];
+    mockParticipants = [];
+    mockBusSyncError = false;
     mockGroups = initialMockGroups;
   });
   afterEach(async () => { await act(async () => renderer?.unmount()); renderer = null; jest.restoreAllMocks(); });
@@ -155,6 +170,136 @@ describe('group bus assignment', () => {
     await act(async () => { createBus.props.onPress(); });
     expect(mockRpc).toHaveBeenCalledWith('admin_create_trip_bus', { p_name: 'Bus 2', p_trip_id: 20 });
     expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('releases selection and sends its notification only after the separate start action', async () => {
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    const start = () => root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.startSelection')!;
+    const nameInput = root().findAllByType(TextInput).find((input) => input.props.accessibilityLabel === 'bus.admin.busName')!;
+    expect(mockInvoke).not.toHaveBeenCalled();
+    await act(async () => { nameInput.props.onChangeText('Bus 2'); });
+    expect(start().props.disabled).toBe(true);
+    await act(async () => { start().props.onPress(); });
+    expect(mockRpc).not.toHaveBeenCalled();
+    await act(async () => { nameInput.props.onChangeText(''); });
+    expect(start().props.disabled).toBe(false);
+    await act(async () => { start().props.onPress(); });
+    expect(mockRpc).toHaveBeenCalledWith('admin_start_trip_bus_selection', { p_trip_id: 20 });
+    expect(mockInvoke).toHaveBeenCalledWith('dispatch-bus-selection', { body: { tripId: 20 } });
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    mockActiveTrip!.bus_selection_started_at = '2026-11-10T12:00:00Z';
+    await act(async () => { renderer?.update(<AdminBusManagementPanel families={[]} users={[]} />); });
+    expect(start()).toBeUndefined();
+  });
+
+  it('does not dispatch after failed activation and allows another attempt', async () => {
+    mockRpc.mockResolvedValueOnce({ error: { message: 'Speichern fehlgeschlagen' } });
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    const start = () => root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.startSelection')!;
+    await act(async () => { start().props.onPress(); });
+    expect(mockInvoke).not.toHaveBeenCalled();
+    expect(start().props.disabled).toBe(false);
+    expect(JSON.stringify(renderer?.toJSON())).toContain('Speichern fehlgeschlagen');
+    await act(async () => { start().props.onPress(); });
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps successful activation when push fails and resumes it separately', async () => {
+    mockInvoke.mockRejectedValueOnce(new Error('Push unavailable'));
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    await act(async () => {
+      root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.startSelection')!.props.onPress();
+    });
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(renderer?.toJSON())).toContain('bus.admin.pushFailed');
+    mockActiveTrip!.bus_selection_started_at = '2026-11-10T12:00:00Z';
+    await act(async () => { renderer?.update(<AdminBusManagementPanel families={[]} users={[]} />); });
+    await act(async () => {
+      root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.retryPush')!.props.onPress();
+    });
+    expect(mockInvoke).toHaveBeenCalledTimes(2);
+    expect(mockRpc).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(renderer?.toJSON())).not.toContain('bus.admin.pushFailed');
+  });
+
+  it('copies saved buses without releasing selection or dispatching a push', async () => {
+    mockRpc.mockResolvedValueOnce({ data: { id: 21 }, error: null });
+    mockActiveTrip = null;
+    mockTrips = [{
+      id: 60, name: 'Gespeicherte Anordnung', archived_at: '2026-10-23T08:00:00Z',
+      bus_selection_started_at: '2026-10-22T08:00:00Z', bus_setup_deleted_at: null,
+      created_at: '2026-10-22T08:00:00Z', created_by_profile_id: 1,
+    }];
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    await act(async () => { choice('Gespeicherte Anordnung').props.onPress(); });
+    await act(async () => {
+      root().findAllByType(TextInput).find((input) => input.props.accessibilityLabel === 'bus.admin.tripName')!.props.onChangeText('Neue Fahrt');
+    });
+    await act(async () => {
+      root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.createTripFromTemplate')!.props.onPress();
+    });
+    expect(mockRpc).toHaveBeenCalledWith('admin_copy_trip_bus_setup', { p_name: 'Neue Fahrt', p_source_trip_id: 60 });
+    expect(mockInvoke).not.toHaveBeenCalled();
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['no buses', 'sync error'])('blocks activation with %s', async (reason) => {
+    if (reason === 'no buses') mockBuses = [];
+    else mockBusSyncError = true;
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    const start = root().findAllByType(Button).find((button) => button.props.label === 'bus.admin.startSelection')!;
+    expect(start.props.disabled).toBe(true);
+    await act(async () => { start.props.onPress(); });
+    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('removes only the selected bus leadership and closes its replacement editor after saving', async () => {
+    mockBuses[0].leader_participant_id = 50;
+    mockBuses.push({ id: 41, name: 'Bus 2', leader_participant_id: null });
+    mockParticipants = [{ id: 50, display_name: 'Leitung' }];
+    let resolveRemoval!: (result: { error: null }) => void;
+    mockRpc.mockImplementationOnce(() => new Promise((resolve) => { resolveRemoval = resolve; }));
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    const button = (label: string) => root().findAllByType(Button).find((item) => item.props.label === label)!;
+    await act(async () => { button('bus.admin.changeBusLeader').props.onPress(); });
+    expect(button('bus.admin.saveBusLeader')).toBeDefined();
+    expect(root().findAllByType(Button).filter((item) => item.props.label === 'bus.admin.removeBusLeader')).toHaveLength(1);
+    await act(async () => { button('bus.admin.removeBusLeader').props.onPress(); });
+    expect(button('bus.admin.removeBusLeader').props.disabled).toBe(true);
+    expect(mockRpc).toHaveBeenCalledTimes(1);
+    expect(mockRpc).toHaveBeenCalledWith('admin_remove_trip_bus_leader', { p_bus_id: 40 });
+    mockBuses[0].leader_participant_id = null;
+    await act(async () => { resolveRemoval({ error: null }); });
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(root().findAllByType(Button).some((item) => item.props.label === 'bus.admin.removeBusLeader')).toBe(false);
+    expect(root().findAllByType(Button).some((item) => item.props.label === 'bus.admin.saveBusLeader')).toBe(false);
+    expect(JSON.stringify(renderer?.toJSON())).toContain('bus.admin.busLeaderMissing');
+  });
+
+  it('keeps the leader visible and allows retry when removing leadership fails', async () => {
+    mockBuses[0].leader_participant_id = 50;
+    mockParticipants = [{ id: 50, display_name: 'Leitung' }];
+    mockRpc.mockResolvedValueOnce({ error: { message: 'Speichern fehlgeschlagen' } });
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    const removeButton = () => root().findAllByType(Button).find((item) => item.props.label === 'bus.admin.removeBusLeader')!;
+    await act(async () => { removeButton().props.onPress(); });
+    expect(JSON.stringify(renderer?.toJSON())).toContain('Speichern fehlgeschlagen');
+    expect(JSON.stringify(renderer?.toJSON())).toContain('bus.admin.busLeaderName Leitung');
+    expect(removeButton().props.disabled).toBe(false);
+    await act(async () => { removeButton().props.onPress(); });
+    expect(mockRpc).toHaveBeenCalledTimes(2);
+  });
+
+  it('blocks removal while the bus snapshot has a sync error', async () => {
+    mockBuses[0].leader_participant_id = 50;
+    mockBusSyncError = true;
+    await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });
+    const removeButton = root().findAllByType(Button).find((item) => item.props.label === 'bus.admin.removeBusLeader')!;
+    expect(removeButton.props.disabled).toBe(true);
+    await act(async () => { removeButton.props.onPress(); });
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
   it('opens all names on person search, filters them and assigns the selected account', async () => {
@@ -209,6 +354,7 @@ describe('group bus assignment', () => {
     mockTrips = [{
       id: 60, name: 'Gespeicherte Anordnung', archived_at: '2026-10-23T08:00:00Z',
       bus_setup_deleted_at: null, created_at: '2026-10-22T08:00:00Z', created_by_profile_id: 1,
+      bus_selection_started_at: null,
     }];
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     await act(async () => { renderer = create(<AdminBusManagementPanel families={[]} users={[]} />); });

@@ -6,6 +6,7 @@ import {
   getProtectedRouteDecision,
 } from '@/features/auth/protected-route-policy';
 import {
+  adminSectionRoute,
   busRoute,
   bypassesGroupCheck,
   dailyProgramRoute,
@@ -59,6 +60,9 @@ describe('protected navigation', () => {
 
     expect(getProtectedReturnRoute('https://example.com')).toBe('/');
     expect(getProtectedReturnRoute('//example.com')).toBe('/');
+    expect(adminSectionRoute('users')).toBe('/admin/users');
+    expect(getProtectedReturnRoute('/admin/users')).toBe('/admin/users');
+    expect(getProtectedReturnRoute('/admin/unknown')).toBe('/');
   });
 
   it('führt den einmaligen Einstieg als eigene öffentliche Route', () => {

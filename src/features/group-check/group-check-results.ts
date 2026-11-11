@@ -9,6 +9,7 @@ export type GroupCheckResultGroup = {
 export type GroupCheckResultSummary = {
   no: GroupCheckResultGroup;
   open: GroupCheckResultGroup;
+  sick: GroupCheckResultGroup;
   totalAccounts: number;
   totalRepresentedPeople: number;
   yes: GroupCheckResultGroup;
@@ -31,6 +32,7 @@ export function parseAdminGroupCheckResults(value: unknown): AdminGroupCheckResu
     (result) =>
       typeof result === 'object' &&
       result !== null &&
+      (!('is_sick' in result) || typeof result.is_sick === 'boolean') &&
       'answer' in result &&
       (result.answer === null || typeof result.answer === 'boolean') &&
       'display_name' in result &&
@@ -47,13 +49,15 @@ export function parseAdminGroupCheckResults(value: unknown): AdminGroupCheckResu
 export function summarizeGroupCheckResults(
   results: AdminGroupCheckResult[],
 ): GroupCheckResultSummary {
-  const yes = results.filter((result) => result.answer === true);
-  const no = results.filter((result) => result.answer === false);
-  const open = results.filter((result) => result.answer === null);
+  const yes = results.filter((result) => !result.is_sick && result.answer === true);
+  const no = results.filter((result) => !result.is_sick && result.answer === false);
+  const open = results.filter((result) => !result.is_sick && result.answer === null);
+  const sick = results.filter((result) => result.is_sick === true);
 
   return {
     no: createResultGroup(no),
     open: createResultGroup(open),
+    sick: createResultGroup(sick),
     totalAccounts: results.length,
     totalRepresentedPeople: results.reduce((total, result) => total + result.party_size, 0),
     yes: createResultGroup(yes),
