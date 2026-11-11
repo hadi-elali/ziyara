@@ -20,7 +20,7 @@ export const adminSectionTitleKeys: Record<AdminSection, string> = {
   push: 'adminPush.title',
   transport: 'admin.transport.title',
   program: 'admin.section.program.title',
-  navigation: 'admin.section.navigation.title',
+  navigation: 'admin.tile.navigation',
   status: 'admin.section.status.title',
   questions: 'admin.section.questions.title',
   families: 'admin.section.families.title',

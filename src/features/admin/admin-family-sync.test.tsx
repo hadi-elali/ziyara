@@ -115,6 +115,9 @@ function root() {
   return renderer.root;
 }
 function panel() { return root().findByType(AdminAccountFamilyPanel); }
+function familyNameInput() {
+  return panel().findAllByType(TextInput).find(node => node.props.accessibilityLabel === 'accountFamilies.name')!;
+}
 function listItems(): AdminUserListItem[] {
   if (root().findByType(AdminDashboard).props.section === 'users') {
     return root().findByType(FlatList).props.data;
@@ -143,10 +146,14 @@ async function render(section: AdminSection = 'families') {
 }
 async function nameFamily(name: string) {
   await act(async () => {
-    panel().findByType(TextInput).props.onChangeText(name);
+    familyNameInput().props.onChangeText(name);
   });
 }
 async function toggleMember(index: number) {
+  await act(async () => {
+    panel().findAllByType(TextInput).find(node => node.props.accessibilityLabel === 'accountFamilies.memberSearch')!
+      .props.onChangeText(users[index].display_name);
+  });
   await act(async () => {
     panel().find(node => node.props.label === users[index].display_name && typeof node.props.onPress === 'function').props.onPress();
   });
@@ -293,7 +300,7 @@ describe('admin family and user synchronization', () => {
     expect(listItems()).toHaveLength(3);
     expect(panel().props.families).toEqual([family]);
     expect(hasText('accountFamilies.feedback.saved')).toBe(true);
-    expect(panel().findByType(TextInput).props.value).toBe('');
+    expect(familyNameInput().props.value).toBe('');
     for (const [section, consumer] of [['organization', AdminTravelOrganizationPanel], ['transport', AdminBusManagementPanel]] as const) {
       await showSection(section);
       const props = root().findByType(consumer).props;
@@ -351,7 +358,7 @@ describe('admin family and user synchronization', () => {
     await render(); await nameFamily(family.name); await toggleMember(0); await press('create');
     expect(panel().props.families).toEqual([]);
     expect(panel().props.users).toEqual(users);
-    expect(panel().findByType(TextInput).props.value).toBe(family.name);
+    expect(familyNameInput().props.value).toBe(family.name);
     expect(hasText('accountFamilies.feedback.saved')).toBe(false);
     expect(hasText(result.error?.message ?? 'accountFamilies.feedback.error')).toBe(true);
     expect(button('create').props.disabled).toBe(false);
@@ -364,7 +371,7 @@ describe('admin family and user synchronization', () => {
     await render(); await press('edit'); await confirmDelete();
     expect(panel().props.families).toEqual([family, otherFamily]);
     expect(panel().props.users).toEqual(assignedUsers);
-    expect(panel().findByType(TextInput).props.value).toBe(family.name);
+    expect(familyNameInput().props.value).toBe(family.name);
     expect(hasText('Deletion failed')).toBe(true);
   });
 

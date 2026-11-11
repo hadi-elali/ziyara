@@ -412,7 +412,14 @@ export function AdminQuestionRoundPanel() {
                         borderColor: targetMemberType === memberType ? theme.accent : theme.border,
                       },
                     ]}>
-                    <ThemedText type="smallBold">{t(`questionRound.audience.${memberType}`)}</ThemedText>
+                    <ThemedText
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                      numberOfLines={1}
+                      style={styles.audienceChoiceLabel}
+                      type="smallBold">
+                      {t(`questionRound.audience.${memberType}`)}
+                    </ThemedText>
                   </Pressable>
                 ))}
               </View>
@@ -513,15 +520,23 @@ const styles = StyleSheet.create({
   },
   audienceChoices: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: Spacing.two,
   },
   audienceChoice: {
+    alignItems: 'center',
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
     justifyContent: 'center',
     minHeight: 48,
-    padding: Spacing.three,
+    minWidth: 0,
+    paddingHorizontal: Spacing.one,
+    paddingVertical: Spacing.two,
+  },
+  audienceChoiceLabel: {
+    fontSize: 13,
+    textAlign: 'center',
+    width: '100%',
   },
   questionList: {
     gap: Spacing.two,

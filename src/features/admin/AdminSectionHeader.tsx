@@ -45,17 +45,14 @@ export function AdminSectionHeader({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
         style={[styles.icon, { backgroundColor: theme.accentSoft }]}>
-        <SymbolIcon color={theme.accent} name={icon} size={28} />
+        <SymbolIcon color={theme.accent} name={icon} size={40} />
       </View>
 
       <ThemedText numberOfLines={2} style={styles.title}>{label ?? title}</ThemedText>
 
-      <View style={styles.status}>
-        <View style={[styles.statusDot, { backgroundColor: color }]} />
-        <ThemedText numberOfLines={1} type="tinyBold" style={[styles.statusText, { color }]}>
-          {status}
-        </ThemedText>
-      </View>
+      <ThemedText numberOfLines={2} type="smallBold" style={[styles.statusText, { color }]}>
+        {'● '}{status}
+      </ThemedText>
     </Pressable>
   );
 }
@@ -68,35 +65,28 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     gap: Spacing.two,
     justifyContent: 'center',
-    padding: 12,
+    minHeight: 172,
+    padding: 10,
     width: '100%',
   },
   icon: {
     alignItems: 'center',
-    borderRadius: 8,
-    height: 40,
+    borderRadius: 12,
+    height: 56,
     justifyContent: 'center',
-    width: 40,
+    width: 56,
   },
   title: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 600,
-    lineHeight: 18,
+    lineHeight: 22,
     textAlign: 'center',
-  },
-  status: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: Spacing.one,
-    maxWidth: '100%',
-  },
-  statusDot: {
-    borderRadius: 3,
-    height: 6,
-    width: 6,
   },
   statusText: {
     flexShrink: 1,
+    fontSize: 14,
+    lineHeight: 18,
+    maxWidth: '100%',
     textAlign: 'center',
   },
   pressed: {

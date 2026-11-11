@@ -326,6 +326,7 @@ test.describe.serial('Phase 7 E2E smoke flows', () => {
 
     await openAdmin(admin.page);
     await admin.page.getByRole('button', { name: /Reiseziele auf Karte markieren/u }).click();
+    await admin.page.getByRole('button', { name: 'Neues Ziel', exact: true }).click();
     await admin.page.getByLabel('Name des Reiseziels').fill('E2E Tor 3');
     await admin.page.getByLabel('Breitengrad des Treffpunkts').fill('32.617');
     await admin.page.getByLabel('Längengrad des Treffpunkts').fill('44.033');

@@ -15,6 +15,7 @@ export type SymbolIconName =
   | 'confirm'
   | 'copy'
   | 'decline'
+  | 'edit'
   | 'external-link'
   | 'eye'
   | 'eye-off'
@@ -24,6 +25,7 @@ export type SymbolIconName =
   | 'location'
   | 'logout'
   | 'map'
+  | 'map-pin'
   | 'minus'
   | 'people'
   | 'plus'
@@ -32,6 +34,7 @@ export type SymbolIconName =
   | 'search'
   | 'settings'
   | 'share'
+  | 'trash'
   | 'unchecked'
   | 'warning';
 
@@ -52,6 +55,7 @@ const symbolNames: Record<SymbolIconName, React.ComponentProps<typeof SymbolView
   confirm: { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
   copy: { ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' },
   decline: { ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' },
+  edit: { ios: 'pencil', android: 'edit', web: 'edit' },
   'external-link': { ios: 'arrow.up.forward.square', android: 'open_in_new', web: 'open_in_new' },
   eye: { ios: 'eye', android: 'visibility', web: 'visibility' },
   'eye-off': { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
@@ -65,6 +69,7 @@ const symbolNames: Record<SymbolIconName, React.ComponentProps<typeof SymbolView
     web: 'logout',
   },
   map: { ios: 'map', android: 'map', web: 'map' },
+  'map-pin': { ios: 'mappin', android: 'location_on', web: 'location_on' },
   minus: { ios: 'minus', android: 'remove', web: 'remove' },
   people: { ios: 'person.3', android: 'group', web: 'group' },
   plus: { ios: 'plus', android: 'add', web: 'add' },
@@ -73,6 +78,7 @@ const symbolNames: Record<SymbolIconName, React.ComponentProps<typeof SymbolView
   search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
   settings: { ios: 'gearshape', android: 'settings', web: 'settings' },
   share: { ios: 'square.and.arrow.up', android: 'share', web: 'share' },
+  trash: { ios: 'trash', android: 'delete_outline', web: 'delete_outline' },
   unchecked: { ios: 'circle', android: 'radio_button_unchecked', web: 'radio_button_unchecked' },
   warning: { ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' },
 };

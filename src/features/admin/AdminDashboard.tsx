@@ -111,7 +111,7 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
   const theme = useTheme();
   const { width, fontScale } = useWindowDimensions();
   const [gridWidth, setGridWidth] = useState(Math.min(width, MaxContentWidth) - Spacing.three * 2);
-  const columnCount = Math.max(1, Math.min(4, Math.floor((gridWidth + 12) / (136 * fontScale + 12))));
+  const columnCount = Math.max(1, Math.min(4, Math.floor((gridWidth + 12) / (160 * fontScale + 12))));
   const tileSize = Math.floor((gridWidth - 12 * (columnCount - 1)) / columnCount);
   const { isRTL, language, t } = useI18n();
   const { profile, refreshProfile } = useAuth();
@@ -407,7 +407,6 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
               <View style={styles.headerContent}>
                 <View style={styles.intro}>
                   <ThemedText type="title">{t('admin.title')}</ThemedText>
-                  <ThemedText themeColor="textSecondary">{t('admin.description')}</ThemedText>
                 </View>
 
                 <View
@@ -655,8 +654,6 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
 
               {section === 'navigation' ? (
                 <View style={styles.section}>
-                  <ThemedText accessibilityRole="header" type="heading">{t('admin.section.navigation.title')}</ThemedText>
-                  <ThemedText themeColor="textSecondary">{t('admin.section.navigation.description')}</ThemedText>
                   <AdminMeetingPointPanel />
                 </View>
               ) : null}

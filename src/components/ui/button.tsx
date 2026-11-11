@@ -93,7 +93,7 @@ export function Button({
       <ThemedText
         type="smallBold"
         style={[
-          (isSuccess || variant === 'danger-solid') && styles.label,
+          styles.label,
           { color: foreground },
           isCompact && styles.compactLabel,
         ]}>

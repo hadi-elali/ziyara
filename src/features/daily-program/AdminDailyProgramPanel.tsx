@@ -37,6 +37,7 @@ function draftsForRange(
 
 export function AdminDailyProgramPanel() {
   const theme = useTheme();
+  const cardColors = { backgroundColor: theme.accentSoft, borderColor: theme.accent };
   const { language, t } = useI18n();
   const { hasSyncError, isLoading, programs, refresh, syncErrorMessage } = useDailyProgram();
   const [selectedStartDate, setStartDate] = useState<string | null>(null);
@@ -154,7 +155,7 @@ export function AdminDailyProgramPanel() {
 
   if (isLoading) {
     return (
-      <Card style={styles.stateCard}>
+      <Card style={[styles.programCard, styles.stateCard, cardColors]}>
         <ActivityIndicator color={theme.accent} />
         <ThemedText themeColor="textSecondary">{t('dailyProgram.loading')}</ThemedText>
       </Card>
@@ -177,7 +178,7 @@ export function AdminDailyProgramPanel() {
         </Card>
       ) : null}
 
-      <Card style={styles.formCard}>
+      <Card style={[styles.programCard, styles.formCard, cardColors]}>
         <ThemedText type="heading">{t('dailyProgram.admin.editorTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary">
           {t('dailyProgram.admin.editorBody')}
@@ -196,7 +197,7 @@ export function AdminDailyProgramPanel() {
             style={[
               styles.input,
               {
-                backgroundColor: theme.backgroundElement,
+                backgroundColor: theme.surface,
                 borderColor: startDateValid ? theme.border : theme.danger,
                 color: theme.text,
                 textAlign: 'left',
@@ -220,7 +221,7 @@ export function AdminDailyProgramPanel() {
               <ThemedText type="heading">
                 {t('dailyProgram.admin.dayNumber', { count: index + 1 })}
               </ThemedText>
-              <ThemedText type="smallBold" themeColor="accent">
+              <ThemedText type="smallBold" themeColor="textSecondary">
                 {formatProgramDate(draft.program_date, language)}
               </ThemedText>
             </View>
@@ -285,16 +286,16 @@ export function AdminDailyProgramPanel() {
       <View style={styles.savedPrograms}>
         <ThemedText type="heading">{t('dailyProgram.admin.publishedTitle')}</ThemedText>
         {upcomingPrograms.length === 0 ? (
-          <Card style={styles.stateCard}>
+          <Card style={[styles.programCard, styles.stateCard, cardColors]}>
             <ThemedText themeColor="textSecondary">
               {t('dailyProgram.admin.empty')}
             </ThemedText>
           </Card>
         ) : (
           upcomingPrograms.map((program) => (
-            <Card key={program.id} style={styles.publishedCard}>
+            <Card key={program.id} style={[styles.programCard, styles.publishedCard, cardColors]}>
               <View style={styles.publishedText}>
-                <ThemedText type="smallBold" themeColor="accent">
+                <ThemedText type="smallBold" themeColor="textSecondary">
                   {formatProgramDate(program.program_date, language)}
                 </ThemedText>
                 {program.title ? <ThemedText type="heading">{program.title}</ThemedText> : null}
@@ -358,7 +359,7 @@ function LabeledInput({
           styles.input,
           multiline && styles.multilineInput,
           {
-            backgroundColor: theme.backgroundElement,
+            backgroundColor: theme.surface,
             borderColor: theme.border,
             color: theme.text,
             textAlign: isRTL ? 'right' : 'left',
@@ -412,6 +413,10 @@ const styles = StyleSheet.create({
   },
   multilineInput: {
     minHeight: 120,
+  },
+  programCard: {
+    borderRadius: 14,
+    borderWidth: 1,
   },
   publishedCard: {
     alignItems: 'center',

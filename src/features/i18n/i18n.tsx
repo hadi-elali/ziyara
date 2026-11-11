@@ -490,6 +490,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "accountFamilies.noMembers":
       "Dieser Familie ist derzeit kein Konto zugeordnet.",
     "accountFamilies.noUsers": "Es sind noch keine Benutzerkonten verfügbar.",
+    "accountFamilies.memberSearch": "Benutzerkonten suchen",
+    "accountFamilies.searchPlaceholder": "Nach Namen suchen …",
+    "accountFamilies.searchHint": "Gib einen Namen ein, um Benutzerkonten zu finden.",
+    "accountFamilies.noSearchResults": "Keine weiteren passenden Benutzerkonten gefunden.",
+    "accountFamilies.selectedMembers": "Ausgewählte Benutzerkonten: {count}",
     "accountFamilies.save": "Änderungen speichern",
     "accountFamilies.selectMembers": "Benutzerkonten auswählen",
     "accountFamilies.selectMembersBody":
@@ -1094,12 +1099,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "dailyProgram.overviewTitle": "Tagesprogramm",
     "navigation.admin.actionError":
       "Das Reiseziel konnte nicht gespeichert oder entfernt werden. Prüfe die Verbindung und versuche es erneut.",
+    "navigation.admin.add": "Neues Ziel",
     "navigation.admin.addTitle": "Neues Reiseziel anlegen",
     "navigation.admin.body":
       "Gib dem Ort einen Namen und setze den Marker auf der Karte – auch ohne aktive Fahrt. Alle angemeldeten Nutzer sehen ihn anschließend auf ihrer Karte.",
     "navigation.admin.coordinatesHint":
       "Die Karte trägt die Koordinaten automatisch ein. Für eine Feinabstimmung können sie direkt geändert werden.",
     "navigation.admin.count": "{count} aktive Reiseziele",
+    "navigation.admin.countOne": "1 aktives Reiseziel",
     "navigation.admin.create": "Reiseziel veröffentlichen",
     "navigation.admin.details": "Beschreibung / Orientierungshinweis",
     "navigation.admin.detailsPlaceholder":
@@ -1108,11 +1115,13 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "navigation.admin.editTitle": "Reiseziel bearbeiten",
     "navigation.admin.emptyBody":
       "Noch keine Reiseziele angelegt. Das erste Ziel erscheint nach dem Speichern als roter Marker auf der Karte.",
-    "navigation.admin.listTitle": "Veröffentlichte Reiseziele",
+    "navigation.admin.emptyTitle": "Noch keine Reiseziele",
+    "navigation.admin.listTitle": "Auf der Karte",
     "navigation.admin.loading": "Reiseziele werden geladen …",
     "navigation.admin.name": "Name des Reiseziels",
     "navigation.admin.namePlaceholder":
       "Zum Beispiel: Hotel, Busparkplatz oder Tor 3",
+    "navigation.admin.navigate": "Navigation",
     "navigation.admin.preview": "Navigation prüfen",
     "navigation.admin.remove": "Entfernen",
     "navigation.admin.removeConfirm": "Ziel wirklich entfernen",
@@ -2038,6 +2047,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "accountFamilies.noMembers":
       "No account is currently assigned to this family.",
     "accountFamilies.noUsers": "No user accounts are available yet.",
+    "accountFamilies.memberSearch": "Search user accounts",
+    "accountFamilies.searchPlaceholder": "Search by name …",
+    "accountFamilies.searchHint": "Enter a name to find user accounts.",
+    "accountFamilies.noSearchResults": "No additional matching user accounts found.",
+    "accountFamilies.selectedMembers": "Selected user accounts: {count}",
     "accountFamilies.save": "Save changes",
     "accountFamilies.selectMembers": "Select user accounts",
     "accountFamilies.selectMembersBody":
@@ -2628,12 +2642,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "dailyProgram.overviewTitle": "Daily program",
     "navigation.admin.actionError":
       "The trip destination could not be saved or removed. Check the connection and try again.",
+    "navigation.admin.add": "Add destination",
     "navigation.admin.addTitle": "Create a trip destination",
     "navigation.admin.body":
       "Name the place and set its marker on the map, even without an active trip. All signed-in users will then see it on their map.",
     "navigation.admin.coordinatesHint":
       "The map enters the coordinates automatically. They can be edited directly for fine adjustment.",
     "navigation.admin.count": "{count} active trip destinations",
+    "navigation.admin.countOne": "1 active trip destination",
     "navigation.admin.create": "Publish destination",
     "navigation.admin.details": "Description / orientation note",
     "navigation.admin.detailsPlaceholder":
@@ -2642,11 +2658,13 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "navigation.admin.editTitle": "Edit trip destination",
     "navigation.admin.emptyBody":
       "No trip destinations yet. The first saved destination will appear as a red marker on the map.",
-    "navigation.admin.listTitle": "Published trip destinations",
+    "navigation.admin.emptyTitle": "No destinations yet",
+    "navigation.admin.listTitle": "On the map",
     "navigation.admin.loading": "Loading trip destinations …",
     "navigation.admin.name": "Destination name",
     "navigation.admin.namePlaceholder":
       "For example: hotel, bus parking or Gate 3",
+    "navigation.admin.navigate": "Navigate",
     "navigation.admin.preview": "Check navigation",
     "navigation.admin.remove": "Remove",
     "navigation.admin.removeConfirm": "Remove destination",
@@ -3553,6 +3571,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "accountFamilies.namePlaceholder": "مثلاً: عائلة علي",
     "accountFamilies.noMembers": "لا يوجد حساب مرتبط بهذه العائلة حالياً.",
     "accountFamilies.noUsers": "لا توجد حسابات مستخدمين متاحة بعد.",
+    "accountFamilies.memberSearch": "البحث عن حسابات المستخدمين",
+    "accountFamilies.searchPlaceholder": "البحث بالاسم …",
+    "accountFamilies.searchHint": "أدخل اسماً للعثور على حسابات المستخدمين.",
+    "accountFamilies.noSearchResults": "لم يتم العثور على حسابات مستخدمين مطابقة إضافية.",
+    "accountFamilies.selectedMembers": "حسابات المستخدمين المحددة: {count}",
     "accountFamilies.save": "حفظ التغييرات",
     "accountFamilies.selectMembers": "اختيار حسابات المستخدمين",
     "accountFamilies.selectMembersBody":
@@ -4117,12 +4140,14 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "dailyProgram.overviewTitle": "البرنامج اليومي",
     "navigation.admin.actionError":
       "تعذر حفظ وجهة الرحلة أو إزالتها. تحقق من الاتصال وحاول مرة أخرى.",
+    "navigation.admin.add": "وجهة جديدة",
     "navigation.admin.addTitle": "إنشاء وجهة رحلة جديدة",
     "navigation.admin.body":
       "امنح المكان اسماً وضع علامته على الخريطة، حتى دون تنقل نشط. سيشاهده جميع المستخدمين المسجلين على خريطتهم.",
     "navigation.admin.coordinatesHint":
       "تُدخل الخريطة الإحداثيات تلقائياً، ويمكن تعديلها مباشرةً لضبط الموقع.",
     "navigation.admin.count": "{count} وجهات رحلة نشطة",
+    "navigation.admin.countOne": "وجهة رحلة نشطة واحدة",
     "navigation.admin.create": "نشر وجهة الرحلة",
     "navigation.admin.details": "الوصف / إرشادات الوصول",
     "navigation.admin.detailsPlaceholder": "مثلاً: المدخل بجانب موقف الفندق",
@@ -4130,11 +4155,13 @@ const dictionaries: Record<Language, Record<string, string>> = {
     "navigation.admin.editTitle": "تعديل وجهة الرحلة",
     "navigation.admin.emptyBody":
       "لا توجد وجهات رحلة بعد. ستظهر أول وجهة محفوظة كعلامة حمراء على الخريطة.",
-    "navigation.admin.listTitle": "وجهات الرحلة المنشورة",
+    "navigation.admin.emptyTitle": "لا توجد وجهات بعد",
+    "navigation.admin.listTitle": "على الخريطة",
     "navigation.admin.loading": "جارٍ تحميل وجهات الرحلة …",
     "navigation.admin.name": "اسم وجهة الرحلة",
     "navigation.admin.namePlaceholder":
       "مثلاً: الفندق أو موقف الحافلات أو الباب 3",
+    "navigation.admin.navigate": "الملاحة",
     "navigation.admin.preview": "فحص الملاحة",
     "navigation.admin.remove": "إزالة",
     "navigation.admin.removeConfirm": "إزالة الوجهة فعلاً",

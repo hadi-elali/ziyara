@@ -33,9 +33,11 @@ export function AdminAccountFamilyPanel({
   users,
 }: AdminAccountFamilyPanelProps) {
   const theme = useTheme();
-  const { language, t } = useI18n();
+  const cardColors = { backgroundColor: theme.accentSoft, borderColor: theme.accent };
+  const { isRTL, language, t } = useI18n();
   const [editingFamilyId, setEditingFamilyId] = useState<number | null>(null);
   const [familyName, setFamilyName] = useState('');
+  const [memberSearch, setMemberSearch] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<FamilyFeedback>(null);
   const [isWorking, setIsWorking] = useState(false);
@@ -47,10 +49,22 @@ export function AdminAccountFamilyPanel({
       ),
     [language, users],
   );
+  const normalizedMemberSearch = memberSearch.trim().toLocaleLowerCase(language);
+  const selectedUsers = sortedUsers.filter((user) => selectedUserIds.has(user.user_id));
+  const matchingUsers = normalizedMemberSearch
+    ? sortedUsers
+        .filter(
+          (user) =>
+            !selectedUserIds.has(user.user_id) &&
+            user.display_name.toLocaleLowerCase(language).includes(normalizedMemberSearch),
+        )
+        .slice(0, 8)
+    : [];
 
   const resetEditor = () => {
     setEditingFamilyId(null);
     setFamilyName('');
+    setMemberSearch('');
     setSelectedUserIds(new Set());
   };
 
@@ -58,6 +72,7 @@ export function AdminAccountFamilyPanel({
     setFeedback(null);
     setEditingFamilyId(family.id);
     setFamilyName(family.name);
+    setMemberSearch('');
     setSelectedUserIds(
       new Set(
         users
@@ -151,9 +166,26 @@ export function AdminAccountFamilyPanel({
     );
   };
 
+  const renderMemberChoice = (user: AdminUserSummary) => (
+    <FamilyMemberChoice
+      disabled={isWorking}
+      key={user.user_id}
+      label={user.display_name}
+      note={
+        user.family_id !== null && user.family_id !== editingFamilyId
+          ? t('accountFamilies.currentFamily', {
+              name: user.family_name ?? t('accountFamilies.unknownFamily'),
+            })
+          : undefined
+      }
+      onPress={() => toggleUser(user.user_id)}
+      selected={selectedUserIds.has(user.user_id)}
+    />
+  );
+
   return (
     <View style={styles.container}>
-      <Card style={styles.formCard}>
+      <Card style={[styles.panelCard, styles.formCard, cardColors]}>
         <View style={styles.header}>
           <View style={styles.flexText}>
             <ThemedText type="heading">
@@ -172,7 +204,7 @@ export function AdminAccountFamilyPanel({
               icon="close"
               label={t('accountFamilies.cancel')}
               onPress={resetEditor}
-              style={[styles.cancelButton, { backgroundColor: theme.background }]}
+              style={[styles.cancelButton, { backgroundColor: theme.surface }]}
               variant="secondary"
             />
           ) : null}
@@ -190,7 +222,7 @@ export function AdminAccountFamilyPanel({
             style={[
               styles.input,
               {
-                backgroundColor: theme.background,
+                backgroundColor: theme.surface,
                 borderColor: theme.border,
                 color: theme.text,
               },
@@ -209,22 +241,48 @@ export function AdminAccountFamilyPanel({
               {t('accountFamilies.noUsers')}
             </ThemedText>
           ) : (
-            sortedUsers.map((user) => (
-              <FamilyMemberChoice
-                disabled={isWorking}
-                key={user.user_id}
-                label={user.display_name}
-                note={
-                  user.family_id !== null && user.family_id !== editingFamilyId
-                    ? t('accountFamilies.currentFamily', {
-                        name: user.family_name ?? t('accountFamilies.unknownFamily'),
-                      })
-                    : undefined
-                }
-                onPress={() => toggleUser(user.user_id)}
-                selected={selectedUserIds.has(user.user_id)}
+            <>
+              {selectedUsers.length > 0 ? (
+                <View style={styles.memberList}>
+                  <ThemedText type="smallBold">
+                    {t('accountFamilies.selectedMembers', { count: selectedUsers.length })}
+                  </ThemedText>
+                  {selectedUsers.map(renderMemberChoice)}
+                </View>
+              ) : null}
+              <TextInput
+                accessibilityLabel={t('accountFamilies.memberSearch')}
+                autoCapitalize="none"
+                autoCorrect={false}
+                clearButtonMode="while-editing"
+                editable={!isWorking}
+                onChangeText={setMemberSearch}
+                placeholder={t('accountFamilies.searchPlaceholder')}
+                placeholderTextColor={theme.textSecondary}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.surface,
+                    borderColor: theme.border,
+                    color: theme.text,
+                    textAlign: isRTL ? 'right' : 'left',
+                    writingDirection: isRTL ? 'rtl' : 'ltr',
+                  },
+                ]}
+                value={memberSearch}
               />
-            ))
+              {!normalizedMemberSearch || matchingUsers.length === 0 ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t(
+                    normalizedMemberSearch
+                      ? 'accountFamilies.noSearchResults'
+                      : 'accountFamilies.searchHint',
+                  )}
+                </ThemedText>
+              ) : (
+                matchingUsers.map(renderMemberChoice)
+              )}
+            </>
           )}
         </View>
 
@@ -269,7 +327,7 @@ export function AdminAccountFamilyPanel({
       ) : null}
 
       {families.length === 0 ? (
-        <Card style={styles.emptyCard}>
+        <Card style={[styles.panelCard, styles.emptyCard, cardColors]}>
           <ThemedText type="heading">{t('accountFamilies.emptyTitle')}</ThemedText>
           <ThemedText themeColor="textSecondary">
             {t('accountFamilies.emptyBody')}
@@ -280,7 +338,7 @@ export function AdminAccountFamilyPanel({
           const members = users.filter((user) => user.family_id === family.id);
 
           return (
-            <Card key={family.id} style={styles.familyCard}>
+            <Card key={family.id} style={[styles.panelCard, styles.familyCard, cardColors]}>
               <View style={styles.familyHeader}>
                 <View style={styles.flexText}>
                   <ThemedText style={styles.familyName}>{family.name}</ThemedText>
@@ -302,7 +360,7 @@ export function AdminAccountFamilyPanel({
                       style={[
                         styles.chip,
                         {
-                          backgroundColor: theme.background,
+                          backgroundColor: theme.surface,
                           borderColor: theme.border,
                         },
                       ]}>
@@ -318,7 +376,7 @@ export function AdminAccountFamilyPanel({
                   icon="settings"
                   label={t('accountFamilies.edit')}
                   onPress={() => editFamily(family)}
-                  style={[styles.actionButton, { backgroundColor: theme.background }]}
+                  style={[styles.actionButton, { backgroundColor: theme.surface }]}
                   variant="secondary"
                 />
                 <Button
@@ -362,7 +420,7 @@ function FamilyMemberChoice({
       style={({ pressed }) => [
         styles.choice,
         {
-          backgroundColor: selected ? theme.accentSoft : theme.background,
+          backgroundColor: selected ? theme.backgroundSelected : theme.surface,
           borderColor: selected ? theme.accent : theme.border,
         },
         pressed && styles.pressed,
@@ -372,7 +430,7 @@ function FamilyMemberChoice({
         style={[
           styles.checkbox,
           {
-            backgroundColor: selected ? theme.accent : theme.background,
+            backgroundColor: selected ? theme.accent : theme.surface,
             borderColor: selected ? theme.accent : theme.border,
           },
         ]}>
@@ -394,8 +452,11 @@ const styles = StyleSheet.create({
   container: {
     gap: Spacing.three,
   },
+  panelCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+  },
   formCard: {
-    borderRadius: 12,
     gap: Spacing.three,
   },
   header: {
@@ -458,7 +519,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   familyCard: {
-    borderRadius: 12,
     gap: Spacing.three,
   },
   familyHeader: {

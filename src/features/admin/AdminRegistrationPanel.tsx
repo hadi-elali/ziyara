@@ -54,13 +54,7 @@ export function AdminRegistrationPanel() {
           value={enabled === true}
         />
       </View>
-      {isSaving || (enabled === null && !hasError) ? (
-        <ActivityIndicator color={theme.accent} />
-      ) : enabled !== null ? (
-        <ThemedText type="small" themeColor={enabled ? 'success' : 'textSecondary'}>
-          {t(enabled ? 'admin.registration.enabled' : 'admin.registration.disabled')}
-        </ThemedText>
-      ) : null}
+      
       {hasError || saveError ? (
         <>
           <ThemedText accessibilityRole="alert" type="small" themeColor="danger">

@@ -4,6 +4,13 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 11 November 2026: Compact destination management
+
+- Contrast follow-up: tint destination cards with the existing accent-soft token, use a solid 1-point accent border and a filled accent navigation action, and give edit/remove separate contrasting surfaces. All affected text/background pairs reach at least 4.70:1 in both themes. Keep this change local to destination management; native visual validation remains pending.
+- Use a short localized Stack title and remove the repeated content heading. Place the destination count and Add action above standalone compact cards with a red map pin, name, optional details and subdued selectable coordinates. Provide distinct navigation/edit actions and a trash action with named confirmation, cancellation and local errors; stack fully labeled actions on narrow screens or with large system text.
+- Open creation/editing in a separate modal with the existing platform map picker, a scrollable form, safe-area/keyboard handling and a fixed save footer. Prefill edits, discard canceled drafts without mutation, preserve failed drafts for retry and lock controls/closing during saves. Support DE/EN/AR and RTL while keeping coordinates LTR. Let shared Button labels wrap; add platform mappings for pin, pencil and trash.
+- Reuse existing RPCs, refresh and navigation. No schema, package or native config change; release the updated client. All 50 focused tests in the existing destination/admin/routes suites, TypeScript and diff checks pass. Lint retains four known warnings; local Expo alignment passes with its offline caveat and online Doctor passes 20/21 with nine existing SDK-57 patch mismatches. Preserve the documented preference to skip browser tests/web exports. Update the existing E2E creation flow without running it; native visual, keyboard and screenreader validation remains pending.
+
 ## 11 November 2026: Empty-battery status
 
 - Extend Admin → Users → Details with a reversible “Battery empty” marker and a fifth status-check result category. Keep it exclusive with sickness, retain saved answers and account/person totals, and reuse mutation locking, feedback and stale-read protection. Provide DE/EN/AR text.

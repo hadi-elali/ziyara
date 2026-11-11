@@ -145,12 +145,6 @@ export function AdminGeneralAlarmPanel(recipientNames: WakeUpCallRecipientNamesP
         )
         : null}
       <Card style={styles.stack}>
-        <ThemedText type='heading'>
-          {t(editingId === null ? 'wakeUp.title' : 'wakeUp.edit')}
-        </ThemedText>
-        <ThemedText type='small' themeColor='textSecondary'>
-          {t('wakeUp.description')}
-        </ThemedText>
         {editingId === null
           ? (
             <View accessibilityRole='radiogroup' style={styles.row}>
