@@ -135,16 +135,23 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       };
     }
 
+    let stopped = false;
+    const onChange = () => {
+      if (!stopped) void refresh();
+    };
     const channel = supabase.channel(`trip-guidance-state:${userId}`);
     channel.on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'trip_navigation_destinations' },
-      () => void refresh(),
+      // Archived destinations fail their SELECT policy, so their UPDATE cannot
+      // notify other clients. This readable singleton carries only a revision.
+      { event: 'UPDATE', schema: 'public', table: 'trip_navigation_state' },
+      onChange,
     );
-    channel.subscribe();
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') onChange();
+    });
 
     let pollingTimeout: ReturnType<typeof setTimeout> | null = null;
-    let stopped = false;
     const scheduleFallbackRefresh = () => {
       if (stopped) return;
       const delay = fallbackRefreshIntervalMs + Math.random() * fallbackRefreshJitterMs;
@@ -159,14 +166,26 @@ export function TripGuidanceProvider({ children }: PropsWithChildren) {
       Platform.OS === 'web'
         ? null
         : AppState.addEventListener('change', (state) => {
-            if (state === 'active') void refresh();
+            if (state === 'active') onChange();
           });
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') onChange();
+    };
+    if (Platform.OS === 'web') {
+      window.addEventListener('focus', onChange);
+      document.addEventListener('visibilitychange', onVisible);
+    }
 
     return () => {
       stopped = true;
       clearTimeout(initialRefreshTimeout);
       if (pollingTimeout) clearTimeout(pollingTimeout);
       appStateSubscription?.remove();
+      if (Platform.OS === 'web') {
+        window.removeEventListener('focus', onChange);
+        document.removeEventListener('visibilitychange', onVisible);
+      }
       stateVersion.current += 1;
       void supabase.removeChannel(channel);
     };

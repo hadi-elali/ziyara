@@ -65,14 +65,16 @@ async function ensureAndroidChannels(): Promise<typeof wakeUpChannelId | undefin
   // Vibration patterns are immutable too. Preserve disabled vibration, muted
   // channels and the other exposed user preferences when creating v2.
   const wakeUpChannel = await Notifications.setNotificationChannelAsync(wakeUpChannelId, {
-    audioAttributes: previous?.audioAttributes,
+    ...(previous?.audioAttributes ? { audioAttributes: previous.audioAttributes } : {}),
     bypassDnd: previous?.bypassDnd ?? false,
     description: 'Weckrufe der Reiseleitung mit längeren Vibrationsimpulsen',
     enableLights: previous?.enableLights ?? false,
     enableVibrate: previous?.enableVibrate ?? true,
-    groupId: previous?.groupId,
+    // Expo looks up a group whenever this key exists, even if its value is
+    // null. Ungrouped channels must omit it to avoid Android's null lookup.
+    ...(previous?.groupId ? { groupId: previous.groupId } : {}),
     importance: previous?.importance ?? Notifications.AndroidImportance.HIGH,
-    lightColor: previous?.lightColor,
+    ...(previous?.lightColor ? { lightColor: previous.lightColor } : {}),
     lockscreenVisibility: previous?.lockscreenVisibility ?? Notifications.AndroidNotificationVisibility.PUBLIC,
     name: 'Weckrufe',
     showBadge: previous?.showBadge ?? true,

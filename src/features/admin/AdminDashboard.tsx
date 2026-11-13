@@ -586,6 +586,15 @@ export function AdminDashboard({ section }: { section?: AdminSection }) {
                   </View>
                   <View style={{ width: tileSize }}>
                     <AdminSectionHeader
+                      description={t('contentImport.description')}
+                      icon="book"
+                      onPress={() => router.push(adminSectionRoute('content'))}
+                      status={t('admin.manage')}
+                      title={t('contentImport.title')}
+                    />
+                  </View>
+                  <View style={{ width: tileSize }}>
+                    <AdminSectionHeader
                       description={t('admin.registration.description')}
                       icon="settings"
                       onPress={() => router.push(adminSectionRoute('registration'))}

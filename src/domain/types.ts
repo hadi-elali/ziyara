@@ -24,9 +24,11 @@ export type RecommendedActType =
 export type ReligiousContentType = 'dua' | 'ziyarah' | 'salawat' | 'surah' | 'instruction';
 
 export type TextParagraph = {
+  kind?: 'text' | 'introduction' | 'heading' | 'note';
   arabic: string;
   transliteration: string;
   translation_de: string;
+  translation_en?: string;
 };
 
 export type SourceReference = {
@@ -70,6 +72,12 @@ export type ReligiousContent = {
   reviewedBy?: string;
   reviewedAt?: string;
   version: string;
+  placeIds?: string[];
+  sources?: SourceReference[];
+  isRemote?: boolean;
+  isImported?: boolean;
+  contentPolicy?: SourceContentPolicy;
+  updatedAt?: string;
 };
 
 export type PlaceImage = {

@@ -1,4 +1,4 @@
-import type { VerificationStatus } from '@/domain/types';
+import type { ReligiousContent, VerificationStatus } from '@/domain/types';
 import { allPlaces } from '@/data/places';
 import { recommendedActs } from '@/data/recommendedActs';
 import { religiousContent } from '@/data/religiousContent';
@@ -60,6 +60,7 @@ export function searchCatalog(
   query: string,
   filter: SearchFilter,
   language: Language = 'de',
+  importedContents: ReligiousContent[] = [],
 ): SearchResult[] {
   const placeResults =
     filter === 'all' || filter === 'places'
@@ -90,16 +91,18 @@ export function searchCatalog(
 
   const contentResults =
     filter === 'all' || filter === 'content'
-      ? religiousContent
+      ? [...religiousContent, ...importedContents.filter((item) => !religiousContent.some((local) => local.id === item.id))]
           .map((content) => localizeReligiousContent(content, language))
           .filter((content) =>
             matches(query, [
               content.title,
-              content.type,
+              ...allPlaces.filter((place) => content.placeIds?.includes(place.id)).flatMap((place) => [place.name, place.city]),
+              ...(content.sources ?? []).flatMap((source) => [source.title, source.url ?? '']),
               ...content.paragraphs.flatMap((paragraph) => [
                 paragraph.arabic,
                 paragraph.transliteration,
                 paragraph.translation_de,
+                paragraph.translation_en ?? '',
               ]),
               ...sourceSearchFields(content.sourceReferences, language),
             ]),
@@ -109,7 +112,7 @@ export function searchCatalog(
             id: content.id,
             kind: 'content' as const,
             slug: content.slug,
-            subtitle: translate(language, `labels.contentType.${content.type}`),
+            subtitle: translate(language, 'labels.readerText'),
             title: content.title,
             verificationStatus: content.verificationStatus,
           }))
@@ -122,7 +125,6 @@ export function searchCatalog(
           .filter((act) =>
             matches(query, [
               act.title,
-              act.type,
               act.shortInstruction,
               ...sourceSearchFields(act.sourceReferences, language),
             ]),
@@ -132,7 +134,7 @@ export function searchCatalog(
             id: act.id,
             kind: 'act' as const,
             slug: act.contentId,
-            subtitle: translate(language, `labels.actType.${act.type}`),
+            subtitle: translate(language, 'labels.recommendedAct'),
             title: act.title,
             verificationStatus: act.verificationStatus,
           }))

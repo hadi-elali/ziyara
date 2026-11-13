@@ -160,6 +160,10 @@ export type QuestionSubmissionLimit = {
 };
 
 export type ReligiousContentRecord = {
+  is_imported?: boolean;
+  place_ids?: string[];
+  source_title?: string;
+  source_url?: string;
   content_policy: 'approved_for_offline' | 'linked_not_copied' | 'pending_rights_review';
   content_type: 'dua' | 'instruction' | 'salawat' | 'surah' | 'ziyarah';
   created_at: string;
@@ -178,6 +182,8 @@ export type ReligiousContentRecord = {
 };
 
 export type ReligiousTextParagraphRecord = {
+  translation_en?: string;
+  block_kind?: 'text' | 'introduction' | 'heading' | 'note';
   arabic: string;
   content_id: string;
   created_at: string;
@@ -875,8 +881,18 @@ export type Database = {
           updated_at?: string;
         };
       };
+      religious_content_imports: {
+        Row: { content_id: string; raw_text: string; raw_german: string; unresolved_blocks: number[] };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       religious_contents: {
         Insert: {
+          is_imported?: boolean;
+          place_ids?: string[];
+          source_title?: string;
+          source_url?: string;
           content_policy?: ReligiousContentRecord['content_policy'];
           content_type: ReligiousContentRecord['content_type'];
           created_at?: string;
@@ -896,6 +912,10 @@ export type Database = {
         Relationships: [];
         Row: ReligiousContentRecord;
         Update: {
+          is_imported?: boolean;
+          place_ids?: string[];
+          source_title?: string;
+          source_url?: string;
           content_policy?: ReligiousContentRecord['content_policy'];
           content_type?: ReligiousContentRecord['content_type'];
           is_published?: boolean;
@@ -913,6 +933,8 @@ export type Database = {
       };
       religious_text_paragraphs: {
         Insert: {
+          translation_en?: string;
+          block_kind?: ReligiousTextParagraphRecord['block_kind'];
           arabic: string;
           content_id: string;
           created_at?: string;
@@ -932,6 +954,8 @@ export type Database = {
         ];
         Row: ReligiousTextParagraphRecord;
         Update: {
+          translation_en?: string;
+          block_kind?: ReligiousTextParagraphRecord['block_kind'];
           arabic?: string;
           content_id?: string;
           position?: number;
@@ -1134,6 +1158,12 @@ export type Database = {
           updated_at?: string;
         };
       };
+      trip_navigation_state: {
+        Insert: { id?: number; revision?: number };
+        Relationships: [];
+        Row: { id: number; revision: number };
+        Update: { revision?: number };
+      };
       trip_navigation_destinations: {
         Insert: {
           archived_at?: string | null;
@@ -1247,6 +1277,20 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      admin_save_reader_content: {
+        Args: {
+          p_content: {
+            id: string; slug: string; title: string; notes: string; content_type: ReligiousContentRecord['content_type'];
+            place_ids: string[]; source_title: string; source_url: string;
+            publish: boolean; unresolved_blocks: number[];
+          };
+          p_paragraphs: { kind?: ReligiousTextParagraphRecord['block_kind']; arabic: string; transliteration: string; translation_de: string; translation_en?: string }[];
+          p_raw_text: string;
+          p_raw_german: string;
+          p_expected_updated_at: string | null;
+        };
+        Returns: ReligiousContentRecord;
+      };
       get_registration_enabled: { Args: Record<string, never>; Returns: boolean };
       admin_set_registration_enabled: { Args: { p_enabled: boolean }; Returns: boolean };
       admin_prepare_push_message: { Args: { p_title: string; p_body: string; p_audience?: AdminPushAudience }; Returns: number };

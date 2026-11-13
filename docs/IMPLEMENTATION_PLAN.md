@@ -4,6 +4,80 @@ This app is a production-ready mobile guide for Shia ziyarah in Iraq, built with
 
 Religious-content rule: do not write unverified duas, ziyarat, Arabic text, transliteration, translation, hadith, devotional instructions, or religious claims. Use placeholders, source fields, and `needs_review` status until qualified review is complete.
 
+## 13 November 2026: Preserve edited sections when publishing
+
+- Remove save/publication's dependency on matching original input with the preview. Existing sections are authoritative, including edited translations, introduction/note types and accepted assignments. Only import automatically before the first preview and without manually created sections; never restore deliberately deleted sections during saving.
+- Recreate existing sections only through the separate secondary “Recreate sections” action and explicit confirmation. Selecting introduction, note or heading explicitly accepts that section's assignment. Keep publication attempts available and show unresolved assignments on the relevant preview page without re-importing. Preserve failed-save edits/retries and clear the form only after server success. No schema, dependency, navigation or native configuration changes.
+- Validation: seven regression cases fail before the fix; all 52 focused editor/validation/import tests in three suites, TypeScript and diff checks pass afterward. Lint retains the existing Home AsyncStorage warning. No additional SDK, export, browser or device runs with unchanged packages; actual device validation remains pending.
+
+## 13 November 2026: Direct reader saves and collapsible editor
+
+- Automatically create the first sections from pasted input on draft save or publication; keep preview creation optional. Preserve explicit re-import confirmation and publication assignment checks. The follow-up correction above removes the initial implementation's automatic re-import of changed originals during saving.
+- Collapse original text and preview independently without losing edits or disabling save actions. On successful saves/publication, open a fresh empty form with a new identity and reset place/editor state, keyboard and scroll position. Preserve input and generated sections after failures so saving can be retried. No schema, dependency, navigation or native configuration change.
+- Validation: seven new or adjusted editor cases fail before implementation; all 48 focused editor/validation/import tests in three suites and TypeScript pass afterward. Lint retains the existing Home AsyncStorage warning. No additional SDK, export, browser or device runs for unchanged dependencies; native keyboard, scroll and collapse behavior still needs device validation.
+
+## 13 November 2026: Specific reader validation feedback
+
+- Keep punctuation and parentheses valid in titles; preserve the title verbatim while deriving its link name. Centralize existing save checks and report the specific invalid field/state, including missing place versus city selection, absent/outdated preview, source URL and numbered empty section. Match the request's trimming of surrounding slug whitespace; clear stale feedback after edits. Provide DE/EN/AR messages.
+- Preserve preview alignment, empty-section protection, draft handling and publication assignment checks. No schema, dependency, navigation or native configuration change. Four editor regression cases fail before the fix; all 44 focused editor/validation/import tests in three suites, TypeScript and diff checks pass afterward. Lint retains the existing Home AsyncStorage warning. No additional SDK, export, browser or device runs for this validation-only change.
+
+## 13 November 2026: Stable loading when navigating back to places
+
+- Distinguish first-load progress from background catalog refreshes. Keep existing entries and confirmed empty results ready across focus changes/remounts; keep the current focus refresh and stale-response protection. Do not show an import-catalog spinner beside already available bundled actions.
+- Persist catalog readiness together with contents in the existing cache key. Migrate valid legacy array caches, including empty results; let hydration settle before showing an initial spinner. Preserve reader body caching, private-data exclusions, withdrawal/version reconciliation and error/retry behavior. No backend, dependency, navigation or native configuration changes; device validation remains pending.
+- Validation: two regression cases fail before the fix; all 20 focused catalog/place/reader/persistence tests in four suites, TypeScript, diff checks and iOS/Android exports pass afterward. Lint retains the existing Home AsyncStorage warning; local Expo alignment passes with its offline caveat. No additional Doctor/browser/device runs for this unchanged dependency/configuration state.
+
+## 13 November 2026: Simplified reader editor and honest publication status
+
+- Consolidate imported reader entries and existing recommended actions into one place-detail section titled “Recommended acts” in DE/EN/AR. Remove the separate reader-text heading while retaining all cards, reader routes and loading/error behavior.
+- Remove the extra return-to-list button, source title, metadata notes, bulk German import and assignment controls, draft explanation and both review switches as explicitly requested. Keep optional source URL, section-level German editing and hidden legacy metadata/originals. Use ordinary guarded back navigation.
+- Add forward migration `20261113010000_simplify_reader_content_editor.sql`: backfill an explicit import marker, allow missing source metadata and separate publishing imported texts from verifying them. The admin RPC always keeps new/edited imports pending review with no reviewer/date or rights attestation, ignoring obsolete client flags. Preserve private drafts/originals, RPC-only writes, optimistic concurrency and atomic saves. Published pending imports carry their actual status through reader/place/search/bookmarks and cache. Original rules for non-imported reviewed content remain.
+- Apply this migration after the original import migration before distributing the client. Only fully rolled-back local SQL tests so far; no remote deployment or additional native dependency/configuration changes. See `docs/READER_CONTENT_IMPORT.md`.
+- Validation: all 43 focused Jest tests in five suites, 56 fully rolled-back pgTAP assertions in two suites, TypeScript, diff checks and iOS/Android exports pass. Lint retains the existing Home AsyncStorage warning; local Expo alignment passes with its offline caveat. No additional Doctor/browser/device runs, native build or remote deployment; dependencies are unchanged.
+
+## 13 November 2026: Plain reader text import
+
+- Accept complete unformatted sources with consecutive Arabic, transliteration and English lines. The next Arabic line starts a new section, without requiring blank separators or Markdown markers. Preserve multiline Arabic/English and compatibility with marked Markdown sources.
+- Flag incomplete inferred sections for review instead of silently accepting a lone Latin line as a complete section. Preserve original input and existing review gates. Update DE/EN/AR input guidance and documentation; no schema, dependency, navigation or native configuration changes.
+- Validation: five new parser cases and two editor cases using plain input fail before the change; all 22 focused import/editor tests pass afterward, along with TypeScript and diff checks. Lint retains the existing Home AsyncStorage warning; local Expo alignment passes with its offline caveat. No additional browser/export/Doctor/device runs for this parser-only adjustment.
+
+## 13 November 2026: Unified reader texts
+
+- Remove the content-type choice from the import editor and category subtitles from place actions. Use one translated reader-text label for content in search/bookmarks and a generic recommended-act label for action results. Stop matching hidden legacy type values in catalog search; retain actual titles and religious contents.
+- Carry existing stored classification values only for schema/RPC/cache compatibility; no additional migration, native configuration or dependency change. Update the import instructions accordingly.
+- Validation: all 19 existing editor/catalog tests, TypeScript and diff checks pass; lint retains only the existing Home AsyncStorage warning. No additional dependency, browser, export or device checks for this presentation-only change.
+
+## 13 November 2026: First-login and registration navigation
+
+- Include the current launch's intro completion in the shared login/registration decision. After profile validation, explicitly open the available intro before attempting Home or mandatory check-in, which remain protected until the intro finishes. Preserve profile-error recovery, email-confirmation forms and direct verified emergency targets.
+- Extend the existing root-navigation suite with both real auth route components through the first session/profile transition, intro completion, pending/blocking checks, profile errors and emergency entry. Four of six new regression cases fail before the fix; older registration tests assumed an already completed intro.
+- Validation: 96 focused Jest tests across five existing suites, TypeScript, diff checks and iOS JavaScript export pass. Lint retains the existing Home AsyncStorage warning; local Expo alignment passes with its offline caveat. After the sandbox DNS failure, online Doctor passes 20/21 checks and retains the nine known SDK-57 patch mismatches. Preserve the user's preference to skip browser checks/web exports. Actual iOS login and registration remain unverified. Deliver the updated JavaScript client; no additional backend, dependency or native configuration changes for this fix.
+
+## 13 November 2026: Full-text reader import
+
+- Add `/admin/content` as the twelfth protected admin section. Paste complete mixed Arabic/italic transliteration/English sources, decode source newlines and review whole multilingual blocks. Import complete German translations only when text-block counts match; never silently shift missing translations. Preserve originals, flag ambiguous sections, allow introductions, notes, headings, ordering and inline bold/italic edits.
+- Use Software Mansion `react-native-enriched-markdown` 1.2.0 for native preview/reader and rich section inputs. Disable unused code highlighting, math and video. Extend persisted preferences to German, English or both translations with a visible language fallback. Preserve transliteration backticks as literal pronunciation characters and existing bundled religious content.
+- Add the forward migration `20261113000000_reader_content_import.sql`: place/source metadata, English and block-role columns, private original imports and an atomic admin-only save RPC with review gates, optimistic concurrency and immutable saved slugs. Keep drafts private, public original access denied and direct writes revoked. Require actual human content and rights review; no religious text was introduced.
+- Link published imports from place pages, search and bookmarks; retain only published metadata/read bodies in a validated offline cache and reconcile on screen focus. Apply migration before the updated client, and make a **new native build**. Migration/tests only run inside fully rolled-back local transactions; remote rollout and device checks remain pending. Preserve the user preference to skip browser checks and web exports. See `docs/READER_CONTENT_IMPORT.md`.
+- Validation: 78 focused Jest tests in eight suites, 31 fully rolled-back pgTAP assertions, TypeScript, diff checks and iOS/Android exports pass. Lint retains only the existing Home AsyncStorage warning. Local dependency alignment passes with its offline caveat; online Doctor passes 20/21 checks with nine existing SDK-57 patch mismatches. No native build, device test, full E2E run or remote deployment.
+
+## 11 November 2026: Synchronize removed navigation destinations
+
+- Archiving hides a destination under SELECT RLS, so its UPDATE cannot reliably reach other Postgres Changes subscribers. Add `20261111030000_sync_navigation_destination_removals.sql`: an authenticated-readable singleton with only ID/revision, bumped transactionally by a protected trigger after destination INSERT/UPDATE/DELETE and published to Realtime. Preserve hidden archived content and RPC-only destination writes.
+- Subscribe to the revision and refresh active destinations on change, subscription/reconnection, app/browser focus and existing fallback. Ignore stale responses and late events after cleanup. Keep the validated account-scoped offline cache; confirmed empty responses clear it. Store map selection by ID and derive details/navigation coordinates from the current list on both platforms so removed selections disappear.
+- All 32 focused Jest tests in five suites and 44 transactional pgTAP assertions pass, as do TypeScript and diff checks. Lint retains four existing warnings; local Expo alignment passes with its offline caveat and online Doctor passes 20/21 checks with nine existing SDK-57 patch mismatches. Schema/test accounts are fully rolled back. Apply the migration before distributing the updated client; remote rollout and real multiple-device verification remain pending. No dependency/native configuration changes; preserve the user's preference to skip browser tests/web exports.
+
+## 11 November 2026: Stable question checkboxes
+
+- Keep loaded question lists, including confirmed empty lists, visible during Realtime refreshes. Sort by creation time and ID so checking a question preserves its position. Reserve the status label's height, hide unused labels from accessibility and retain mutation locking without fading the entire list.
+- Invalidate reads started before a successful checkbox save so older results cannot undo the confirmed state. Preserve existing questions on read/write failures and allow retries. Client-only fix; distribute the updated client. No dependency, backend or native configuration changes. Preserve the documented preference to skip browser tests/web exports; native visual validation remains pending.
+- Validation: three of four added regressions fail before the fix; all 27 tests in the existing question UI/context suites pass afterward, along with TypeScript and diff checks. Lint retains four existing warnings. Local Expo alignment passes with its offline caveat; online Doctor passes 20/21 checks with nine known SDK-57 patch mismatches. Manifest/lockfile unchanged.
+
+## 11 November 2026: Android notification channel null-group crash
+
+- Omit absent/empty group IDs when migrating the wake-up channel. Expo otherwise passes a present `groupId: null` to Android's group lookup, causing the reported `Object.hashCode()` NullPointerException and preventing permission/token registration. Omit missing audio/light options as well; retain populated groups, muted sound, disabled vibration and existing privacy settings.
+- Four new boundary cases fail before the fix; all 24 tests in four existing notification suites pass afterward, along with TypeScript and diff checks. Lint retains four existing warnings; local Expo alignment passes with its offline caveat and online Doctor passes 20/21 checks with nine existing SDK-57 patch mismatches. Preserve the documented preference to skip browser tests/web exports. No dependency, native configuration or backend changes. Distribute an updated Android build containing the JavaScript fix; physical-device registration/delivery confirmation remains pending.
+
 ## 11 November 2026: Compact destination management
 
 - Contrast follow-up: tint destination cards with the existing accent-soft token, use a solid 1-point accent border and a filled accent navigation action, and give edit/remove separate contrasting surfaces. All affected text/background pairs reach at least 4.70:1 in both themes. Keep this change local to destination management; native visual validation remains pending.
@@ -17,11 +91,11 @@ Religious-content rule: do not write unverified duas, ziyarat, Arabic text, tran
 - Add `20261111000000_add_user_battery_empty_status.sql`: protected profile field and constraint, admin-only setter, atomic replacement through both status RPCs, expanded admin lists/results and exclusion from unclaimed response pushes. Load the field on profile refresh/restart, exempt all affected account roles and suppress response prompts.
 - Validate with 84 focused App tests and 92 transactional pgTAP assertions, TypeScript and diff checks. Lint retains four existing warnings; online Doctor reports nine existing patch mismatches (20/21). Preserve the user's existing preference to skip web tests/exports. Migration and synthetic accounts are fully rolled back; apply the migration before distributing the updated client. Remote rollout and native device validation remain pending. Dependencies/native configuration unchanged.
 
-## 11 November 2026: Synchronize registration controls across admins
+## 11 November 2026: Synchronize public registration availability and admin controls
 
-- Enable an individual Postgres Changes subscription for each open admin registration panel. Refetch the confirmed Boolean on changes and successful subscription/reconnection; retain stale-response protection, foreground polling and resume reconciliation. Remove subscriptions and ignore late events on unmount. Public auth screens retain getter-only reads without a Realtime subscription.
-- Add `20261111010000_sync_registration_settings.sql` to publish the singleton and grant SELECT under an admin-only RLS policy. Preserve RPC-only writes, signup enforcement and anonymous access through the Boolean getter. Deploy this migration before distributing the updated client; no remote deployment or native/dependency changes.
-- Extend the existing hook/panel suite with two simultaneous panels, closing/reopening, reconnection, fallback polling, stale reads and cleanup. Extend the existing database suite with publication/RLS checks and a second administrator. Run local SQL transactionally with full rollback; preserve the user's existing preference to skip browser tests and web exports. Real multiple-device validation remains pending.
+- Enable an individual Postgres Changes subscription for login, registration and every admin registration panel. Refetch the confirmed Boolean on changes and successful subscription/reconnection; retain stale-response protection, foreground polling and resume reconciliation. Remove subscriptions and ignore late events on unmount. Public auth screens now update without waiting for the 30-second fallback.
+- Add `20261111010000_sync_registration_settings.sql` to publish the singleton, followed by `20261111020000_sync_public_registration_availability.sql` to grant SELECT for anonymous and authenticated subscribers under an `id = 1` RLS policy. The table contains only the already-public Boolean and singleton ID; closed rows stay readable so subscribers also receive reopening. Preserve RPC-only admin writes and signup enforcement. Deploy both migrations in order before distributing the updated client; no remote deployment or native/dependency changes.
+- Extend the existing suites with public closure/reopening, login-link visibility, draft preservation, two simultaneous admin panels, reconnection, fallback polling, stale reads and cleanup. All 40 targeted Jest tests and 42 local Supabase pgTAP assertions pass, including anonymous/ordinary read access and rejected direct writes. SQL migrations and synthetic accounts are fully rolled back. TypeScript passes; lint retains four existing warnings and local Expo alignment passes with its offline caveat. Online Doctor passes 20/21 checks with nine existing SDK-57 patch mismatches. Preserve the user's existing preference to skip browser tests and web exports. Real multiple-device validation remains pending.
 
 ## 11 November 2026: Show status checks directly to admins
 
@@ -640,6 +714,7 @@ Files:
 - `src/features/i18n/i18n.tsx`
 - `supabase/migrations/20260828120000_add_trip_navigation_destinations.sql`
 - `supabase/migrations/20261007000000_separate_navigation_from_intermediate_trips.sql`
+- `supabase/migrations/20261111030000_sync_navigation_destination_removals.sql`
 
 Acceptance criteria:
 
@@ -647,14 +722,14 @@ Acceptance criteria:
 - The admin dashboard exposes `Reiseziele auf Karte markieren` / `Mark trip destinations on the map` as its own section, with a corresponding Arabic label. Admins create, edit and archive multiple named destinations without an active intermediate trip and select coordinates on a platform-specific map or through one foreground location request.
 - Every signed-in account sees active destinations as distinct map markers, can open their list and use external navigation. Destinations remain visible when an intermediate trip ends or is deleted.
 - A validated user-scoped destination cache survives restart and initial read failures; a successful server response, including an empty list, replaces it authoritatively.
-- The client reads and subscribes only to navigation destinations in this provider. Realtime, focus and staggered fallback refreshes remain available without trip or participant reads.
+- The provider reads only active navigation destinations and subscribes to their authenticated-readable revision signal so archived rows need not remain readable. Subscription/reconnection, focus and staggered fallback refreshes reconcile missed events without trip or participant reads.
 - The independent daily program remains available on Home and `/program`.
 
 Tests/checks:
 
 - Existing destination-cache, provider, navigation, admin destination editor and public offline-start tests.
 - TypeScript, lint, Expo dependency alignment, Expo Doctor and web export.
-- No database migration or new native dependency is required for the client removal.
+- No database migration or new native dependency was required for the historical itinerary-client removal. Destination removal synchronization additionally requires the revision migration above before releasing the updated client.
 
 ## Phase 13: General alarm and escalation (historical boarding)
 

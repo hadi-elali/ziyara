@@ -98,8 +98,8 @@ export function AdminQuestionRoundPanel() {
           .from('anonymous_questions')
           .select('id, round_id, question, is_checked, created_at, checked_at')
           .eq('round_id', roundId)
-          .order('is_checked', { ascending: true })
           .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
           .abortSignal(signal),
       );
 
@@ -281,6 +281,9 @@ export function AdminQuestionRoundPanel() {
         throw error;
       }
 
+      // Reads started before this confirmation must not restore an older checkbox state.
+      questionsRequestSequence.current += 1;
+      setIsLoadingQuestions(false);
       setQuestions((current) =>
         current.map((item) =>
           item.id === question.id
@@ -336,7 +339,7 @@ export function AdminQuestionRoundPanel() {
               <ThemedText type="smallBold">
                 {t('questionRound.questionCount', { count: displayedQuestions.length })}
               </ThemedText>
-              {isLoadingQuestions ? (
+              {isLoadingQuestions && questionsRoundId !== roundId ? (
                 <ActivityIndicator color={theme.accent} />
               ) : displayedQuestions.length > 0 ? (
                 <>
@@ -486,7 +489,6 @@ function QuestionItem({
           borderColor: question.is_checked ? theme.success : theme.border,
         },
         pressed && styles.pressed,
-        disabled && styles.disabled,
       ]}>
       <SymbolIcon
         color={question.is_checked ? theme.success : theme.textSecondary}
@@ -495,11 +497,14 @@ function QuestionItem({
       />
       <View style={styles.questionText}>
         <ThemedText style={question.is_checked && styles.checkedText}>{question.question}</ThemedText>
-        {question.is_checked ? (
-          <ThemedText type="tinyBold" themeColor="success">
-            {t('questionRound.checked')}
-          </ThemedText>
-        ) : null}
+        <ThemedText
+          accessibilityElementsHidden={!question.is_checked}
+          importantForAccessibility={question.is_checked ? 'auto' : 'no-hide-descendants'}
+          style={!question.is_checked && styles.hiddenStatus}
+          type="tinyBold"
+          themeColor="success">
+          {t('questionRound.checked')}
+        </ThemedText>
       </View>
     </Pressable>
   );
@@ -560,7 +565,7 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
-  disabled: {
-    opacity: 0.55,
+  hiddenStatus: {
+    opacity: 0,
   },
 });

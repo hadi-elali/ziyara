@@ -28,7 +28,7 @@ const legacyChannel: Notifications.NotificationChannel = {
   id: 'wake-up-calls-v1', name: 'Weckrufe', description: null,
   importance: Notifications.AndroidImportance.HIGH,
   lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-  bypassDnd: false, showBadge: true, sound: 'custom',
+  bypassDnd: false, showBadge: true, sound: 'custom', groupId: null,
   audioAttributes: {
     usage: 5, contentType: 4,
     flags: { enforceAudibility: false, requestHardwareAudioVideoSynchronization: false },
@@ -86,6 +86,51 @@ describe('wake-up notification channel rollout', () => {
         enableVibrate: false, sound: null, importance: 2,
         showBadge: false, lockscreenVisibility: 3,
       }));
+  });
+
+  it.each([null, undefined, ''])('omits an absent channel group (%p) from native options', async (groupId) => {
+    jest.mocked(Notifications.getNotificationChannelAsync).mockResolvedValue({
+      ...legacyChannel, groupId,
+    });
+
+    expect(await registerGeneralAlarmNotifications('de', false))
+      .toEqual({ availability: 'registered', permissionGranted: true });
+
+    const channel = jest.mocked(Notifications.setNotificationChannelAsync).mock.calls
+      .find(([id]) => id === 'wake-up-calls-v2')?.[1];
+    // Expo checks whether the key exists, then passes its value to Android's
+    // group lookup. A present null/undefined key is different from omitting it.
+    expect(channel).toBeDefined();
+    expect(channel).not.toHaveProperty('groupId');
+  });
+
+  it('preserves a populated channel group and existing audio/light preferences', async () => {
+    jest.mocked(Notifications.getNotificationChannelAsync).mockResolvedValue({
+      ...legacyChannel, groupId: 'travel-team',
+    });
+
+    expect(await registerGeneralAlarmNotifications('de', false))
+      .toEqual({ availability: 'registered', permissionGranted: true });
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith('wake-up-calls-v2',
+      expect.objectContaining({
+        groupId: 'travel-team',
+        audioAttributes: legacyChannel.audioAttributes,
+        lightColor: legacyChannel.lightColor,
+      }));
+  });
+
+  it('uses defaults without sending undefined native options when v1 cannot be read', async () => {
+    jest.mocked(Notifications.getNotificationChannelAsync).mockResolvedValue(null);
+
+    expect(await registerGeneralAlarmNotifications('de', false))
+      .toEqual({ availability: 'registered', permissionGranted: true });
+
+    const channel = jest.mocked(Notifications.setNotificationChannelAsync).mock.calls
+      .find(([id]) => id === 'wake-up-calls-v2')?.[1];
+    expect(channel).toEqual(expect.objectContaining({ sound: 'weckruf.wav', enableVibrate: true }));
+    expect(channel).not.toHaveProperty('groupId');
+    expect(channel).not.toHaveProperty('audioAttributes');
+    expect(channel).not.toHaveProperty('lightColor');
   });
 
   it('falls back to legacy registration when the migration is not installed yet', async () => {

@@ -885,6 +885,7 @@ export function localizeReligiousContent(
   content: ReligiousContent,
   language: Language,
 ): ReligiousContent {
+  if (content.isRemote) return content;
   return {
     ...content,
     ...religiousContentTranslations[content.id]?.[language],

@@ -10,7 +10,6 @@ import { Section } from '@/components/ui/section';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { allPlaces } from '@/data/places';
-import type { TripNavigationDestination } from '@/domain/database';
 import { useI18n } from '@/features/i18n/i18n';
 import {
   formatPlaceLocation,
@@ -54,8 +53,10 @@ export function MapExperience() {
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
   const [locationMessageKey, setLocationMessageKey] = useState<LocationMessageKey | null>(null);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
-  const [selectedDestination, setSelectedDestination] =
-    useState<TripNavigationDestination | null>(null);
+  const [selectedDestinationId, setSelectedDestinationId] = useState<number | null>(null);
+  const selectedDestination = navigationDestinations.find(
+    (destination) => destination.id === selectedDestinationId,
+  ) ?? null;
   const [showDestinations, setShowDestinations] = useState(false);
 
   const requestLocation = () => {
@@ -188,7 +189,7 @@ export function MapExperience() {
               accessibilityLabel={`${t('map.tripDestination')}: ${destination.name}`}
               accessibilityRole="button"
               key={`destination-${destination.id}`}
-              onPress={() => setSelectedDestination(destination)}
+              onPress={() => setSelectedDestinationId(destination.id)}
               style={({ pressed }) => [
                 styles.destinationMarker,
                 positionFor(destination),
@@ -231,7 +232,7 @@ export function MapExperience() {
             <Button
               icon="close"
               label={t('map.backToOverview')}
-              onPress={() => setSelectedDestination(null)}
+              onPress={() => setSelectedDestinationId(null)}
               variant="secondary"
             />
           </Card>

@@ -17,7 +17,7 @@ export type ButtonVariant = 'danger' | 'danger-solid' | 'success' | 'primary' | 
 export type ButtonProps = {
   accessibilityState?: AccessibilityState;
   disabled?: boolean;
-  icon: SymbolIconName;
+  icon?: SymbolIconName;
   iconSize?: number;
   label: string;
   onPress: () => void;
@@ -89,7 +89,7 @@ export function Button({
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}>
-      <SymbolIcon color={foreground} name={icon} size={iconSize ?? (isCompact ? 15 : 18)} />
+      {icon ? <SymbolIcon color={foreground} name={icon} size={iconSize ?? (isCompact ? 15 : 18)} /> : null}
       <ThemedText
         type="smallBold"
         style={[

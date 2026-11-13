@@ -42,8 +42,10 @@ export function MapExperience() {
   const { navigationDestinations } = useTripGuidance();
   const mapRef = useRef<MapCanvasHandle>(null);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [selectedDestination, setSelectedDestination] =
-    useState<TripNavigationDestination | null>(null);
+  const [selectedDestinationId, setSelectedDestinationId] = useState<number | null>(null);
+  const selectedDestination = navigationDestinations.find(
+    (destination) => destination.id === selectedDestinationId,
+  ) ?? null;
   const [showDestinations, setShowDestinations] = useState(false);
   const insets = useSafeAreaInsets();
   const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
@@ -56,7 +58,7 @@ export function MapExperience() {
 
   const returnToOverview = useCallback(() => {
     setSelectedPlace(null);
-    setSelectedDestination(null);
+    setSelectedDestinationId(null);
     setShowDestinations(false);
     mapRef.current?.animateToRegion(IRAQ_REGION, 650);
   }, []);
@@ -90,7 +92,7 @@ export function MapExperience() {
     (destination: TripNavigationDestination) => {
       setShowDestinations(false);
       setSelectedPlace(null);
-      setSelectedDestination(destination);
+      setSelectedDestinationId(destination.id);
       mapRef.current?.animateToRegion(
         {
           latitude: destination.latitude,
@@ -197,7 +199,7 @@ export function MapExperience() {
       if (id.startsWith("place:")) {
         const place = allPlaces.find((item) => `place:${item.id}` === id);
         if (!place) return;
-        setSelectedDestination(null);
+        setSelectedDestinationId(null);
         setSelectedPlace(place);
         return;
       }
@@ -208,7 +210,7 @@ export function MapExperience() {
         );
         if (!destination) return;
         setSelectedPlace(null);
-        setSelectedDestination(destination);
+        setSelectedDestinationId(destination.id);
       }
     },
     [navigationDestinations],

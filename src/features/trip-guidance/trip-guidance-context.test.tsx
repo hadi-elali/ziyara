@@ -230,6 +230,85 @@ describe('TripGuidanceProvider', () => {
     });
   });
 
+  it('entfernt archivierte Ziele durch das für andere Konten lesbare Änderungssignal', async () => {
+    queueSnapshot([navigationDestination]);
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => !context().isLoading);
+
+    const channel = mockSupabase.channel.mock.results[0].value as MockChannel;
+    const listener = channel.on.mock.calls.find(([, filter]) =>
+      (filter as { table: string }).table === 'trip_navigation_state',
+    );
+    expect(listener).toBeDefined();
+    queueSnapshot();
+    await act(async () => { (listener![2] as () => void)(); });
+    await waitFor(() => context().navigationDestinations.length === 0);
+
+    expect(mockNavigationCacheState.setValue).toHaveBeenLastCalledWith({
+      destinations: [], userId: session.user.id,
+    });
+  });
+
+  it('gleicht verpasste Löschungen nach Beitritt und Wiederverbindung ab', async () => {
+    queueSnapshot([navigationDestination]);
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => !context().isLoading);
+    const channel = mockSupabase.channel.mock.results[0].value as MockChannel;
+    const onStatus = channel.subscribe.mock.calls[0][0] as (status: string) => void;
+    expect(onStatus).toEqual(expect.any(Function));
+
+    queueSnapshot();
+    await act(async () => { onStatus('SUBSCRIBED'); });
+    await waitFor(() => context().navigationDestinations.length === 0);
+    queueSnapshot([navigationDestination]);
+    await act(async () => { onStatus('SUBSCRIBED'); });
+    await waitFor(() => context().navigationDestinations.length === 1);
+  });
+
+  it('ignoriert eine alte Serverantwort nach einem neueren Entfernungssignal', async () => {
+    let resolveOldRead!: (result: QueryResult<TripNavigationDestination[]>) => void;
+    responses.set('trip_navigation_destinations', [new Promise((resolve) => { resolveOldRead = resolve; })]);
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => mockSupabase.from.mock.calls.length === 1);
+    queueSnapshot();
+    await act(async () => { await context().refresh(); });
+    await act(async () => { resolveOldRead({ data: [navigationDestination], error: null }); });
+
+    expect(context().navigationDestinations).toEqual([]);
+    expect(mockNavigationCacheState.setValue).toHaveBeenCalledTimes(1);
+  });
+
+  it('gleicht Ziele bei App-Rückkehr ab und ignoriert späte Kanalereignisse nach Unmount', async () => {
+    queueSnapshot([navigationDestination]);
+    await act(async () => {
+      renderer = create(<TripGuidanceProvider><Probe /></TripGuidanceProvider>);
+    });
+    await waitFor(() => !context().isLoading);
+    queueSnapshot();
+    const onAppState = jest.mocked(AppState.addEventListener).mock.calls[0][1];
+    await act(async () => { onAppState('active'); });
+    await waitFor(() => context().navigationDestinations.length === 0);
+
+    const channel = mockSupabase.channel.mock.results[0].value as MockChannel;
+    const onChange = channel.on.mock.calls[0][2] as () => void;
+    const onStatus = channel.subscribe.mock.calls[0][0] as (status: string) => void;
+    await act(async () => { renderer!.unmount(); });
+    renderer = null;
+    const previousReads = mockSupabase.from.mock.calls.length;
+    await act(async () => {
+      onChange();
+      onStatus?.('SUBSCRIBED');
+    });
+    expect(mockSupabase.from).toHaveBeenCalledTimes(previousReads);
+    expect(mockSupabase.removeChannel).toHaveBeenCalledWith(channel);
+  });
+
   it('speichert geladene Kartenorte für den nächsten App-Start', async () => {
     queueSnapshot([navigationDestination]);
 

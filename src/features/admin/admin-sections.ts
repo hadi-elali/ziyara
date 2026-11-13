@@ -10,6 +10,7 @@ export const adminSections = [
   'families',
   'users',
   'registration',
+  'content',
 ] as const;
 
 export type AdminSection = (typeof adminSections)[number];
@@ -26,4 +27,5 @@ export const adminSectionTitleKeys: Record<AdminSection, string> = {
   families: 'admin.section.families.title',
   users: 'admin.section.users.title',
   registration: 'admin.registration.title',
+  content: 'contentImport.title',
 };

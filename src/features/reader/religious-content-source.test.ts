@@ -64,4 +64,20 @@ describe('religious content database mapping', () => {
       ]),
     ).toBeUndefined();
   });
+  it('loads a published import without pretending that it was verified', () => {
+    const imported = mapReligiousContentRows({ ...content, is_imported: true,
+      verification_status: 'needs_review', content_policy: 'pending_rights_review',
+      reviewed_at: null, reviewed_by: null, source_title: '', source_url: '',
+      source_references: ['editorial-review-required'],
+    }, [paragraph(1, 0, 'نص تجريبي')]);
+    expect(imported).toMatchObject({ isImported: true, verificationStatus: 'needs_review',
+      contentPolicy: 'pending_rights_review', sources: [], sourceReferences: ['editorial-review-required'] });
+    expect(imported?.reviewedAt).toBeUndefined();
+    expect(imported?.reviewedBy).toBeUndefined();
+  });
+  it('does not expose an unpublished or rejected import', () => {
+    const row = { ...content, is_imported: true, verification_status: 'needs_review' as const, content_policy: 'pending_rights_review' as const };
+    expect(mapReligiousContentRows({ ...row, is_published: false }, [paragraph(1, 0, 'نص تجريبي')])).toBeUndefined();
+    expect(mapReligiousContentRows({ ...row, verification_status: 'rejected' }, [paragraph(1, 0, 'نص تجريبي')])).toBeUndefined();
+  });
 });

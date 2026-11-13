@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getReligiousContentBySlug } from '@/data/religiousContent';
 import type { ReligiousContent } from '@/domain/types';
+import type { ReligiousTextParagraphRecord } from '@/domain/database';
 import { supabase } from '@/features/auth/supabase';
 import {
   getOriginalErrorMessage,
@@ -10,13 +11,14 @@ import {
   withSupabaseReadTimeout,
 } from '@/features/network/supabase-read';
 import { mapReligiousContentRows } from '@/features/reader/religious-content-mapping';
+import { usePublishedReaderCache } from './imported-content-catalog';
 
 export async function loadPublishedReligiousContent(slug: string) {
   const { data: content, error: contentError } = await withSupabaseReadTimeout((signal) =>
     supabase
       .from('religious_contents')
       .select(
-        'id, slug, title, content_type, language, notes, source_references, verification_status, content_policy, reviewed_by, reviewed_at, version, is_published, created_at, updated_at',
+        '*',
       )
       .eq('slug', slug)
       .eq('is_published', true)
@@ -32,20 +34,17 @@ export async function loadPublishedReligiousContent(slug: string) {
     return undefined;
   }
 
-  const { data: paragraphs, error: paragraphsError } = await withSupabaseReadTimeout((signal) =>
-    supabase
-      .from('religious_text_paragraphs')
-      .select('id, content_id, position, arabic, transliteration, translation_de, created_at')
-      .eq('content_id', content.id)
-      .order('position')
-      .abortSignal(signal),
-  );
-
-  if (paragraphsError) {
-    throw paragraphsError;
+  const paragraphs: ReligiousTextParagraphRecord[] = [];
+  for (let from = 0; ; from += 500) {
+    const { data: page, error } = await withSupabaseReadTimeout((signal) => supabase
+      .from('religious_text_paragraphs').select('*').eq('content_id', content.id)
+      .order('position').range(from, from + 499).abortSignal(signal));
+    if (error) throw error;
+    paragraphs.push(...page ?? []);
+    if ((page?.length ?? 0) < 500) break;
   }
 
-  return mapReligiousContentRows(content, paragraphs ?? []);
+  return mapReligiousContentRows(content, paragraphs);
 }
 
 type RemoteContentState = {
@@ -58,6 +57,8 @@ type RemoteContentState = {
 
 export function useReligiousContent(slug?: string) {
   const bundledContent = useMemo(() => getReligiousContentBySlug(slug), [slug]);
+  const [{ contents: cachedContents }, setCachedContents] = usePublishedReaderCache();
+  const cachedContent = cachedContents.find((item) => item.slug === slug && item.paragraphs.length > 0);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [remoteState, setRemoteState] = useState<RemoteContentState>({
     errorKind: null,
@@ -87,6 +88,12 @@ export function useReligiousContent(slug?: string) {
     void loadPublishedReligiousContent(slug)
       .then((content) => {
         if (isCurrent) {
+          if (content?.sources) setCachedContents((previous) => ({ ...previous,
+            contents: [...previous.contents.filter((p) => p.id !== content.id), content],
+          }));
+          else if (!content) setCachedContents((previous) => ({ ...previous,
+            contents: previous.contents.filter((p) => p.slug !== slug),
+          }));
           setRemoteState({ content, errorKind: null, errorMessage: null, isLoading: false, slug });
         }
       })
@@ -104,16 +111,18 @@ export function useReligiousContent(slug?: string) {
     return () => {
       isCurrent = false;
     };
-  }, [refreshVersion, slug]);
+  }, [refreshVersion, slug, setCachedContents]);
 
   const refresh = useCallback(() => setRefreshVersion((current) => current + 1), []);
   const stateMatchesSlug = remoteState.slug === slug;
 
   return {
-    content: stateMatchesSlug && remoteState.content ? remoteState.content : bundledContent,
+    content: stateMatchesSlug && !remoteState.isLoading && !remoteState.errorKind
+      ? remoteState.content ?? bundledContent
+      : cachedContent ?? bundledContent,
     errorKind: stateMatchesSlug ? remoteState.errorKind : null,
     errorMessage: stateMatchesSlug ? remoteState.errorMessage : null,
-    isLoading: !bundledContent && (!stateMatchesSlug || remoteState.isLoading),
+    isLoading: !bundledContent && !cachedContent && (!stateMatchesSlug || remoteState.isLoading),
     refresh,
   };
 }

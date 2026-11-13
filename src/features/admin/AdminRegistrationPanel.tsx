@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 export function AdminRegistrationPanel() {
   const { t, isRTL } = useI18n();
   const theme = useTheme();
-  const { enabled, hasError, refresh } = useRegistrationAvailability({ realtime: true });
+  const { enabled, hasError, refresh } = useRegistrationAvailability();
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const saving = useRef(false);

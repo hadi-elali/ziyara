@@ -20,6 +20,7 @@ export function ReaderPreferenceControls() {
     setShowTranslation,
     setShowTransliteration,
     setTranslationFontScale,
+    setTranslationLanguage,
     setTransliterationFontScale,
   } = useReaderPreferences();
 
@@ -40,6 +41,17 @@ export function ReaderPreferenceControls() {
         onValueChange={setShowTranslation}
         value={preferences.showTranslation}
       />
+      <ThemedText type="smallBold">{t('reader.translationLanguage')}</ThemedText>
+      <View style={styles.languages}>
+        {(['de', 'en', 'both'] as const).map((value) => (
+          <Pressable key={value} accessibilityRole="radio"
+            accessibilityState={{ checked: preferences.translationLanguage === value }}
+            onPress={() => setTranslationLanguage(value)}
+            style={[styles.language, { borderColor: theme.border, backgroundColor: preferences.translationLanguage === value ? theme.accentSoft : theme.surface }]}>
+            <ThemedText type="small">{t(`reader.language.${value}`)}</ThemedText>
+          </Pressable>
+        ))}
+      </View>
 
       <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
@@ -139,6 +151,8 @@ function FontScaleControl({
 }
 
 const styles = StyleSheet.create({
+  languages: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  language: { borderRadius: 8, borderWidth: 1, padding: Spacing.two, minHeight: 44, justifyContent: 'center' },
   panel: {
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,

@@ -11,7 +11,10 @@ update public.profiles set role = 'admin' where user_id in (
 );
 
 select ok(public.get_registration_enabled(), 'registration starts enabled');
-select ok(not has_table_privilege('anon', 'public.registration_settings', 'select'), 'anonymous clients only read the public getter');
+select ok(has_table_privilege('anon', 'public.registration_settings', 'select'), 'anonymous clients can subscribe to the public flag');
+select ok(not has_table_privilege('anon', 'public.registration_settings', 'update'), 'anonymous clients cannot change the flag');
+select ok(not has_table_privilege('anon', 'public.registration_settings', 'insert'), 'anonymous clients cannot replace the singleton');
+select ok(not has_table_privilege('anon', 'public.registration_settings', 'delete'), 'anonymous clients cannot delete the singleton');
 select ok(not has_table_privilege('authenticated', 'public.registration_settings', 'update'), 'clients cannot bypass admin RPC');
 select ok(not has_table_privilege('authenticated', 'public.registration_settings', 'insert'), 'clients cannot replace the singleton');
 select ok(not has_table_privilege('authenticated', 'public.registration_settings', 'delete'), 'clients cannot delete the singleton');
@@ -25,10 +28,13 @@ select ok((select relrowsecurity from pg_class where oid = 'public.registration_
 
 set local role anon;
 select ok(public.get_registration_enabled(), 'anonymous clients can read availability before login');
+select is((select enabled from public.registration_settings where id = 1), true, 'anonymous realtime subscribers can read an enabled row');
+select throws_ok($$update public.registration_settings set enabled = false where id = 1$$, '42501', null, 'anonymous direct updates are rejected');
 reset role;
 select set_config('request.jwt.claim.sub', '89000000-0000-0000-0000-000000000002', true);
 set local role authenticated;
-select is((select count(*) from public.registration_settings), 0::bigint, 'ordinary users cannot read realtime rows');
+select is((select enabled from public.registration_settings where id = 1), true, 'ordinary users can read realtime availability');
+select throws_ok($$update public.registration_settings set enabled = false where id = 1$$, '42501', null, 'ordinary users cannot directly change availability');
 select throws_ok($$select public.admin_set_registration_enabled(false)$$, '42501', null, 'ordinary users cannot close registration');
 reset role;
 select set_config('request.jwt.claim.sub', '', true);
@@ -58,9 +64,18 @@ select is((select count(*) from auth.users where id in ('89000000-0000-0000-0000
 
 set local role anon;
 select is(public.get_registration_enabled(), false, 'closed status visible without login');
+select is((select enabled from public.registration_settings where id = 1), false, 'closed row remains visible to anonymous realtime subscribers');
 reset role;
+select set_config('request.jwt.claim.sub', '89000000-0000-0000-0000-000000000002', true);
+set local role authenticated;
+select is((select enabled from public.registration_settings where id = 1), false, 'closed row remains visible to ordinary realtime subscribers');
+reset role;
+select set_config('request.jwt.claim.sub', '89000000-0000-0000-0000-000000000001', true);
 set local role authenticated;
 select is(public.admin_set_registration_enabled(true), true, 'admin can reopen registration');
+reset role;
+set local role anon;
+select is((select enabled from public.registration_settings where id = 1), true, 'anonymous subscribers can see reopening without signing in');
 reset role;
 select lives_ok($$insert into auth.users(id, email, raw_user_meta_data) values
   ('89000000-0000-0000-0000-000000000004', 'reopened@example.invalid', '{"display_name":"Reopened User","name":"Reopened","surname":"User","age":30}')$$,

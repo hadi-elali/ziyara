@@ -15,6 +15,8 @@ import { localizePlace } from '@/features/i18n/localizedData';
 import { placeRoute, readerRoute, singleRouteParam } from '@/features/navigation/routes';
 import { PlaceImageCard } from '@/features/places/PlaceImageCard';
 import { useTheme } from '@/hooks/use-theme';
+import { useImportedContentCatalog } from '@/features/reader/imported-content-catalog';
+import { Button } from '@/components/ui/button';
 
 const filters: SearchFilter[] = ['all', 'places', 'content', 'acts'];
 
@@ -24,8 +26,9 @@ export default function SearchScreen() {
   const [filter, setFilter] = useState<SearchFilter>('all');
   const theme = useTheme();
   const { isRTL, language, t } = useI18n();
+  const { contents, error, refresh } = useImportedContentCatalog();
 
-  const results = useMemo(() => searchCatalog(query, filter, language), [filter, language, query]);
+  const results = useMemo(() => searchCatalog(query, filter, language, contents), [filter, language, query, contents]);
 
   return (
     <Screen>
@@ -75,6 +78,8 @@ export default function SearchScreen() {
         </View>
       </Section>
 
+      {error ? <View><ThemedText type="small" themeColor="danger">{error}</ThemedText>
+        <Button label={t('reader.retry')} variant="secondary" onPress={() => void refresh()} /></View> : null}
       <Section
         title={t(results.length === 1 ? 'search.resultCount.one' : 'search.resultCount.many', {
           count: results.length,

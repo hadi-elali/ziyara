@@ -50,7 +50,7 @@ export function DailyProgramOverview() {
   );
 
   return (
-    <Screen safeAreaEdges={['right', 'bottom', 'left']}>
+    <Screen automaticallyAdjustKeyboardInsets safeAreaEdges={['right', 'bottom', 'left']}>
       <View style={styles.heading}>
         <View style={styles.headingText}>
           <ThemedText type="eyebrow" themeColor="accent">

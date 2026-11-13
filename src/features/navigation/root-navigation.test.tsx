@@ -5,6 +5,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 
 import RootLayout from '@/app/_layout';
 import CheckInScreen from '@/app/check-in';
+import LoginScreen from '@/app/login';
 import RegisterScreen from '@/app/register';
 import { Button } from '@/components/ui/button';
 import type { GroupCheck } from '@/domain/database';
@@ -135,8 +136,9 @@ let hardwareBack: Parameters<typeof BackHandler.addEventListener>[1] | undefined
 const removeBackListener = jest.fn();
 const backPressEvent = { type: 'hardwareBackPress', timeStamp: 1 };
 
-async function renderNavigation(registration = false) {
-  const content = <><RootLayout />{registration ? <RegisterScreen /> : null}</>;
+async function renderNavigation(authScreen?: 'login' | 'register') {
+  const AuthScreen = authScreen === 'register' ? RegisterScreen : authScreen === 'login' ? LoginScreen : null;
+  const content = <><RootLayout />{AuthScreen ? <AuthScreen /> : null}</>;
   await act(async () => {
     if (renderer) renderer.update(content);
     else renderer = create(content);
@@ -303,30 +305,97 @@ describe('root startup route guards', () => {
     expect(await renderNavigation()).toEqual(['login', 'register', 'forgot-password', 'reset-password']);
   });
 
+  it.each(['login', 'register'] as const)('öffnet nach der ersten Anmeldung über %s das freigegebene Intro statt des gesperrten Home', async (authScreen) => {
+    jest.replaceProperty(Platform, 'OS', 'ios');
+    mockPathname = `/${authScreen}`;
+    mockHasCompletedOnboarding = false;
+    Object.assign(mockAuth, { isLoading: false, session: null });
+    await renderNavigation(authScreen);
+    expect(renderer!.root.findAllByType(AuthFormScreen)).toHaveLength(1);
+
+    Object.assign(mockAuth, { isLoading: true, session: { user: { id: 'first-login' } } });
+    await renderNavigation(authScreen);
+    expect(renderer!.root.findAllByProps({ testID: 'redirect' })).toHaveLength(0);
+    expect(renderer!.root.findAllByType(ActivityIndicator)).toHaveLength(1);
+
+    mockAuth.isLoading = false;
+    const routes = await renderNavigation(authScreen);
+    expect(routes).toContain('onboarding');
+    expect(routes).not.toContain('(tabs)');
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/onboarding'));
+
+    mockHasCompletedOnboarding = true;
+    expect(await renderNavigation(authScreen)).toContain('(tabs)');
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/'));
+  });
+
+  it.each(['login', 'register'] as const)('zeigt über %s zuerst das Intro, auch wenn die Pflichtabfrage noch lädt oder Home blockiert', async (authScreen) => {
+    mockPathname = `/${authScreen}`;
+    mockReturnTo = '/bus';
+    mockHasCompletedOnboarding = false;
+    mockAuth.isLoading = false;
+    Object.assign(mockCheck, { isLoading: true, isBlocking: true });
+    let routes = await renderNavigation(authScreen);
+    expect(routes).toContain('onboarding');
+    expect(routes).not.toContain('check-in');
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/onboarding'));
+
+    mockCheck.isLoading = false;
+    routes = await renderNavigation(authScreen);
+    expect(routes).not.toContain('check-in');
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/onboarding'));
+
+    mockHasCompletedOnboarding = true;
+    routes = await renderNavigation(authScreen);
+    expect(routes).toContain('check-in');
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(
+      JSON.stringify({ pathname: '/check-in', params: { returnTo: '/bus' } }),
+    );
+  });
+
+  it.each(['login', 'register'] as const)('hält über %s Profilfehler und Notfallziele auch vor dem ersten Intro erreichbar', async (authScreen) => {
+    mockPathname = `/${authScreen}`;
+    mockHasCompletedOnboarding = false;
+    mockReturnTo = '/emergency';
+    mockAuth.isLoading = false;
+    mockCheck.isLoading = true;
+    let routes = await renderNavigation(authScreen);
+    expect(routes).toContain('emergency');
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/emergency'));
+
+    mockAuth.hasProfileError = true;
+    routes = await renderNavigation(authScreen);
+    expect(routes).toContain('check-in');
+    expect(routes).not.toContain('onboarding');
+    expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(
+      JSON.stringify({ pathname: '/check-in', params: { returnTo: '/emergency' } }),
+    );
+  });
+
   it('wartet nach Registrierung auf Profil und Gruppencheck, bevor es zum freigegebenen Home weiterleitet', async () => {
     jest.replaceProperty(Platform, 'OS', 'ios');
     mockPathname = '/register';
     mockAuth.session = null;
     mockCheck.isLoading = true;
     mockAuth.isLoading = false;
-    await renderNavigation(true);
+    await renderNavigation('register');
     expect(renderer!.root.findAllByType(AuthFormScreen)).toHaveLength(1);
     expect(renderer!.root.findAllByProps({ testID: 'redirect' })).toHaveLength(0);
 
     Object.assign(mockAuth, { isLoading: true, session: { user: { id: 'new-user' } } });
-    let routes = await renderNavigation(true);
+    let routes = await renderNavigation('register');
     expect(routes).not.toContain('(tabs)');
     expect(renderer!.root.findAllByProps({ testID: 'redirect' })).toHaveLength(0);
     expect(renderer!.root.findAllByType(ActivityIndicator)).toHaveLength(1);
 
     mockAuth.isLoading = false;
-    routes = await renderNavigation(true);
+    routes = await renderNavigation('register');
     expect(routes).not.toContain('(tabs)');
     expect(renderer!.root.findAllByProps({ testID: 'redirect' })).toHaveLength(0);
     expect(renderer!.root.findAllByType(ActivityIndicator)).toHaveLength(1);
 
     mockCheck.isLoading = false;
-    routes = await renderNavigation(true);
+    routes = await renderNavigation('register');
     expect(routes).toContain('(tabs)');
     expect(renderer!.root.findAllByType(ActivityIndicator)).toHaveLength(0);
     expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/'));
@@ -336,7 +405,7 @@ describe('root startup route guards', () => {
     mockPathname = '/register';
     mockReturnTo = '/bus';
     Object.assign(mockAuth, { hasProfileError: true, isLoading: false, session: { user: { id: 'new-user' } } });
-    const routes = await renderNavigation(true);
+    const routes = await renderNavigation('register');
 
     expect(routes[0]).toBe('check-in');
     expect(routes).not.toContain('bus');
@@ -350,7 +419,7 @@ describe('root startup route guards', () => {
     mockReturnTo = '/bus';
     Object.assign(mockAuth, { isLoading: false, session: { user: { id: 'new-user' } } });
     Object.assign(mockCheck, { isBlocking: true, isLoading: false });
-    const routes = await renderNavigation(true);
+    const routes = await renderNavigation('register');
 
     expect(routes[0]).toBe('check-in');
     expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(
@@ -362,11 +431,11 @@ describe('root startup route guards', () => {
     mockPathname = '/register';
     mockReturnTo = '/emergency';
     Object.assign(mockAuth, { isLoading: true, session: { user: { id: 'new-user' } } });
-    await renderNavigation(true);
+    await renderNavigation('register');
     expect(renderer!.root.findAllByProps({ testID: 'redirect' })).toHaveLength(0);
 
     mockAuth.isLoading = false;
-    const routes = await renderNavigation(true);
+    const routes = await renderNavigation('register');
     expect(routes).toContain('emergency');
     expect(renderer!.root.findByProps({ testID: 'redirect' }).props.accessibilityLabel).toBe(JSON.stringify('/emergency'));
   });

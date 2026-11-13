@@ -72,6 +72,7 @@ describe('protected navigation', () => {
   it.each([false, true])('hält den Login bis zur geklärten Pflichtabfrage stabil (Admin: %s)', (isAdmin) => {
     expect(
       getLoginScreenDecision({
+        hasCompletedOnboarding: true,
         hasProfileError: false,
         hasSession: true,
         isAdmin,
@@ -91,6 +92,7 @@ describe('protected navigation', () => {
 
     expect(
       getLoginScreenDecision({
+        hasCompletedOnboarding: true,
         hasProfileError: false,
         hasSession: true,
         isAdmin,
@@ -110,6 +112,7 @@ describe('protected navigation', () => {
 
     expect(
       getLoginScreenDecision({
+        hasCompletedOnboarding: true,
         hasProfileError: false,
         hasSession: true,
         isAdmin,
@@ -131,6 +134,7 @@ describe('protected navigation', () => {
   it('führt bei einem Profil- oder Pflichtabfragefehler weiter zum Check-in', () => {
     expect(
       getLoginScreenDecision({
+        hasCompletedOnboarding: true,
         hasProfileError: true,
         hasSession: true,
         isAdmin: false,
@@ -151,6 +155,7 @@ describe('protected navigation', () => {
 
   it('lässt Notfallziele trotz Pflichtabfrage zu und behält die Anmeldung bei', () => {
     const state = {
+      hasCompletedOnboarding: false,
       hasProfileError: false,
       hasSession: true,
       isAdmin: false,
@@ -166,7 +171,7 @@ describe('protected navigation', () => {
       expect(getLoginScreenDecision({ ...state, bypassGroupCheck, isAuthLoading: true })).toBe('loading');
     }
     expect(bypassesGroupCheck('/bus')).toBe(false);
-    expect(getLoginScreenDecision({ ...state, bypassGroupCheck: bypassesGroupCheck('/bus') })).toBe('loading');
+    expect(getLoginScreenDecision({ ...state, bypassGroupCheck: bypassesGroupCheck('/bus') })).toBe('onboarding');
   });
 
   it('führt das Busmanagement als geschützte interne Route', () => {

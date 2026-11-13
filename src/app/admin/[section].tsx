@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { AdminDashboard } from '@/features/admin/AdminDashboard';
 import { adminSections, adminSectionTitleKeys } from '@/features/admin/admin-sections';
 import { RequireAuth } from '@/features/auth/RequireAuth';
+import { AdminContentImportPanel } from '@/features/content-import/AdminContentImportPanel';
 import { useI18n } from '@/features/i18n/i18n';
 import { adminSectionRoute, singleRouteParam } from '@/features/navigation/routes';
 
@@ -32,7 +33,7 @@ export default function AdminSectionScreen() {
           ),
         }}
       />
-      <AdminDashboard key={section} section={section} />
+      {section === 'content' ? <AdminContentImportPanel /> : <AdminDashboard key={section} section={section} />}
     </RequireAuth>
   );
 }

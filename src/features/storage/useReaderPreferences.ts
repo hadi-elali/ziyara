@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { createPersistentState } from '@/features/storage/persistentState';
 
 export type ReaderPreferences = {
+  translationLanguage: 'de' | 'en' | 'both';
   arabicFontScale: number;
   showArabic: boolean;
   showTranslation: boolean;
@@ -12,6 +13,7 @@ export type ReaderPreferences = {
 };
 
 export const defaultReaderPreferences: ReaderPreferences = {
+  translationLanguage: 'de',
   arabicFontScale: 1,
   showArabic: true,
   showTranslation: true,
@@ -45,6 +47,8 @@ export function parseReaderPreferences(value: unknown): ReaderPreferences | unde
   }
 
   const candidate = value as Partial<ReaderPreferences>;
+  const translationLanguage = candidate.translationLanguage ?? 'de';
+  if (!['de', 'en', 'both'].includes(translationLanguage)) return undefined;
   const arabicFontScale = parseOptionalFontScale(
     candidate.arabicFontScale,
     defaultReaderPreferences.arabicFontScale,
@@ -82,6 +86,7 @@ export function parseReaderPreferences(value: unknown): ReaderPreferences | unde
   }
 
   return {
+    translationLanguage,
     arabicFontScale,
     showArabic,
     showTranslation,
@@ -99,6 +104,9 @@ const useReaderPreferencesState = createPersistentState(
 
 export function useReaderPreferences() {
   const [preferences, setPreferences] = useReaderPreferencesState();
+  const setTranslationLanguage = useCallback((translationLanguage: ReaderPreferences['translationLanguage']) => {
+    setPreferences((current) => ({ ...current, translationLanguage }));
+  }, [setPreferences]);
 
   const setArabicFontScale = useCallback(
     (arabicFontScale: number) => {
@@ -143,6 +151,7 @@ export function useReaderPreferences() {
   );
 
   return {
+    setTranslationLanguage,
     preferences,
     setArabicFontScale,
     setShowArabic,

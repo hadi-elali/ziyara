@@ -4,7 +4,7 @@ import { AppState, Platform } from 'react-native';
 import { supabase } from '@/features/auth/supabase';
 import { withSupabaseReadTimeout } from '@/features/network/supabase-read';
 
-export function useRegistrationAvailability({ realtime = false } = {}) {
+export function useRegistrationAvailability() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [hasError, setHasError] = useState(false);
   const sequence = useRef(0);
@@ -42,15 +42,15 @@ export function useRegistrationAvailability({ realtime = false } = {}) {
       : AppState.currentState === 'active';
     void Promise.resolve().then(onChange);
 
-    // Realtime needs admin-only SELECT permission. Public auth screens keep
-    // using the Boolean getter without opening an unauthorized subscription.
-    const channel = realtime ? supabase
+    // The singleton exposes only the public availability flag. Anonymous auth
+    // screens need the same live changes as authenticated admin panels.
+    const channel = supabase
       .channel(`registration-settings:${channelId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_settings' }, onChange)
       .subscribe((status) => {
         // Also reconcile changes missed while joining or reconnecting.
         if (status === 'SUBSCRIBED') onChange();
-      }) : null;
+      });
     const poll = setInterval(() => {
       if (isVisible()) onChange();
     }, 30_000);
@@ -69,13 +69,13 @@ export function useRegistrationAvailability({ realtime = false } = {}) {
       sequence.current += 1;
       clearInterval(poll);
       subscription.remove();
-      if (channel) void supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
       if (Platform.OS === 'web') {
         window.removeEventListener('focus', onChange);
         document.removeEventListener('visibilitychange', onVisible);
       }
     };
-  }, [channelId, realtime, refresh]);
+  }, [channelId, refresh]);
 
   return { enabled, hasError, refresh };
 }

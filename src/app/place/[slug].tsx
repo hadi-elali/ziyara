@@ -13,7 +13,6 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Zoomable } from "@likashefqet/react-native-image-zoom";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
@@ -34,6 +33,7 @@ import { useBookmarks } from "@/features/storage/useBookmarks";
 import { openNavigation } from "@/features/places/openNavigation";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+import { PlaceRecommendedActs } from '@/features/reader/PlaceRecommendedActs';
 
 type PlaceImageCarouselProps = {
   images: PlaceImage[];
@@ -280,8 +280,8 @@ export default function PlaceDetailScreen() {
         <PlaceImageCarousel images={place.images} />
       </Section>
 
-      {acts.length > 0 ? (
-        <Section title={t("place.recommendedActs")}>
+      <PlaceRecommendedActs key={place.id} placeId={place.id}>
+        {acts.length > 0 ? (
           <View style={styles.list}>
             {acts.map((act) => (
               <Card
@@ -293,11 +293,7 @@ export default function PlaceDetailScreen() {
                 <View style={styles.cardHeader}>
                   <View style={styles.cardTitle}>
                     <ThemedText type="heading">{act.title}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {t(`labels.actType.${act.type}`)}
-                    </ThemedText>
                   </View>
-                  <Badge status={act.verificationStatus} />
                 </View>
                 <ThemedText type="small" themeColor="textSecondary">
                   {act.shortInstruction}
@@ -305,8 +301,8 @@ export default function PlaceDetailScreen() {
               </Card>
             ))}
           </View>
-        </Section>
-      ) : null}
+        ) : null}
+      </PlaceRecommendedActs>
     </Screen>
   );
 }

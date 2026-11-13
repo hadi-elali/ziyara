@@ -7,6 +7,7 @@ import { useAuth } from '@/features/auth/auth-context';
 import { getLoginScreenDecision } from '@/features/auth/protected-route-policy';
 import { useGroupCheck } from '@/features/group-check/group-check-context';
 import { bypassesGroupCheck, checkInRoute, getProtectedReturnRoute } from '@/features/navigation/routes';
+import { useOnboarding } from '@/features/onboarding/onboarding-state';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function LoginScreen() {
@@ -19,9 +20,11 @@ export default function LoginScreen() {
     session,
   } = useAuth();
   const { isBlocking, isLoading: isGroupCheckLoading } = useGroupCheck();
+  const { hasCompletedOnboarding } = useOnboarding();
   const safeReturnTo = getProtectedReturnRoute(returnTo);
   const decision = getLoginScreenDecision({
     bypassGroupCheck: bypassesGroupCheck(safeReturnTo),
+    hasCompletedOnboarding,
     hasProfileError,
     hasSession: Boolean(session),
     isAdmin,
@@ -36,6 +39,10 @@ export default function LoginScreen() {
         <ActivityIndicator color={theme.accent} size="large" />
       </SafeAreaView>
     );
+  }
+
+  if (decision === 'onboarding') {
+    return <Redirect href="/onboarding" />;
   }
 
   if (decision === 'check-in') {

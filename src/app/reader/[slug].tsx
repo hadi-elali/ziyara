@@ -84,7 +84,7 @@ export default function ReaderScreen() {
   }
 
   const bookmarkKey = `content:${content.slug}`;
-  const sources = localizeSourceReferences(getSourceReferencesByIds(content.sourceReferences), language);
+  const sources = content.sources ?? localizeSourceReferences(getSourceReferencesByIds(content.sourceReferences), language);
   const sourceText = sources.map((source) => source.title).join('\n');
   const visibleParagraphText = formatVisibleParagraphs(content.paragraphs, preferences);
   const readerText = [
@@ -156,7 +156,6 @@ export default function ReaderScreen() {
       ) : null}
 
       <View style={styles.textSection}>
-        <ThemedText type="subtitle">{t('reader.text')}</ThemedText>
         <SegmentedReligiousText paragraphs={content.paragraphs} preferences={preferences} />
       </View>
 
@@ -165,11 +164,13 @@ export default function ReaderScreen() {
           styles.infoCard,
           { backgroundColor: theme.surface, borderColor: theme.border },
         ]}>
-        <View style={styles.infoSection}>
-          <ThemedText type="heading">{t('reader.notes')}</ThemedText>
-          <ThemedText themeColor="textSecondary">{content.notes}</ThemedText>
-        </View>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        {content.notes.trim() ? <>
+          <View style={styles.infoSection}>
+            <ThemedText type="heading">{t('reader.notes')}</ThemedText>
+            <ThemedText themeColor="textSecondary">{content.notes}</ThemedText>
+          </View>
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        </> : null}
         <View style={styles.infoSection}>
           <ThemedText type="heading">{t('reader.sources')}</ThemedText>
           <SourceReferenceList showLastChecked={false} showUrl={false} sources={sources} />

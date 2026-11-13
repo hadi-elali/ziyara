@@ -1,5 +1,5 @@
 export type ProtectedRouteDecision = 'allow' | 'loading' | 'login' | 'unauthorized';
-export type LoginScreenDecision = 'check-in' | 'form' | 'loading' | 'return';
+export type LoginScreenDecision = 'check-in' | 'form' | 'loading' | 'onboarding' | 'return';
 
 export function getProtectedRouteDecision({
   admin,
@@ -27,6 +27,7 @@ export function getProtectedRouteDecision({
 
 export function getLoginScreenDecision({
   bypassGroupCheck = false,
+  hasCompletedOnboarding,
   hasProfileError,
   hasSession,
   isAuthLoading,
@@ -34,6 +35,7 @@ export function getLoginScreenDecision({
   isGroupCheckLoading,
 }: {
   bypassGroupCheck?: boolean;
+  hasCompletedOnboarding: boolean;
   hasProfileError: boolean;
   hasSession: boolean;
   isAdmin: boolean;
@@ -54,6 +56,9 @@ export function getLoginScreenDecision({
   }
 
   if (bypassGroupCheck) return 'return';
+
+  // Home and check-in stay protected until this launch's intro is complete.
+  if (!hasCompletedOnboarding) return 'onboarding';
 
   if (isGroupCheckLoading) {
     return 'loading';

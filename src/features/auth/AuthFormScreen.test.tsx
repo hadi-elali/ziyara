@@ -109,6 +109,31 @@ describe('family registration', () => {
     expect(mockSignUp).not.toHaveBeenCalled();
   });
 
+  it('hides and restores the login registration link when live availability changes', async () => {
+    await render('login');
+    expect(hasText('auth.signUp')).toBe(true);
+    mockRegistration.enabled = false;
+    await act(async () => { renderer.update(<AuthFormScreen mode="login" />); });
+    expect(hasText('auth.signUp')).toBe(false);
+    mockRegistration.enabled = true;
+    await act(async () => { renderer.update(<AuthFormScreen mode="login" />); });
+    expect(hasText('auth.signUp')).toBe(true);
+  });
+
+  it('closes and reopens an active registration form while preserving its draft', async () => {
+    await render();
+    await fillAccount();
+    mockRegistration.enabled = false;
+    await act(async () => { renderer.update(<AuthFormScreen mode="register" />); });
+    expect(renderer.root.findAllByType(TextInput)).toHaveLength(0);
+    expect(hasText('auth.registrationClosed')).toBe(true);
+    mockRegistration.enabled = true;
+    await act(async () => { renderer.update(<AuthFormScreen mode="register" />); });
+    expect(hasText('auth.registrationClosed')).toBe(false);
+    expect(input('auth.firstName').props.value).toBe(' Eltern ');
+    expect(mockSignUp).not.toHaveBeenCalled();
+  });
+
   it.each([false, null])('keeps sign-in working when registration is %s', async enabled => {
     mockRegistration.enabled = enabled;
     mockRegistration.hasError = enabled === null;

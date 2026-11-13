@@ -66,7 +66,7 @@ describe('registration availability and admin control', () => {
 
   it('fails closed on a failed read and recovers when the app returns to the foreground', async () => {
     await mount();
-    expect(mockChannel).not.toHaveBeenCalled();
+    expect(mockChannel).toHaveBeenCalledTimes(1);
     expect(value.enabled).toBe(true);
     mockQuery.mockResolvedValueOnce({ data: null, error: { message: 'offline' } });
     await act(async () => { await value.refresh(); });
@@ -151,15 +151,31 @@ describe('registration availability and admin control', () => {
     expect(mockSave).toHaveBeenCalledTimes(2);
   });
 
-  it('reconciles on subscription and reconnect without waiting for a change event', async () => {
-    await mount(true);
+  it('updates public auth availability immediately on closure and reopening without polling', async () => {
+    await mount();
+    const [channel] = getChannels();
+    expect(channel.on).toHaveBeenCalledWith('postgres_changes', {
+      event: '*', schema: 'public', table: 'registration_settings',
+    }, expect.any(Function));
+    expect(value.enabled).toBe(true);
+    mockQuery.mockResolvedValueOnce({ data: false, error: null });
+    await act(async () => { channel.on.mock.calls[0][2](); });
+    expect(value.enabled).toBe(false);
+    mockQuery.mockResolvedValueOnce({ data: true, error: null });
+    await act(async () => { channel.on.mock.calls[0][2](); });
+    expect(value.enabled).toBe(true);
+    expect(mockQuery).toHaveBeenCalledTimes(3);
+  });
+
+  it.each([false, true])('reconciles on subscription and reconnect (admin: %s)', async admin => {
+    await mount(admin);
     const [channel] = getChannels();
     mockQuery.mockResolvedValueOnce({ data: false, error: null });
     await act(async () => { channel.subscribe.mock.calls[0][0]('SUBSCRIBED'); });
-    expect(renderer!.root.findByType(Switch).props.value).toBe(false);
+    expect(admin ? renderer!.root.findByType(Switch).props.value : value.enabled).toBe(false);
     mockQuery.mockResolvedValueOnce({ data: true, error: null });
     await act(async () => { channel.subscribe.mock.calls[0][0]('SUBSCRIBED'); });
-    expect(renderer!.root.findByType(Switch).props.value).toBe(true);
+    expect(admin ? renderer!.root.findByType(Switch).props.value : value.enabled).toBe(true);
   });
 
   it('keeps the foreground poll when realtime is unavailable and pauses it in the background', async () => {
@@ -179,19 +195,19 @@ describe('registration availability and admin control', () => {
     }
   });
 
-  it('ignores an older enabled response when a realtime refresh confirms closure', async () => {
+  it.each([false, true])('ignores a stale response after a realtime closure (admin: %s)', async admin => {
     let resolve!: (result: Result) => void;
     mockQuery.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
-    await mount(true);
+    await mount(admin);
     const [channel] = getChannels();
     mockQuery.mockResolvedValueOnce({ data: false, error: null });
     await act(async () => { channel.on.mock.calls[0][2](); });
     await act(async () => { resolve({ data: true, error: null }); });
-    expect(renderer!.root.findByType(Switch).props.value).toBe(false);
+    expect(admin ? renderer!.root.findByType(Switch).props.value : value.enabled).toBe(false);
   });
 
-  it('removes realtime listeners and ignores late callbacks after unmount', async () => {
-    await mount(true);
+  it.each([false, true])('removes realtime listeners and ignores late callbacks after unmount (admin: %s)', async admin => {
+    await mount(admin);
     const [channel] = getChannels();
     await act(async () => { renderer!.unmount(); });
     renderer = null;
